@@ -26,6 +26,7 @@ import OrderConfirmationPage from '@/pages/OrderConfirmationPage';
 import OrderStatusPage from '@/pages/OrderStatusPage';
 import AdminOrdersPage from '@/pages/AdminOrdersPage';
 import AdminReportsPage from '@/pages/AdminReportsPage';
+import { Analytics } from "@vercel/analytics/next"
 
 function App() {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
@@ -37,8 +38,9 @@ function App() {
     <AuthProvider>
       <CartProvider>
         <WishlistProvider>
+        <Analytics />
           <Router>
-            <div className="min-h-screen flex flex-col bg-background text-foreground">
+            <div className="flex flex-col min-h-screen bg-background text-foreground">
               <Helmet>
                 <title>Rolu Modas - Moda Femenina Exclusiva</title>
                 <meta name="description" content="Descubre las últimas tendencias en moda femenina. Ropa exclusiva, accesorios únicos y estilo incomparable en Rolu Modas." />
