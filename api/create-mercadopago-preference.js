@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { MercadoPagoConfig } from "mercadopago";
-
+import { preferences } from "mercadopago/resources/preferences";
 import crypto from "crypto";
 
 export default async function handler(req, res) {
@@ -19,23 +19,29 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Validar variables de entorno primero
     const required = [
       "NEXT_PUBLIC_SUPABASE_URL",
       "SUPABASE_SERVICE_ROLE_KEY",
       "MERCADOPAGO_ACCESS_TOKEN",
     ];
-
     required.forEach((n) => {
       if (!process.env[n]) throw new Error(`Missing env var: ${n}`);
     });
 
+    // Inicializar clientes externos
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     const mpToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
 
     const supabase = createClient(supabaseUrl, serviceKey);
-    const mp = new MercadoPagoConfig({ accessToken: mpToken });
+    const mp = new MercadoPagoConfig({
+      accessToken: mpToken,
+      options: { timeout: 5000 },
+    });
+    mp.preferences = preferences;
 
+    // Tomar datos del body
     const { items = [], shipping_method } = req.body || {};
 
     if (!Array.isArray(items) || items.length === 0) {
@@ -54,12 +60,14 @@ export default async function handler(req, res) {
       0
     );
 
+    // Crear preferencia en MercadoPago
     const mpPreference = await mp.preferences.create({
-      items: preferenceItems,
+      body: { items: preferenceItems },
     });
 
-    const preferenceId = mpPreference.body.id;
+    const preferenceId = mpPreference.id;
 
+    // Guardar orden en Supabase
     const orderData = {
       order_number: crypto.randomUUID(),
       items: preferenceItems,
