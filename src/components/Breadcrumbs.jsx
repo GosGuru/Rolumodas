@@ -1,0 +1,56 @@
+import React from 'react';
+import { useLocation, Link } from 'react-router-dom';
+import { ChevronRight, Home } from 'lucide-react';
+
+const Breadcrumbs = ({ product, category }) => {
+  const location = useLocation();
+  const pathnames = location.pathname.split('/').filter((x) => x);
+
+  const breadcrumbs = [
+    { name: 'Inicio', path: '/' },
+  ];
+
+  if (pathnames.includes('tienda')) {
+    breadcrumbs.push({ name: 'Tienda', path: '/tienda' });
+  }
+
+  if (pathnames.includes('categoria') && category) {
+    breadcrumbs.push({ name: category.name, path: `/categoria/${category.slug}` });
+  }
+
+  if (pathnames.includes('producto') && product) {
+    if (product.categories) {
+       if (!breadcrumbs.find(b => b.path.includes('categoria'))) {
+         breadcrumbs.push({ name: product.categories.name, path: `/categoria/${product.categories.slug}`});
+       }
+    }
+    breadcrumbs.push({ name: product.name, path: `/producto/${product.id}` });
+  }
+
+  return (
+    <div className="bg-secondary/50">
+      <nav className="container mx-auto px-4 py-3">
+        <ol className="flex items-center space-x-2 text-sm text-muted-foreground">
+          {breadcrumbs.map((crumb, index) => {
+            const isLast = index === breadcrumbs.length - 1;
+            return (
+              <li key={crumb.path} className="flex items-center space-x-2">
+                {index > 0 && <ChevronRight className="h-4 w-4" />}
+                {isLast ? (
+                  <span className="font-semibold text-foreground">{crumb.name}</span>
+                ) : (
+                  <Link to={crumb.path} className="hover:text-primary transition-colors flex items-center">
+                    {index === 0 && <Home className="h-4 w-4 mr-1.5" />}
+                    {crumb.name}
+                  </Link>
+                )}
+              </li>
+            );
+          })}
+        </ol>
+      </nav>
+    </div>
+  );
+};
+
+export default Breadcrumbs;

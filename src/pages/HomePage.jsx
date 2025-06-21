@@ -1,0 +1,152 @@
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Helmet } from 'react-helmet';
+import { Loader2, ArrowRight } from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient';
+import { toast } from '@/components/ui/use-toast';
+import ProductCard from '@/components/ProductCard';
+import { Button } from '@/components/ui/button';
+
+const HomePage = () => {
+  const [categories, setCategories] = useState([]);
+  const [trendingProducts, setTrendingProducts] = useState([]);
+  const [heroImage, setHeroImage] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      
+      const fetchCategories = supabase.from('categories').select('*').order('name').limit(3);
+      const fetchTrendingProducts = supabase.from('products').select('*, categories(name)').eq('is_trending', true).eq('visible', true).limit(4);
+      const fetchHeroImage = supabase.from('site_content').select('content_value').eq('content_key', 'hero_image').single();
+
+      const [categoriesRes, productsRes, heroImageRes] = await Promise.all([fetchCategories, fetchTrendingProducts, fetchHeroImage]);
+
+      if (categoriesRes.error) {
+        toast({ title: "Error", description: "No se pudieron cargar las categorías.", variant: "destructive" });
+      } else {
+        setCategories(categoriesRes.data);
+      }
+
+      if (productsRes.error) {
+        toast({ title: "Error", description: "No se pudieron cargar los productos.", variant: "destructive" });
+      } else {
+        setTrendingProducts(productsRes.data);
+      }
+
+      if (heroImageRes.error || !heroImageRes.data) {
+        setHeroImage("https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=1999&auto=format&fit=crop");
+      } else {
+        setHeroImage(heroImageRes.data.content_value.url);
+      }
+
+      setLoading(false);
+    };
+
+    fetchData();
+  }, []);
+
+  return (
+    <>
+      <Helmet>
+        <title>Rolu Modas - Inicio</title>
+        <meta name="description" content="Explora nuestras categorías y productos tendencia en Rolu Modas." />
+      </Helmet>
+
+      <section className="relative h-screen min-h-[600px] flex items-center justify-center text-center text-white bg-gray-400">
+        {heroImage && 
+          <img  
+            className="absolute inset-0 w-full h-full object-cover"
+            alt="Hero background showing a fashion product"
+            src={heroImage} 
+          />
+        }
+        <div className="absolute inset-0 bg-black/40"></div>
+        
+        <div className="relative z-10 px-4">
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="text-4xl md:text-6xl font-bold uppercase tracking-tight"
+          >
+            Estilo que Inspira
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="mt-4 text-lg md:text-xl max-w-2xl mx-auto"
+          >
+            Descubre las últimas tendencias y encuentra tu look perfecto.
+          </motion.p>
+        </div>
+      </section>
+
+      {loading ? (
+        <div className="py-24 bg-background flex justify-center items-center">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      ) : (
+        <>
+          <section id="categories-section" className="py-8 sm:py-12 bg-secondary">
+            <div className="container mx-auto px-4">
+               <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+                className="text-center mb-8"
+              >
+                <h2 className="text-3xl md:text-4xl font-bold uppercase tracking-tight text-foreground">Categorías</h2>
+              </motion.div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {categories.map((category, index) => (
+                  <motion.div
+                    key={category.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                    className="relative aspect-square group overflow-hidden"
+                  >
+                    <img
+                      src={category.image || 'https://placehold.co/400x500/e0e0e0/000000?text=Rolu'}
+                      alt={category.name}
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-black bg-opacity-30 flex flex-col items-center justify-center text-white text-center p-4">
+                      <h3 className="text-2xl font-bold uppercase tracking-wider">
+                        {category.name}
+                      </h3>
+                       <Link to={`/categoria/${category.slug}`} className="mt-2 inline-flex items-center text-sm font-semibold hover:underline">
+                        Ver más <ArrowRight className="ml-1 h-4 w-4" />
+                      </Link>
+                    </div>
+                    <Link to={`/categoria/${category.slug}`} className="absolute inset-0 z-10">
+                      <span className="sr-only">Ver {category.name}</span>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <section className="py-8 sm:py-12 bg-background">
+            <div className="container mx-auto px-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-8 md:gap-x-6 md:gap-y-10">
+                {trendingProducts.map((product, index) => (
+                  <ProductCard key={product.id} product={product} index={index} />
+                ))}
+              </div>
+            </div>
+          </section>
+        </>
+      )}
+    </>
+  );
+};
+
+export default HomePage;

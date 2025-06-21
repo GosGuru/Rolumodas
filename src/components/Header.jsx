@@ -1,0 +1,146 @@
+
+import React, { useState, useEffect, useRef } from 'react';
+import { Link, NavLink } from 'react-router-dom';
+import { ShoppingCart, Heart, User, Search, Menu, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useCart } from '@/contexts/CartContext';
+import { useWishlist } from '@/contexts/WishlistContext';
+import { Button } from '@/components/ui/button';
+
+const Header = ({ openSearchModal }) => {
+  const { toggleDrawer, getTotalItems } = useCart();
+  const { wishlistItems } = useWishlist();
+  const totalCartItems = getTotalItems();
+  const totalWishlistItems = wishlistItems.length;
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const mobileMenuRef = useRef(null);
+
+  const closeMobileMenu = () => setIsMobileMenuOpen(false);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target)) {
+        const menuButton = document.getElementById('mobile-menu-button');
+        if (menuButton && menuButton.contains(event.target)) return;
+        closeMobileMenu();
+      }
+    };
+    if (isMobileMenuOpen) document.addEventListener('mousedown', handleClickOutside);
+    else document.removeEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isMobileMenuOpen]);
+
+  const navLinkStyle = {
+    color: '#FFF',
+    textDecoration: 'none',
+    transition: 'color 0.3s'
+  };
+
+  const activeNavLinkStyle = {
+    ...navLinkStyle,
+    fontWeight: '600',
+  };
+  
+  const mobileNavLinkClasses = "block py-3 px-4 text-base text-white hover:bg-white/20 rounded-md";
+
+
+  return (
+    <motion.header
+      className="sticky top-0 z-50 bg-black"
+    >
+      <div className="container mx-auto px-4 py-3">
+        <div className="flex items-center justify-between">
+          <Link to="/" className="flex items-center">
+            <img 
+              src="https://storage.googleapis.com/hostinger-horizons-assets-prod/51b3ed79-9556-4473-9300-b6672a6c2c9e/bcaac9251c06448f37208b48ec5f52f4.png" 
+              alt="Rolu Modas Logo" 
+              className="h-10 w-auto object-cover"
+            />
+          </Link>
+
+          <nav className="hidden md:flex items-center space-x-8 text-sm font-medium">
+            <NavLink to="/" style={({ isActive }) => isActive ? activeNavLinkStyle : navLinkStyle}>INICIO</NavLink>
+            <NavLink to="/tienda" style={({ isActive }) => isActive ? activeNavLinkStyle : navLinkStyle}>TIENDA</NavLink>
+            <NavLink to="/faq" style={({ isActive }) => isActive ? activeNavLinkStyle : navLinkStyle}>PREGUNTAS FRECUENTES</NavLink>
+          </nav>
+
+          <div className="flex items-center space-x-2 text-white">
+            <Button variant="ghost" size="icon" onClick={openSearchModal} className="hover:bg-white/20 hover:text-white">
+              <Search className="h-5 w-5" />
+            </Button>
+            <Link to="/admin/login">
+              <Button variant="ghost" size="icon" className="hover:bg-white/20 hover:text-white hidden md:inline-flex">
+                <User className="h-5 w-5" />
+              </Button>
+            </Link>
+            <Link to="/favoritos">
+              <Button variant="ghost" size="icon" className="relative hover:bg-white/20 hover:text-white">
+                <Heart className="h-5 w-5" />
+                {totalWishlistItems > 0 && (
+                  <motion.span
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute -top-1 -right-1 bg-white text-black text-[10px] rounded-full h-4 w-4 flex items-center justify-center font-bold"
+                  >
+                    {totalWishlistItems}
+                  </motion.span>
+                )}
+              </Button>
+            </Link>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={toggleDrawer}
+              className="relative hover:bg-white/20 hover:text-white"
+            >
+              <ShoppingCart className="h-5 w-5" />
+              {totalCartItems > 0 && (
+                <motion.span
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute -top-1 -right-1 bg-white text-black text-[10px] rounded-full h-4 w-4 flex items-center justify-center font-bold"
+                >
+                  {totalCartItems}
+                </motion.span>
+              )}
+            </Button>
+            
+            <Button 
+              id="mobile-menu-button"
+              variant="ghost" 
+              size="icon" 
+              className="md:hidden hover:bg-white/20 hover:text-white" 
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label="Abrir menú móvil"
+              aria-expanded={isMobileMenuOpen}
+            >
+              {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
+          </div>
+        </div>
+      </div>
+      
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            ref={mobileMenuRef}
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="md:hidden bg-black/95 backdrop-blur-sm overflow-hidden border-t border-white/10"
+          >
+            <nav className="flex flex-col p-4 space-y-2">
+              <Link to="/" onClick={closeMobileMenu} className={mobileNavLinkClasses}>INICIO</Link>
+              <Link to="/tienda" onClick={closeMobileMenu} className={mobileNavLinkClasses}>TIENDA</Link>
+              <Link to="/faq" onClick={closeMobileMenu} className={mobileNavLinkClasses}>PREGUNTAS FRECUENTES</Link>
+              <Link to="/admin/login" onClick={closeMobileMenu} className={mobileNavLinkClasses}>PERFIL</Link>
+            </nav>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.header>
+  );
+};
+
+export default Header;
