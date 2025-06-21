@@ -1,9 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+import mercadopago from 'mercadopago';
+import crypto from 'crypto';
 
 export default async function handler(req, res) {
   if (req.method === 'OPTIONS') {
@@ -18,20 +15,66 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const mpToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
+
+  if (!supabaseUrl || !serviceKey || !mpToken) {
+    console.error('Missing required environment variables');
+    return res.status(500).json({ message: 'Server misconfiguration' });
+  }
+
+  const supabase = createClient(supabaseUrl, serviceKey);
+  mercadopago.configure({ access_token: mpToken });
+
   try {
-    const { data, error } = await supabase.functions.invoke('create-mercadopago-preference', { body: req.body });
+    const { items = [], shipping_method } = req.body || {};
+
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ message: 'Invalid items' });
+    }
+
+    const preferenceItems = items.map((item) => ({
+      title: item.name,
+      quantity: item.quantity,
+      currency_id: 'UYU',
+      unit_price: item.price,
+    }));
+
+    const totalAmount = preferenceItems.reduce(
+      (sum, item) => sum + item.unit_price * item.quantity,
+      0
+    );
+
+    const mpPreference = await mercadopago.preferences.create({
+      items: preferenceItems,
+    });
+
+    const preferenceId = mpPreference.body.id;
+
+    const orderData = {
+      order_number: crypto.randomUUID(),
+      items: preferenceItems,
+      total_amount: totalAmount,
+      status: 'pending',
+      payment_method: 'mercadopago',
+      payment_id: preferenceId,
+      payment_status: 'pending',
+      shipping_method: shipping_method || null,
+    };
+
+    const { error } = await supabase.from('orders').insert([orderData]);
 
     if (error) {
-      console.error(error);
-      res.status(500).json({ message: error.message });
-      return;
+      console.error('Supabase insert error:', error);
+      return res.status(500).json({ message: 'Error creating order' });
     }
 
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.status(200).json(data);
+    return res.status(200).json({ preferenceId });
   } catch (err) {
     console.error(err);
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.status(500).json({ message: 'Server error' });
+    return res.status(500).json({ message: 'Server error' });
   }
 }
