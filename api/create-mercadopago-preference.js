@@ -1,6 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { MercadoPagoConfig } from "mercadopago";
-import { preferences } from "mercadopago/resources/preferences";
+import { MercadoPagoConfig, Preference } from "mercadopago";
 import crypto from "crypto";
 
 export default async function handler(req, res) {
@@ -39,7 +38,6 @@ export default async function handler(req, res) {
       accessToken: mpToken,
       options: { timeout: 5000 },
     });
-    mp.preferences = preferences;
 
     // Tomar datos del body
     const { items = [], shipping_method } = req.body || {};
@@ -60,8 +58,10 @@ export default async function handler(req, res) {
       0
     );
 
-    // Crear preferencia en MercadoPago
-    const mpPreference = await mp.preferences.create({
+    // Crear preferencia en MercadoPago usando el recurso Preference
+    const preferenceClient = new Preference(mp);
+
+    const mpPreference = await preferenceClient.create({
       body: { items: preferenceItems },
     });
 
