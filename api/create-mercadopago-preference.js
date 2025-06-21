@@ -1,27 +1,28 @@
-import { createClient } from '@supabase/supabase-js';
-import mercadopago from 'mercadopago';
-import crypto from 'crypto';
+import { createClient } from "@supabase/supabase-js";
+import { MercadoPagoConfig } from "mercadopago";
+
+import crypto from "crypto";
 
 export default async function handler(req, res) {
-  if (req.method === 'OPTIONS') {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === "OPTIONS") {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
     return res.status(200).end();
   }
 
-  if (req.method !== 'POST') {
+  if (req.method !== "POST") {
     return res
       .status(405)
-      .setHeader('Allow', 'POST')
-      .json({ message: 'Method Not Allowed' });
+      .setHeader("Allow", "POST")
+      .json({ message: "Method Not Allowed" });
   }
 
   try {
     const required = [
-      'NEXT_PUBLIC_SUPABASE_URL',
-      'SUPABASE_SERVICE_ROLE_KEY',
-      'MERCADOPAGO_ACCESS_TOKEN',
+      "NEXT_PUBLIC_SUPABASE_URL",
+      "SUPABASE_SERVICE_ROLE_KEY",
+      "MERCADOPAGO_ACCESS_TOKEN",
     ];
 
     required.forEach((n) => {
@@ -33,18 +34,18 @@ export default async function handler(req, res) {
     const mpToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
 
     const supabase = createClient(supabaseUrl, serviceKey);
-    mercadopago.configure({ access_token: mpToken });
+    const mp = new MercadoPagoConfig({ accessToken: mpToken });
 
     const { items = [], shipping_method } = req.body || {};
 
     if (!Array.isArray(items) || items.length === 0) {
-      return res.status(400).json({ message: 'Invalid items' });
+      return res.status(400).json({ message: "Invalid items" });
     }
 
     const preferenceItems = items.map((item) => ({
       title: item.name,
       quantity: item.quantity,
-      currency_id: 'UYU',
+      currency_id: "UYU",
       unit_price: item.price,
     }));
 
@@ -53,7 +54,7 @@ export default async function handler(req, res) {
       0
     );
 
-    const mpPreference = await mercadopago.preferences.create({
+    const mpPreference = await mp.preferences.create({
       items: preferenceItems,
     });
 
@@ -63,26 +64,25 @@ export default async function handler(req, res) {
       order_number: crypto.randomUUID(),
       items: preferenceItems,
       total_amount: totalAmount,
-      status: 'pending',
-      payment_method: 'mercadopago',
+      status: "pending",
+      payment_method: "mercadopago",
       payment_id: preferenceId,
-      payment_status: 'pending',
+      payment_status: "pending",
       shipping_method: shipping_method || null,
     };
 
-    const { error } = await supabase.from('orders').insert([orderData]);
+    const { error } = await supabase.from("orders").insert([orderData]);
 
     if (error) {
-      console.error('Supabase insert error:', error);
-      return res.status(500).json({ message: 'Error creating order' });
+      console.error("Supabase insert error:", error);
+      return res.status(500).json({ message: "Error creating order" });
     }
 
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader("Access-Control-Allow-Origin", "*");
     return res.status(200).json({ preferenceId });
-
   } catch (err) {
-    console.error('Server error:', err);
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    return res.status(500).json({ message: err.message || 'Internal error' });
+    console.error("Server error:", err);
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    return res.status(500).json({ message: err.message || "Internal error" });
   }
 }
