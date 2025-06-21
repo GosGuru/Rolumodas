@@ -29,18 +29,33 @@ const CheckoutPage = () => {
   const createPreference = async () => {
     setIsProcessing(true);
     try {
-      const { data, error } = await supabase.functions.invoke('create-mercadopago-preference', {
-        body: { items: items.map(item => ({ id: item.id, name: item.name, quantity: item.quantity, price: item.price })) },
+      const response = await fetch('/api/create-mercadopago-preference', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: items.map(item => ({
+            id: item.id,
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price,
+          })),
+        }),
       });
 
-      if (error || !data.preferenceId) {
-        throw new Error(error?.message || "No se pudo crear la preferencia de pago.");
+      if (!response.ok) {
+        throw new Error('No se pudo crear la preferencia de pago.');
       }
-      
+
+      const data = await response.json();
+
+      if (!data.preferenceId) {
+        throw new Error('No se pudo crear la preferencia de pago.');
+      }
+
       setPreferenceId(data.preferenceId);
       toast({
-        title: "¡Listo para pagar!",
-        description: "Se ha generado tu link de Mercado Pago.",
+        title: '¡Listo para pagar!',
+        description: 'Se ha generado tu link de Mercado Pago.',
       });
 
     } catch (error) {
