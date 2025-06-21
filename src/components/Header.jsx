@@ -46,19 +46,19 @@ const Header = ({ openSearchModal }) => {
 
   return (
     <motion.header
-      className="sticky top-0 z-50 bg-black"
+      className="sticky top-0 z-50 border-b shadow-lg bg-black/95 backdrop-blur-sm border-white/10"
     >
-      <div className="container mx-auto px-4 py-3">
+      <div className="container px-4 py-3 mx-auto">
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center">
             <img 
               src="https://storage.googleapis.com/hostinger-horizons-assets-prod/51b3ed79-9556-4473-9300-b6672a6c2c9e/bcaac9251c06448f37208b48ec5f52f4.png" 
               alt="Rolu Modas Logo" 
-              className="h-10 w-auto object-cover"
+              className="object-cover w-auto h-10"
             />
           </Link>
 
-          <nav className="hidden md:flex items-center space-x-8 text-sm font-medium">
+          <nav className="items-center hidden space-x-8 text-sm font-medium md:flex">
             <NavLink to="/" style={({ isActive }) => isActive ? activeNavLinkStyle : navLinkStyle}>INICIO</NavLink>
             <NavLink to="/tienda" style={({ isActive }) => isActive ? activeNavLinkStyle : navLinkStyle}>TIENDA</NavLink>
             <NavLink to="/faq" style={({ isActive }) => isActive ? activeNavLinkStyle : navLinkStyle}>PREGUNTAS FRECUENTES</NavLink>
@@ -66,16 +66,16 @@ const Header = ({ openSearchModal }) => {
 
           <div className="flex items-center space-x-2 text-white">
             <Button variant="ghost" size="icon" onClick={openSearchModal} className="hover:bg-white/20 hover:text-white">
-              <Search className="h-5 w-5" />
+              <Search className="w-5 h-5" />
             </Button>
             <Link to="/admin/login">
-              <Button variant="ghost" size="icon" className="hover:bg-white/20 hover:text-white hidden md:inline-flex">
-                <User className="h-5 w-5" />
+              <Button variant="ghost" size="icon" className="hidden hover:bg-white/20 hover:text-white md:inline-flex">
+                <User className="w-5 h-5" />
               </Button>
             </Link>
             <Link to="/favoritos">
               <Button variant="ghost" size="icon" className="relative hover:bg-white/20 hover:text-white">
-                <Heart className="h-5 w-5" />
+                <Heart className="w-5 h-5" />
                 {totalWishlistItems > 0 && (
                   <motion.span
                     initial={{ scale: 0 }}
@@ -93,7 +93,7 @@ const Header = ({ openSearchModal }) => {
               onClick={toggleDrawer}
               className="relative hover:bg-white/20 hover:text-white"
             >
-              <ShoppingCart className="h-5 w-5" />
+              <ShoppingCart className="w-5 h-5" />
               {totalCartItems > 0 && (
                 <motion.span
                   initial={{ scale: 0 }}
@@ -114,7 +114,7 @@ const Header = ({ openSearchModal }) => {
               aria-label="Abrir menú móvil"
               aria-expanded={isMobileMenuOpen}
             >
-              {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </Button>
           </div>
         </div>
@@ -128,7 +128,7 @@ const Header = ({ openSearchModal }) => {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="md:hidden bg-black/95 backdrop-blur-sm overflow-hidden border-t border-white/10"
+            className="overflow-hidden border-t md:hidden bg-black/95 backdrop-blur-sm border-white/10"
           >
             <nav className="flex flex-col p-4 space-y-2">
               <Link to="/" onClick={closeMobileMenu} className={mobileNavLinkClasses}>INICIO</Link>

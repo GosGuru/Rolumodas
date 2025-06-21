@@ -29,17 +29,17 @@ const Breadcrumbs = ({ product, category }) => {
 
   return (
     <div className="bg-secondary/50">
-      <nav className="container mx-auto px-4 py-3">
+      <nav className="container flex flex-col items-start px-4 py-3 pb-0 mx-auto sm:space-x-2">
         <ol className="flex items-center space-x-2 text-sm text-muted-foreground">
           {breadcrumbs.map((crumb, index) => {
             const isLast = index === breadcrumbs.length - 1;
             return (
-              <li key={crumb.path} className="flex items-center space-x-2">
-                {index > 0 && <ChevronRight className="h-4 w-4" />}
+              <li key={crumb.path} className="flex items-center space-x-2 sm:flex-row sm:items-center ">
+                {index > 0 && <ChevronRight className="w-4 h-4" />}
                 {isLast ? (
                   <span className="font-semibold text-foreground">{crumb.name}</span>
                 ) : (
-                  <Link to={crumb.path} className="hover:text-primary transition-colors flex items-center">
+                  <Link to={crumb.path} className="flex items-center transition-colors hover:text-primary">
                     {index === 0 && <Home className="h-4 w-4 mr-1.5" />}
                     {crumb.name}
                   </Link>

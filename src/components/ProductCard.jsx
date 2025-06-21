@@ -45,30 +45,26 @@ const ProductCard = ({ product, index }) => {
             alt={product.name}
             className="w-full h-full object-cover aspect-[3/4] transition-transform duration-300 group-hover:scale-105"
           />
-          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <div className="absolute transition-opacity duration-300 opacity-0 top-2 right-2 group-hover:opacity-100">
             <Button
               size="icon"
               variant="ghost"
               onClick={handleToggleWishlist}
-              className="text-foreground bg-white/60 hover:bg-white w-9 h-9 rounded-full backdrop-blur-sm"
+              className="rounded-full text-foreground bg-white/60 hover:bg-white w-9 h-9 backdrop-blur-sm"
               aria-label="Agregar a favoritos"
             >
               <Heart className={`h-4 w-4 transition-all ${isProductInWishlist ? 'text-red-500 fill-current' : ''}`} />
             </Button>
           </div>
         </div>
-        <div className="pt-3 text-left">
+        <div className="pt-1 text-left">
           <h3 className="text-sm font-normal text-foreground">
             {product.name}
           </h3>
           <p className="text-base font-semibold text-foreground mt-0.5">
             UYU {formatPrice(product.price)}
           </p>
-          {product.price > 0 && (
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Hasta 5 cuotas de $ {formatInstallment(product.price / 5)}
-            </p>
-          )}
+       
         </div>
       </Link>
     </motion.div>
