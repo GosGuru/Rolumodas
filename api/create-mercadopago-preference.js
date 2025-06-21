@@ -17,23 +17,24 @@ export default async function handler(req, res) {
       .json({ message: 'Method Not Allowed' });
   }
 
-  const required = [
-    'NEXT_PUBLIC_SUPABASE_URL',
-    'SUPABASE_SERVICE_ROLE_KEY',
-    'MERCADOPAGO_ACCESS_TOKEN',
-  ];
-  required.forEach((n) => {
-    if (!process.env[n]) throw new Error();
-  });
-
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const mpToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
-
-  const supabase = createClient(supabaseUrl, serviceKey);
-  mercadopago.configure({ access_token: mpToken });
-
   try {
+    const required = [
+      'NEXT_PUBLIC_SUPABASE_URL',
+      'SUPABASE_SERVICE_ROLE_KEY',
+      'MERCADOPAGO_ACCESS_TOKEN',
+    ];
+
+    required.forEach((n) => {
+      if (!process.env[n]) throw new Error(`Missing env var: ${n}`);
+    });
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const mpToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
+
+    const supabase = createClient(supabaseUrl, serviceKey);
+    mercadopago.configure({ access_token: mpToken });
+
     const { items = [], shipping_method } = req.body || {};
 
     if (!Array.isArray(items) || items.length === 0) {
@@ -78,9 +79,10 @@ export default async function handler(req, res) {
 
     res.setHeader('Access-Control-Allow-Origin', '*');
     return res.status(200).json({ preferenceId });
+
   } catch (err) {
-    console.error(err);
+    console.error('Server error:', err);
     res.setHeader('Access-Control-Allow-Origin', '*');
-    return res.status(500).json({ message: err.message });
+    return res.status(500).json({ message: err.message || 'Internal error' });
   }
 }
