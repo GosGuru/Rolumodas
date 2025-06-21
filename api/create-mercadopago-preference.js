@@ -11,18 +11,24 @@ export default async function handler(req, res) {
   }
 
   if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST, OPTIONS');
-    return res.status(405).json({ message: 'Method not allowed' });
+    return res
+      .status(405)
+      .setHeader('Allow', 'POST')
+      .json({ message: 'Method Not Allowed' });
   }
+
+  const required = [
+    'NEXT_PUBLIC_SUPABASE_URL',
+    'SUPABASE_SERVICE_ROLE_KEY',
+    'MERCADOPAGO_ACCESS_TOKEN',
+  ];
+  required.forEach((n) => {
+    if (!process.env[n]) throw new Error(`Missing env var: ${n}`);
+  });
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const mpToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
-
-  if (!supabaseUrl || !serviceKey || !mpToken) {
-    console.error('Missing required environment variables');
-    return res.status(500).json({ message: 'Server misconfiguration' });
-  }
 
   const supabase = createClient(supabaseUrl, serviceKey);
   mercadopago.configure({ access_token: mpToken });
@@ -75,6 +81,6 @@ export default async function handler(req, res) {
   } catch (err) {
     console.error(err);
     res.setHeader('Access-Control-Allow-Origin', '*');
-    return res.status(500).json({ message: 'Server error' });
+    return res.status(500).json({ message: err.message });
   }
 }
