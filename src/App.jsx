@@ -26,7 +26,10 @@ import OrderConfirmationPage from '@/pages/OrderConfirmationPage';
 import OrderStatusPage from '@/pages/OrderStatusPage';
 import AdminOrdersPage from '@/pages/AdminOrdersPage';
 import AdminReportsPage from '@/pages/AdminReportsPage';
-import { Analytics } from "@vercel/analytics/next"
+// Import the React variant of Vercel Analytics since this project uses
+// React Router instead of Next.js. The React build doesn't rely on
+// Next.js-specific APIs like `useParams`, which caused build errors.
+import { Analytics } from "@vercel/analytics/react"
 
 function App() {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
