@@ -15,6 +15,14 @@ export const AuthProvider = ({ children }) => {
       if (session) {
         setIsAuthenticated(true);
         setUser(session.user);
+        localStorage.setItem('rolu-admin-session', JSON.stringify(session));
+      } else {
+        const stored = localStorage.getItem('rolu-admin-session');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          setIsAuthenticated(true);
+          setUser(parsed.user);
+        }
       }
       setLoading(false);
     };
@@ -46,7 +54,9 @@ export const AuthProvider = ({ children }) => {
     if (error) {
       return { success: false, error: error.message };
     }
-    
+
+    localStorage.setItem('rolu-admin-session', JSON.stringify(data.session));
+
     return { success: true, data };
   };
 
@@ -54,6 +64,7 @@ export const AuthProvider = ({ children }) => {
     await supabase.auth.signOut();
     setIsAuthenticated(false);
     setUser(null);
+    localStorage.removeItem('rolu-admin-session');
   };
 
   const value = {

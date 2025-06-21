@@ -19,12 +19,41 @@ const CheckoutPage = () => {
   const [paymentMethod, setPaymentMethod] = useState('manual');
   const [preferenceId, setPreferenceId] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [mpInstallments, setMpInstallments] = useState(5);
 
   useEffect(() => {
     if (paymentMethod === 'mp' && !preferenceId && items.length > 0) {
       createPreference();
     }
-  }, [paymentMethod, items]);
+  }, [paymentMethod, items, mpInstallments]);
+
+  useEffect(() => {
+    const savedShip = localStorage.getItem('rolu-checkout-shipping');
+    const savedPay = localStorage.getItem('rolu-checkout-payment');
+    if (savedShip) setShippingMethod(savedShip);
+    if (savedPay) setPaymentMethod(savedPay);
+
+    const fetchInstallments = async () => {
+      const { data } = await supabase
+        .from('site_content')
+        .select('content_value')
+        .eq('content_key', 'mp_max_installments')
+        .single();
+      if (data) {
+        const val = parseInt(data.content_value.value, 10);
+        if (!isNaN(val)) setMpInstallments(val);
+      }
+    };
+    fetchInstallments();
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('rolu-checkout-shipping', shippingMethod);
+  }, [shippingMethod]);
+
+  useEffect(() => {
+    localStorage.setItem('rolu-checkout-payment', paymentMethod);
+  }, [paymentMethod]);
 
   const createPreference = async () => {
     setIsProcessing(true);
@@ -39,6 +68,8 @@ const CheckoutPage = () => {
             quantity: item.quantity,
             price: item.price,
           })),
+          shipping_method: shippingMethod,
+          max_installments: mpInstallments,
         }),
       });
 

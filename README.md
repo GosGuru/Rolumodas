@@ -11,4 +11,8 @@ environment variables in your hosting platform:
   functions.
 
 The function lives at `api/create-mercadopago-preference.js` and is
-called from the checkout page.
+called from the checkout page. It now accepts a `max_installments` value
+so that the admin can limit the number of Mercado Pago installments.
+
+The limit is stored in the `site_content` table with the key
+`mp_max_installments` and can be managed from the admin dashboard.

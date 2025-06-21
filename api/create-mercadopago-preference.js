@@ -40,7 +40,7 @@ export default async function handler(req, res) {
     });
 
     // Tomar datos del body
-    const { items = [], shipping_method } = req.body || {};
+    const { items = [], shipping_method, max_installments } = req.body || {};
 
     if (!Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ message: "Invalid items" });
@@ -62,7 +62,12 @@ export default async function handler(req, res) {
     const preferenceClient = new Preference(mp);
 
     const mpPreference = await preferenceClient.create({
-      body: { items: preferenceItems },
+      body: {
+        items: preferenceItems,
+        payment_methods: {
+          installments: max_installments || 5,
+        },
+      },
     });
 
     const preferenceId = mpPreference.id;
