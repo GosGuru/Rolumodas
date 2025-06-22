@@ -39,19 +39,19 @@ const AdminLogin = () => {
       <Helmet>
         <title>Admin Login - Rolu Modas</title>
       </Helmet>
-      <div className="admin-login-page min-h-screen flex items-center justify-center bg-gray-100 p-4">
+      <div className="flex items-center justify-center min-h-screen p-4 bg-gray-100 admin-login-page">
         <div className="w-full max-w-md">
-          <div className="text-center mb-8">
+          <div className="mb-8 text-center">
             <Link to="/" className="inline-block">
-               <h1 className="text-3xl font-negro text-gray-900">ROLU MODAS</h1>
+               <h1 className="text-3xl text-gray-900 font-negro">ROLU MODAS</h1>
             </Link>
             <h2 className="mt-2 text-xl text-gray-700 font-header-nav">Acceso de Administrador</h2>
           </div>
           
-          <div className="bg-white shadow-lg p-8">
+          <div className="p-8 bg-white shadow-lg">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label htmlFor="email" className="block text-sm font-negro text-gray-700">
+                <label htmlFor="email" className="block text-sm text-gray-700 font-negro">
                   Email
                 </label>
                 <input
@@ -62,13 +62,13 @@ const AdminLogin = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 shadow-sm focus:outline-none focus:ring-black focus:border-black sm:text-sm"
+                  className="block w-full px-3 py-2 mt-1 border border-gray-300 shadow-sm focus:outline-none focus:ring-black focus:border-black sm:text-sm"
                   placeholder="tu@email.com"
                 />
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-negro text-gray-700">
+                <label htmlFor="password" className="block text-sm text-gray-700 font-negro">
                   Contraseña
                 </label>
                 <input
@@ -79,27 +79,27 @@ const AdminLogin = () => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 shadow-sm focus:outline-none focus:ring-black focus:border-black sm:text-sm"
+                  className="block w-full px-3 py-2 mt-1 border border-gray-300 shadow-sm focus:outline-none focus:ring-black focus:border-black sm:text-sm"
                 />
               </div>
 
               {error && (
-                <div className="flex items-center space-x-2 text-sm text-red-600 bg-red-100 p-3">
-                  <AlertCircle className="h-5 w-5" />
+                <div className="flex items-center p-3 space-x-2 text-sm text-red-600 bg-red-100">
+                  <AlertCircle className="w-5 h-5" />
                   <span>{error}</span>
                 </div>
               )}
 
               <div>
-                <Button type="submit" className="w-full flex justify-center py-2 px-4 border border-transparent text-sm font-negro text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black" disabled={loading}>
+                <Button type="submit" className="flex justify-center w-full px-4 py-2 text-sm text-white bg-black border border-transparent font-negro hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black" disabled={loading}>
                   {loading ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       Iniciando...
                     </>
                   ) : (
                     <>
-                      <LogIn className="mr-2 h-4 w-4" />
+                      <LogIn className="w-4 h-4 mr-2" />
                       Iniciar Sesión
                     </>
                   )}
@@ -107,8 +107,8 @@ const AdminLogin = () => {
               </div>
             </form>
           </div>
-           <p className="mt-6 text-center text-xs text-gray-600">
-            <Link to="/" className="font-negro text-black hover:underline">
+           <p className="mt-6 text-xs text-center text-gray-600">
+            <Link to="/" className="text-black font-negro hover:underline">
               Volver a la tienda
             </Link>
           </p>

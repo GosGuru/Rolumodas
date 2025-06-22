@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Heart, Minus, Plus, Loader2, Facebook, MessageCircle, ShoppingCart } from 'lucide-react';
@@ -9,6 +9,8 @@ import { useWishlist } from '@/contexts/WishlistContext';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabaseClient';
 import Breadcrumbs from '@/components/Breadcrumbs';
+import Lightbox from 'yet-another-react-lightbox';
+import 'yet-another-react-lightbox/styles.css';
 
 const ProductPage = () => {
   const { id } = useParams();
@@ -20,6 +22,10 @@ const ProductPage = () => {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [zoomed, setZoomed] = useState(false);
+  const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
+  const imgContainerRef = useRef(null);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -98,10 +104,61 @@ const ProductPage = () => {
     }).format(price);
   };
 
+  // Navegación con flechas de teclado
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowRight') setSelectedImage((prev) => (prev + 1) % (product?.images?.length || 1));
+      if (e.key === 'ArrowLeft') setSelectedImage((prev) => (prev - 1 + (product?.images?.length || 1)) % (product?.images?.length || 1));
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [product]);
+
+  // Swipe para móvil
+  useEffect(() => {
+    const container = imgContainerRef.current;
+    if (!container) return;
+    let startX = null;
+    const onTouchStart = (e) => {
+      startX = e.touches[0].clientX;
+    };
+    const onTouchEnd = (e) => {
+      if (startX === null) return;
+      const endX = e.changedTouches[0].clientX;
+      if (endX - startX > 50) setSelectedImage((prev) => (prev - 1 + (product?.images?.length || 1)) % (product?.images?.length || 1));
+      if (startX - endX > 50) setSelectedImage((prev) => (prev + 1) % (product?.images?.length || 1));
+      startX = null;
+    };
+    container.addEventListener('touchstart', onTouchStart);
+    container.addEventListener('touchend', onTouchEnd);
+    return () => {
+      container.removeEventListener('touchstart', onTouchStart);
+      container.removeEventListener('touchend', onTouchEnd);
+    };
+  }, [product]);
+
+  // Zoom handlers
+  const handleMouseMove = (e) => {
+    if (!zoomed || !imgContainerRef.current) return;
+    const rect = imgContainerRef.current.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setZoomPos({ x, y });
+  };
+
+  const handleTouchMove = (e) => {
+    if (!zoomed || !imgContainerRef.current) return;
+    const rect = imgContainerRef.current.getBoundingClientRect();
+    const touch = e.touches[0];
+    const x = ((touch.clientX - rect.left) / rect.width) * 100;
+    const y = ((touch.clientY - rect.top) / rect.height) * 100;
+    setZoomPos({ x, y });
+  };
+
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8 flex justify-center items-center min-h-[50vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -110,12 +167,12 @@ const ProductPage = () => {
     return (
       <>
         <Breadcrumbs />
-        <div className="container mx-auto px-4 py-8 text-center">
+        <div className="container px-4 py-8 mx-auto text-center">
           <h1 className="text-2xl font-semibold">Producto no encontrado</h1>
-          <p className="text-muted-foreground mt-2">El producto que buscas no existe o no está disponible.</p>
+          <p className="mt-2 text-muted-foreground">El producto que buscas no existe o no está disponible.</p>
           <Link to="/">
             <Button variant="outline" className="mt-6">
-              <ArrowLeft className="h-4 w-4 mr-2" />
+              <ArrowLeft className="w-4 h-4 mr-2" />
               Volver al Inicio
             </Button>
           </Link>
@@ -135,38 +192,93 @@ const ProductPage = () => {
 
       <Breadcrumbs product={product} />
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
+      <div className="container px-4 py-8 mx-auto">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
             className="space-y-4"
           >
-            <div className="aspect-square w-full overflow-hidden bg-secondary">
+            <div
+              ref={imgContainerRef}
+              className="relative w-full overflow-hidden aspect-square bg-secondary group"
+              tabIndex={0}
+              style={{ cursor: zoomed ? 'zoom-out' : 'zoom-in' }}
+              onClick={() => setLightboxOpen(true)}
+              onMouseEnter={() => setZoomed(true)}
+              onMouseLeave={() => setZoomed(false)}
+              onMouseMove={handleMouseMove}
+              onTouchStart={() => setZoomed(true)}
+              onTouchEnd={() => setZoomed(false)}
+              onTouchMove={handleTouchMove}
+            >
               <img
                 src={product.images[selectedImage]}
                 alt={product.name}
-                className="w-full h-full object-cover"
+                className={`w-full h-full object-cover transition duration-300 ${zoomed ? 'pointer-events-none' : ''}`}
+                style={zoomed ? {
+                  transform: `scale(2)`,
+                  transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
+                  transition: 'transform 0.2s cubic-bezier(.4,2,.6,1)',
+                  zIndex: 20,
+                } : {}}
+                draggable={false}
               />
+              {/* Flechas navegación */}
+              {product.images.length > 1 && (
+                <>
+                  <button
+                    className="absolute z-30 p-2 -translate-y-1/2 rounded-full shadow left-2 top-1/2 bg-white/70 hover:bg-white"
+                    onClick={e => { e.stopPropagation(); setSelectedImage((prev) => (prev - 1 + product.images.length) % product.images.length); }}
+                    aria-label="Imagen anterior"
+                  >
+                    <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
+                  </button>
+                  <button
+                    className="absolute z-30 p-2 -translate-y-1/2 rounded-full shadow right-2 top-1/2 bg-white/70 hover:bg-white"
+                    onClick={e => { e.stopPropagation(); setSelectedImage((prev) => (prev + 1) % product.images.length); }}
+                    aria-label="Imagen siguiente"
+                  >
+                    <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+                  </button>
+                </>
+              )}
             </div>
+            {/* Miniaturas */}
             {product.images.length > 1 && (
               <div className="grid grid-cols-5 gap-2">
                 {product.images.map((image, index) => (
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
-                    className={`aspect-square w-full overflow-hidden border-2 transition-colors ${
-                      selectedImage === index ? 'border-primary' : 'border-transparent hover:border-border'
-                    }`}
+                    className={`aspect-square w-full overflow-hidden border-2 transition-colors ${selectedImage === index ? 'border-primary' : 'border-transparent hover:border-border'}`}
                   >
                     <img
                       src={image}
                       alt={`${product.name} ${index + 1}`}
-                      className="w-full h-full object-cover"
+                      className="object-cover w-full h-full"
                     />
                   </button>
                 ))}
+              </div>
+            )}
+            {/* Lightbox con fondo blur discreto */}
+            {lightboxOpen && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center" style={{backdropFilter: 'blur(8px)', background: 'rgba(255,255,255,0.15)'}}>
+                <Lightbox
+                  open={lightboxOpen}
+                  close={() => setLightboxOpen(false)}
+                  slides={product.images.map((img) => ({ src: img }))}
+                  index={selectedImage}
+                  on={{
+                    view: ({ index }) => setSelectedImage(index),
+                  }}
+                  render={{
+                    // Elimina overlay opaco por defecto
+                    backdrop: () => null,
+                  }}
+                />
               </div>
             )}
           </motion.div>
@@ -178,13 +290,17 @@ const ProductPage = () => {
             className="space-y-6"
           >
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-foreground mt-1">{product.name}</h1>
-              <div className="text-3xl font-bold text-foreground mt-4">
+              <h1 className="mb-2 text-2xl font-bold md:text-3xl text-foreground">{product?.name}</h1>
+              {/* Descripción corta */}
+              {product?.short_description && (
+                <p className="mb-2 text-base text-gray-500 dark:text-gray-300">{product.short_description}</p>
+              )}
+              <div className="mt-4 text-3xl font-bold text-foreground">
                 {formatPrice(product.price)}
               </div>
             </div>
 
-            <p className="text-muted-foreground leading-relaxed text-base">{product.description}</p>
+            <p className="text-base leading-relaxed text-muted-foreground">{product.description}</p>
             
             <div className="flex items-center space-x-3">
               <h3 className="text-sm font-medium text-foreground">CANTIDAD:</h3>
@@ -195,26 +311,26 @@ const ProductPage = () => {
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   className="w-10 h-10"
                 >
-                  <Minus className="h-4 w-4"/>
+                  <Minus className="w-4 h-4"/>
                 </Button>
-                <span className="w-12 text-center font-semibold text-lg">{quantity}</span>
+                <span className="w-12 text-lg font-semibold text-center">{quantity}</span>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => setQuantity(quantity + 1)}
                   className="w-10 h-10"
                 >
-                  <Plus className="h-4 w-4"/>
+                  <Plus className="w-4 h-4"/>
                 </Button>
               </div>
             </div>
 
-            <div className="space-y-3 pt-2">
+            <div className="pt-2 space-y-3">
               <div className="flex space-x-2">
                 <Button
                   onClick={handleBuyNow}
                   size="lg"
-                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
+                  className="w-full font-semibold bg-primary text-primary-foreground hover:bg-primary/90"
                   disabled={!product.inStock}
                 >
                   {product.inStock ? 'COMPRAR AHORA' : 'AGOTADO'}
@@ -226,7 +342,7 @@ const ProductPage = () => {
                   onClick={handleAddToCart}
                   disabled={!product.inStock}
                 >
-                  <ShoppingCart className="h-5 w-5" />
+                  <ShoppingCart className="w-5 h-5" />
                 </Button>
               </div>
               <Button 
@@ -240,17 +356,25 @@ const ProductPage = () => {
               </Button>
             </div>
 
-            <div className="border-t pt-6">
-              <h3 className="text-sm font-medium text-foreground mb-3 uppercase">Compartir</h3>
+            <div className="pt-6 border-t">
+              <h3 className="mb-3 text-sm font-medium uppercase text-foreground">Compartir</h3>
               <div className="flex space-x-2">
                  <Button variant="outline" size="icon" onClick={() => shareOn('whatsapp')}>
-                   <MessageCircle className="h-5 w-5"/>
+                   <MessageCircle className="w-5 h-5"/>
                  </Button>
                  <Button variant="outline" size="icon" onClick={() => shareOn('facebook')}>
-                   <Facebook className="h-5 w-5"/>
+                   <Facebook className="w-5 h-5"/>
                  </Button>
               </div>
             </div>
+
+            {/* Descripción larga */}
+            {product?.long_description && (
+              <div className="p-4 mt-6 prose-sm prose bg-gray-100 rounded-lg dark:prose-invert max-w-none dark:bg-gray-900/40">
+                <h2 className="mb-2 text-lg font-semibold text-foreground">Descripción</h2>
+                <p style={{whiteSpace: 'pre-line'}}>{product.long_description}</p>
+              </div>
+            )}
           </motion.div>
         </div>
       </div>

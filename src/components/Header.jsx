@@ -1,15 +1,16 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { ShoppingCart, Heart, User, Search, Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '@/contexts/CartContext';
 import { useWishlist } from '@/contexts/WishlistContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 
 const Header = ({ openSearchModal }) => {
   const { toggleDrawer, getTotalItems } = useCart();
   const { wishlistItems } = useWishlist();
+  const { isAuthenticated, user, logout } = useAuth();
   const totalCartItems = getTotalItems();
   const totalWishlistItems = wishlistItems.length;
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -68,11 +69,6 @@ const Header = ({ openSearchModal }) => {
             <Button variant="ghost" size="icon" onClick={openSearchModal} className="hover:bg-white/20 hover:text-white">
               <Search className="w-5 h-5" />
             </Button>
-            <Link to="/admin/login">
-              <Button variant="ghost" size="icon" className="hidden hover:bg-white/20 hover:text-white md:inline-flex">
-                <User className="w-5 h-5" />
-              </Button>
-            </Link>
             <Link to="/favoritos">
               <Button variant="ghost" size="icon" className="relative hover:bg-white/20 hover:text-white">
                 <Heart className="w-5 h-5" />
@@ -104,7 +100,18 @@ const Header = ({ openSearchModal }) => {
                 </motion.span>
               )}
             </Button>
-            
+            {/* Botón de perfil siempre visible */}
+            <Link to={isAuthenticated && user ? "/admin" : "/admin/login"}>
+              <Button variant="ghost" size="icon" className="hover:bg-white/20 hover:text-white" aria-label="Perfil">
+                <User className="w-5 h-5" />
+              </Button>
+            </Link>
+            {/* Botón de cerrar sesión solo si está autenticado */}
+            {isAuthenticated && user && (
+              <Button variant="ghost" size="icon" onClick={logout} className="hover:bg-white/20 hover:text-white" aria-label="Cerrar sesión">
+                <X className="w-5 h-5" />
+              </Button>
+            )}
             <Button 
               id="mobile-menu-button"
               variant="ghost" 

@@ -9,6 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
     "@emotion/is-prop-valid": "^1.2.1",
     "@mercadopago/sdk-react": "^0.0.19",
     "@radix-ui/react-accordion": "^1.1.2",
@@ -35,7 +37,8 @@
     "react-helmet": "^6.1.0",
     "react-router-dom": "^6.16.0",
     "tailwind-merge": "^1.1.4",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "yet-another-react-lightbox": "^3.23.3"
   },
   "devDependencies": {
     "@babel/generator": "^7.27.0",

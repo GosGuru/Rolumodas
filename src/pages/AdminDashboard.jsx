@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { LogOut, Loader2, Package, BarChart2, Settings, ShoppingBag } from 'lucide-react';
@@ -199,10 +198,7 @@ const AdminDashboard = () => {
         <header className="bg-gray-900 shadow-sm border-b border-gray-700 sticky top-0 z-40">
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-negro">Dashboard</h1>
-                <p className="text-gray-400 text-sm">Bienvenido, {user?.email || 'Admin'}</p>
-              </div>
+              <h1 className="text-2xl font-negro">Dashboard</h1>
               <Button onClick={logout} variant="outline" className="flex items-center space-x-2 text-white border-gray-600 bg-gray-800 hover:bg-gray-700 hover:text-white">
                 <LogOut className="h-4 w-4" />
                 <span>Cerrar Sesión</span>

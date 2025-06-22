@@ -21,6 +21,15 @@ const CheckoutPage = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [mpInstallments, setMpInstallments] = useState(5);
 
+  // NUEVO: Estado para datos personales y agencia
+  const [customerName, setCustomerName] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [agencyName, setAgencyName] = useState("");
+  const [agencyAddress, setAgencyAddress] = useState("");
+  const [agencyCity, setAgencyCity] = useState("");
+  const [agencyExtra, setAgencyExtra] = useState("");
+
   useEffect(() => {
     if (paymentMethod === "mp" && !preferenceId && items.length > 0) {
       createPreference();
@@ -125,15 +134,72 @@ const CheckoutPage = () => {
     }).format(price);
   };
 
-  const handlePlaceOrder = () => {
-    const orderDetails = {
-      items,
-      total: getTotalPrice(),
-      shipping: shippingMethod,
-      orderNumber: `ROLU-${Date.now()}`,
-    };
+  const handlePlaceOrder = async () => {
+    // Validación básica
+    if (!customerName || !customerEmail) {
+      toast({
+        title: "Completa tus datos",
+        description: "Nombre y email son obligatorios.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (
+      shippingMethod === "agency" &&
+      (!agencyName || !agencyAddress || !agencyCity)
+    ) {
+      toast({
+        title: "Completa los datos de agencia",
+        description:
+          "Agencia, dirección y ciudad son obligatorios.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsProcessing(true);
+    // Guardar pedido en Supabase (ajusta según tu lógica)
+    const { data, error } = await supabase.from('orders').insert([
+      {
+        customer_name: customerName,
+        customer_email: customerEmail,
+        customer_phone: customerPhone,
+        shipping_method: shippingMethod,
+        agency_name: shippingMethod === 'agency' ? agencyName : null,
+        agency_address: shippingMethod === 'agency' ? agencyAddress : null,
+        agency_city: shippingMethod === 'agency' ? agencyCity : null,
+        agency_extra: shippingMethod === 'agency' ? agencyExtra : null,
+        items,
+        total_amount: getTotalPrice(), // <-- CAMBIO AQUÍ
+        payment_method: paymentMethod,
+        // order_number: generado por trigger o función en Supabase
+      }
+    ]);
+    setIsProcessing(false);
+    if (error) {
+      toast({
+        title: "Error al guardar el pedido",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
     clearCart();
-    navigate("/orden-confirmada", { state: { order: orderDetails } });
+    navigate("/orden-confirmada", {
+      state: {
+        order: {
+          customerName,
+          customerEmail,
+          customerPhone,
+          shippingMethod,
+          agencyName,
+          agencyAddress,
+          agencyCity,
+          agencyExtra,
+          items,
+          total: getTotalPrice(),
+        },
+      },
+    });
   };
 
   return (
@@ -152,13 +218,65 @@ const CheckoutPage = () => {
             Finalizar Compra
           </h1>
         </motion.div>
-
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             className="space-y-8"
           >
+            {/* NUEVO: Datos personales */}
+            <div className="p-6 mb-4 space-y-4 bg-gray-100 rounded-lg dark:bg-gray-900/40">
+              <h2 className="mb-2 text-xl font-semibold">Datos personales</h2>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label
+                    htmlFor="customerName"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-200"
+                  >
+                    Nombre y Apellido *
+                  </label>
+                  <input
+                    id="customerName"
+                    type="text"
+                    required
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    className="w-full px-3 py-2 text-gray-900 bg-white border border-gray-300 rounded-md dark:border-gray-700 dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="customerEmail"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-200"
+                  >
+                    Email *
+                  </label>
+                  <input
+                    id="customerEmail"
+                    type="email"
+                    required
+                    value={customerEmail}
+                    onChange={(e) => setCustomerEmail(e.target.value)}
+                    className="w-full px-3 py-2 text-gray-900 bg-white border border-gray-300 rounded-md dark:border-gray-700 dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="customerPhone"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-200"
+                  >
+                    Teléfono
+                  </label>
+                  <input
+                    id="customerPhone"
+                    type="tel"
+                    value={customerPhone}
+                    onChange={(e) => setCustomerPhone(e.target.value)}
+                    className="w-full px-3 py-2 text-gray-900 bg-white border border-gray-300 rounded-md dark:border-gray-700 dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+              </div>
+            </div>
             <div className="space-y-4">
               <h2 className="flex items-center text-2xl font-semibold">
                 <Truck className="w-6 h-6 mr-3" />
@@ -236,6 +354,78 @@ const CheckoutPage = () => {
                 )}
               </AnimatePresence>
             </div>
+
+            {/* NUEVO: Inputs de agencia si corresponde */}
+            {shippingMethod === "agency" && (
+              <div className="p-6 mb-4 space-y-4 bg-gray-100 rounded-lg dark:bg-gray-900/40">
+                <h2 className="mb-2 text-xl font-semibold">Datos de la Agencia</h2>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div>
+                    <label
+                      htmlFor="agencyName"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-200"
+                    >
+                      Agencia *
+                    </label>
+                    <input
+                      id="agencyName"
+                      type="text"
+                      required={shippingMethod === "agency"}
+                      value={agencyName}
+                      onChange={(e) => setAgencyName(e.target.value)}
+                      className="w-full px-3 py-2 text-gray-900 bg-white border border-gray-300 rounded-md dark:border-gray-700 dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="agencyAddress"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-200"
+                    >
+                      Dirección *
+                    </label>
+                    <input
+                      id="agencyAddress"
+                      type="text"
+                      required={shippingMethod === "agency"}
+                      value={agencyAddress}
+                      onChange={(e) => setAgencyAddress(e.target.value)}
+                      className="w-full px-3 py-2 text-gray-900 bg-white border border-gray-300 rounded-md dark:border-gray-700 dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="agencyCity"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-200"
+                    >
+                      Ciudad *
+                    </label>
+                    <input
+                      id="agencyCity"
+                      type="text"
+                      required={shippingMethod === "agency"}
+                      value={agencyCity}
+                      onChange={(e) => setAgencyCity(e.target.value)}
+                      className="w-full px-3 py-2 text-gray-900 bg-white border border-gray-300 rounded-md dark:border-gray-700 dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="agencyExtra"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-200"
+                    >
+                      Detalles adicionales
+                    </label>
+                    <input
+                      id="agencyExtra"
+                      type="text"
+                      value={agencyExtra}
+                      onChange={(e) => setAgencyExtra(e.target.value)}
+                      className="w-full px-3 py-2 text-gray-900 bg-white border border-gray-300 rounded-md dark:border-gray-700 dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </motion.div>
 
           <motion.div
