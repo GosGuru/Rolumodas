@@ -4,20 +4,37 @@ import { Button } from '@/components/ui/button';
 import { UploadCloud, X, Star, Plus, Trash2 } from 'lucide-react';
 
 const ProductForm = ({ formData, setFormData, handleSubmit, resetForm, editingProduct, categories }) => {
+  // Validación defensiva: asegurar que formData siempre tenga un valor por defecto
+  const safeFormData = formData || {
+    name: '',
+    price: '',
+    description: '',
+    category_id: '',
+    images: [],
+    stock: '',
+    visible: true,
+    variants: [],
+    short_description: '',
+    long_description: '',
+    is_trending: false
+  };
+
+  // Validación defensiva: asegurar que editingProduct existe antes de acceder a sus propiedades
+  const safeEditingProduct = editingProduct || {};
+
   const [imagePreviews, setImagePreviews] = useState([]);
 
   const updatePreviews = useCallback(() => {
-    if (!formData.images || formData.images.length === 0) {
+    if (!safeFormData.images || safeFormData.images.length === 0) {
       setImagePreviews([]);
       return;
     }
 
-    const newPreviews = formData.images.map(image => {
+    const newPreviews = safeFormData.images.map(image => {
       if (typeof image === 'string') {
-        return image;
-      }
-      if (image instanceof File) {
-        return URL.createObjectURL(image);
+        return { url: image, file: null };
+      } else if (image instanceof File) {
+        return { url: URL.createObjectURL(image), file: image };
       }
       return null;
     }).filter(Boolean);
@@ -26,12 +43,12 @@ const ProductForm = ({ formData, setFormData, handleSubmit, resetForm, editingPr
 
     return () => {
       newPreviews.forEach(preview => {
-        if (preview.startsWith('blob:')) {
-          URL.revokeObjectURL(preview);
+        if (preview.url.startsWith('blob:')) {
+          URL.revokeObjectURL(preview.url);
         }
       });
     };
-  }, [formData.images]);
+  }, [safeFormData.images]);
 
   useEffect(() => {
     const cleanup = updatePreviews();
@@ -64,7 +81,7 @@ const ProductForm = ({ formData, setFormData, handleSubmit, resetForm, editingPr
   };
 
   const handleVariantChange = (variantIndex, field, value) => {
-    const newVariants = [...formData.variants];
+    const newVariants = [...(safeFormData.variants || [])];
     newVariants[variantIndex][field] = value;
     setFormData(prev => ({ ...prev, variants: newVariants }));
   };
@@ -72,12 +89,12 @@ const ProductForm = ({ formData, setFormData, handleSubmit, resetForm, editingPr
   const addVariant = () => {
     setFormData(prev => ({
       ...prev,
-      variants: [...prev.variants, { name: '', options: '' }]
+      variants: [...(prev.variants || []), { name: '', options: '' }]
     }));
   };
 
   const removeVariant = (variantIndex) => {
-    const newVariants = formData.variants.filter((_, index) => index !== variantIndex);
+    const newVariants = (safeFormData.variants || []).filter((_, index) => index !== variantIndex);
     setFormData(prev => ({ ...prev, variants: newVariants }));
   };
 
@@ -99,9 +116,9 @@ const ProductForm = ({ formData, setFormData, handleSubmit, resetForm, editingPr
               id="name"
               name="name"
               required
-              value={formData.name}
+              value={safeFormData.name}
               onChange={handleInputChange}
-              className="w-full px-3 py-3 text-white placeholder-gray-400 bg-gray-800 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-white text-base"
+              className="bg-[#23272f] text-white border border-gray-700 focus:border-blue-500 focus:ring-blue-500 placeholder-gray-400 rounded-lg px-3 py-2 w-full"
               autoComplete="off"
             />
           </div>
@@ -116,9 +133,9 @@ const ProductForm = ({ formData, setFormData, handleSubmit, resetForm, editingPr
               required
               min="0"
               step="0.01"
-              value={formData.price}
+              value={safeFormData.price}
               onChange={handleInputChange}
-              className="w-full px-3 py-3 text-white placeholder-gray-400 bg-gray-800 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-white text-base"
+              className="bg-[#23272f] text-white border border-gray-700 focus:border-blue-500 focus:ring-blue-500 placeholder-gray-400 rounded-lg px-3 py-2 w-full"
               inputMode="decimal"
             />
           </div>
@@ -130,9 +147,9 @@ const ProductForm = ({ formData, setFormData, handleSubmit, resetForm, editingPr
               id="category_id"
               name="category_id"
               required
-              value={formData.category_id}
+              value={safeFormData.category_id}
               onChange={handleInputChange}
-              className="w-full px-3 py-3 text-white bg-gray-800 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-white text-base"
+              className="bg-[#23272f] text-white border border-gray-700 focus:border-blue-500 focus:ring-blue-500 placeholder-gray-400 rounded-lg px-3 py-2 w-full"
             >
               <option value="">Seleccionar categoría</option>
               {categories.map(cat => (
@@ -150,9 +167,9 @@ const ProductForm = ({ formData, setFormData, handleSubmit, resetForm, editingPr
               name="stock"
               required
               min="0"
-              value={formData.stock}
+              value={safeFormData.stock}
               onChange={handleInputChange}
-              className="w-full px-3 py-3 text-white placeholder-gray-400 bg-gray-800 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-white text-base"
+              className="bg-[#23272f] text-white border border-gray-700 focus:border-blue-500 focus:ring-blue-500 placeholder-gray-400 rounded-lg px-3 py-2 w-full"
               inputMode="numeric"
             />
           </div>
@@ -168,13 +185,13 @@ const ProductForm = ({ formData, setFormData, handleSubmit, resetForm, editingPr
             name="short_description"
             rows={2}
             maxLength={160}
-            value={formData.short_description || ''}
+            value={safeFormData.short_description || ''}
             onChange={handleInputChange}
-            className="w-full px-3 py-2 text-white placeholder-gray-400 bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-white"
+            className="bg-[#23272f] text-white border border-gray-700 focus:border-blue-500 focus:ring-blue-500 placeholder-gray-400 rounded-lg px-3 py-2 w-full"
             placeholder="Ej: Remera oversize de algodón premium. Ideal para el día a día."
           />
           <div className="mt-1 text-xs text-right text-gray-400">
-            {formData.short_description?.length || 0}/160
+            {safeFormData.short_description?.length || 0}/160
           </div>
         </div>
 
@@ -187,9 +204,9 @@ const ProductForm = ({ formData, setFormData, handleSubmit, resetForm, editingPr
             id="long_description"
             name="long_description"
             rows={5}
-            value={formData.long_description || ''}
+            value={safeFormData.long_description || ''}
             onChange={handleInputChange}
-            className="w-full px-3 py-2 text-white placeholder-gray-400 bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-white"
+            className="bg-[#23272f] text-white border border-gray-700 focus:border-blue-500 focus:ring-blue-500 placeholder-gray-400 rounded-lg px-3 py-2 w-full"
             placeholder="Agrega detalles, materiales, cuidados, inspiración, etc."
           />
         </div>
@@ -203,7 +220,7 @@ const ProductForm = ({ formData, setFormData, handleSubmit, resetForm, editingPr
               {imagePreviews.map((preview, index) => (
                 <div key={index} className="relative group aspect-square">
                   <img 
-                    src={preview}
+                    src={preview.url}
                     alt={`Vista previa ${index + 1}`}
                     className="object-cover w-full h-full border border-gray-600"
                   />
@@ -221,9 +238,9 @@ const ProductForm = ({ formData, setFormData, handleSubmit, resetForm, editingPr
             </div>
             <label
               htmlFor="images"
-              className="flex flex-col items-center justify-center w-full px-6 pt-5 pb-6 transition-colors bg-gray-800 border-2 border-gray-600 border-dashed cursor-pointer hover:border-gray-500 hover:bg-gray-700/80"
+              className="flex flex-col items-center justify-center w-full px-6 pt-5 pb-6 transition-colors bg-gray-800 border-2 border-gray-600 border-dashed cursor-pointer hover:border-black hover:bg-black group"
             >
-              <UploadCloud className="w-12 h-12 mb-2 text-gray-400" />
+              <UploadCloud className="w-12 h-12 mb-2 text-black group-hover:text-white transition-colors" />
               <p className="text-sm text-gray-400">
                 <span className="text-gray-300 font-negro">Haz clic para subir</span> o arrastra y suelta
               </p>
@@ -243,7 +260,7 @@ const ProductForm = ({ formData, setFormData, handleSubmit, resetForm, editingPr
 
         <div className="pt-4 space-y-4 border-t border-gray-700">
           <h3 className="text-gray-200 text-md font-negro">Variantes del Producto (Talla, Color, etc.)</h3>
-          {formData.variants && formData.variants.map((variant, index) => (
+          {safeFormData.variants && safeFormData.variants.map((variant, index) => (
             <div key={index} className="flex items-end gap-4 p-3 border border-gray-700 bg-gray-800/50">
               <div className="flex-grow">
                 <label className="block mb-1 text-xs text-gray-400 font-negro">Nombre de la Variante (ej. Talla)</label>
@@ -252,7 +269,7 @@ const ProductForm = ({ formData, setFormData, handleSubmit, resetForm, editingPr
                   value={variant.name}
                   onChange={(e) => handleVariantChange(index, 'name', e.target.value)}
                   placeholder="Talla"
-                  className="w-full px-3 py-2 text-sm text-white placeholder-gray-400 bg-gray-700 border border-gray-600 focus:outline-none focus:ring-1 focus:ring-white"
+                  className="bg-[#23272f] text-white border border-gray-700 focus:border-blue-500 focus:ring-blue-500 placeholder-gray-400 rounded-lg px-3 py-2 w-full"
                 />
               </div>
               <div className="flex-grow">
@@ -262,7 +279,7 @@ const ProductForm = ({ formData, setFormData, handleSubmit, resetForm, editingPr
                   value={variant.options}
                   onChange={(e) => handleVariantChange(index, 'options', e.target.value)}
                   placeholder="S, M, L, XL"
-                  className="w-full px-3 py-2 text-sm text-white placeholder-gray-400 bg-gray-700 border border-gray-600 focus:outline-none focus:ring-1 focus:ring-white"
+                  className="bg-[#23272f] text-white border border-gray-700 focus:border-blue-500 focus:ring-blue-500 placeholder-gray-400 rounded-lg px-3 py-2 w-full"
                 />
               </div>
               <Button type="button" variant="destructive" size="icon" onClick={() => removeVariant(index)}>
@@ -270,7 +287,7 @@ const ProductForm = ({ formData, setFormData, handleSubmit, resetForm, editingPr
               </Button>
             </div>
           ))}
-          <Button type="button" variant="outline" onClick={addVariant} className="text-sm text-white border-gray-500 hover:bg-gray-700">
+          <Button type="button" onClick={addVariant} className="text-sm bg-black text-white border border-gray-700 hover:bg-white hover:text-black hover:border-black flex items-center gap-2 px-4 py-2 mt-2 transition-colors">
             <Plus className="w-4 h-4 mr-2" />
             Añadir Variante
           </Button>
@@ -282,7 +299,7 @@ const ProductForm = ({ formData, setFormData, handleSubmit, resetForm, editingPr
               type="checkbox"
               id="visible"
               name="visible"
-              checked={formData.visible}
+              checked={safeFormData.visible}
               onChange={handleInputChange}
               className="w-4 h-4 text-indigo-500 bg-gray-700 border-gray-600 focus:ring-indigo-600"
             />
@@ -295,7 +312,7 @@ const ProductForm = ({ formData, setFormData, handleSubmit, resetForm, editingPr
               type="checkbox"
               id="is_trending"
               name="is_trending"
-              checked={formData.is_trending}
+              checked={safeFormData.is_trending}
               onChange={handleInputChange}
               className="w-4 h-4 text-yellow-500 bg-gray-700 border-gray-600 focus:ring-yellow-600"
             />
@@ -306,10 +323,10 @@ const ProductForm = ({ formData, setFormData, handleSubmit, resetForm, editingPr
           </div>
         </div>
         <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-4">
-          <Button type="submit" className="w-full text-black bg-white hover:bg-gray-300 font-negro sm:w-auto">
-            {editingProduct ? 'Actualizar' : 'Crear'} Producto
+          <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+            {safeEditingProduct.id ? 'Actualizar' : 'Crear'} Producto
           </Button>
-          <Button type="button" variant="outline" onClick={resetForm} className="w-full text-white border-gray-500 font-negro hover:bg-gray-700 sm:w-auto">
+          <Button type="button" variant="outline" onClick={resetForm} className="w-full bg-black text-white border-gray-500 font-negro hover:bg-gray-700 sm:w-auto">
             Cancelar
           </Button>
         </div>

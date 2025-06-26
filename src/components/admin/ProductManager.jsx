@@ -10,11 +10,21 @@ const ProductManager = ({ products, categories, formatPrice, submitProduct, dele
   const [showProductForm, setShowProductForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [productFormData, setProductFormData] = useState({
-    name: '', price: '', description: '', category_id: '', images: [], stock: '', visible: true
+    name: '', 
+    price: '', 
+    description: '', 
+    category_id: '', 
+    images: [], 
+    stock: '', 
+    visible: true,
+    variants: [],
+    short_description: '',
+    long_description: '',
+    is_trending: false
   });
 
   const resetProductForm = () => {
-    setProductFormData({ name: '', price: '', description: '', category_id: '', images: [], stock: '', visible: true });
+    setProductFormData({ name: '', price: '', description: '', category_id: '', images: [], stock: '', visible: true, variants: [], short_description: '', long_description: '', is_trending: false });
     setEditingProduct(null);
     setShowProductForm(false);
   };
@@ -29,13 +39,17 @@ const ProductManager = ({ products, categories, formatPrice, submitProduct, dele
 
   const handleEditProduct = (product) => {
     setProductFormData({
-      name: product.name,
-      price: product.price.toString(),
+      name: product.name || '',
+      price: product.price?.toString() || '',
       description: product.description || '',
-      category_id: product.categories.id.toString(),
+      category_id: product.categories?.id?.toString() || '',
       images: product.images || [],
-      stock: product.stock.toString(),
-      visible: product.visible ?? true
+      stock: product.stock?.toString() || '',
+      visible: product.visible ?? true,
+      variants: product.variants || [],
+      short_description: product.short_description || '',
+      long_description: product.long_description || '',
+      is_trending: product.is_trending || false
     });
     setEditingProduct(product);
     setShowProductForm(true);
@@ -64,12 +78,12 @@ const ProductManager = ({ products, categories, formatPrice, submitProduct, dele
                 placeholder="Buscar productos..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-3 py-2 border border-gray-600 bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-white text-sm"
+                className="w-full pl-10 pr-3 py-2 border border-gray-700 bg-[#23272f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               />
             </div>
             <Button
               onClick={() => { resetProductForm(); setShowProductForm(true); }}
-              className="bg-white text-black hover:bg-gray-300 flex items-center justify-center space-x-2 text-sm px-3 py-2 sm:px-4"
+              className="bg-blue-600 text-white hover:bg-blue-700 flex items-center justify-center space-x-2 text-sm px-3 py-2 sm:px-4"
             >
               <Plus className="h-4 w-4" />
               <span>Nuevo Producto</span>

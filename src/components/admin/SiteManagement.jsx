@@ -183,7 +183,7 @@ const SiteManagement = () => {
                 Seleccionar Nueva Imagen
               </Button>
               <Button
-                className="w-full text-black bg-white hover:bg-gray-300"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                 onClick={handleSaveHero}
                 disabled={uploading || !newHeroImageFile}
               >

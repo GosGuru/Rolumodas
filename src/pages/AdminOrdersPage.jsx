@@ -75,6 +75,18 @@ const AdminOrdersPage = () => {
     }
   };
 
+  const handleDeleteAllOrders = async () => {
+    if (!window.confirm('¿Seguro que deseas eliminar TODOS los pedidos? Esta acción no se puede deshacer.')) return;
+    const { error } = await supabase.from('orders').delete().neq('id', null);
+    if (error) {
+      toast({ title: 'Error', description: 'No se pudieron eliminar los pedidos.', variant: 'destructive' });
+    } else {
+      toast({ title: 'Pedidos eliminados', description: 'Todos los pedidos fueron eliminados correctamente.' });
+      fetchOrders();
+      setSelectedOrder(null);
+    }
+  };
+
   const formatPrice = (price) => {
     return new Intl.NumberFormat('es-UY', { style: 'currency', currency: 'UYU' }).format(price);
   };
@@ -105,15 +117,24 @@ const AdminOrdersPage = () => {
       <div className="p-6 text-white bg-gray-900 border border-gray-700 shadow-sm">
         <div className="flex flex-col mb-6 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="mb-4 text-2xl font-bold sm:mb-0">Gestión de Pedidos</h2>
-          <div className="relative">
-            <Search className="absolute w-4 h-4 text-gray-400 transform -translate-y-1/2 left-3 top-1/2" />
-            <input
-              type="text"
-              placeholder="Buscar por N°, cliente o email..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full py-2 pl-10 pr-3 text-sm text-white placeholder-gray-400 bg-gray-800 border border-gray-600 sm:w-64 focus:outline-none focus:ring-1 focus:ring-white"
-            />
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Search className="absolute w-4 h-4 text-gray-400 transform -translate-y-1/2 left-3 top-1/2" />
+              <input
+                type="text"
+                placeholder="Buscar por N°, cliente o email..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full py-2 pl-10 pr-3 text-sm text-white placeholder-gray-400 bg-gray-800 border border-gray-600 sm:w-64 focus:outline-none focus:ring-1 focus:ring-white"
+              />
+            </div>
+            <Button
+              onClick={handleDeleteAllOrders}
+              className="ml-4 bg-red-600 hover:bg-red-700 text-white font-bold px-4 py-2 rounded-lg shadow-sm"
+              title="Eliminar todos los pedidos"
+            >
+              Eliminar todos
+            </Button>
           </div>
         </div>
 

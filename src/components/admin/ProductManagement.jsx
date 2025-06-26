@@ -17,13 +17,23 @@ const ProductManagement = ({
   const [showProductForm, setShowProductForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [productFormData, setProductFormData] = useState({
-    name: '', price: '', description: '', category_id: '', images: [], stock: '', visible: true
+    name: '', 
+    price: '', 
+    description: '', 
+    category_id: '', 
+    images: [], 
+    stock: '', 
+    visible: true,
+    variants: [],
+    short_description: '',
+    long_description: '',
+    is_trending: false
   });
   const [categoryFilter, setCategoryFilter] = useState('');
   const [stockFilter, setStockFilter] = useState('');
 
   const resetProductForm = () => {
-    setProductFormData({ name: '', price: '', description: '', category_id: '', images: [], stock: '', visible: true });
+    setProductFormData({ name: '', price: '', description: '', category_id: '', images: [], stock: '', visible: true, variants: [], short_description: '', long_description: '', is_trending: false });
     setEditingProduct(null);
     setShowProductForm(false);
   };
@@ -34,13 +44,17 @@ const ProductManagement = ({
 
   const handleEditProduct = (product) => {
     setProductFormData({
-      name: product.name,
-      price: product.price.toString(),
+      name: product.name || '',
+      price: product.price?.toString() || '',
       description: product.description || '',
       category_id: product.category_id?.toString() || '',
       images: product.images || [],
       stock: product.stock?.toString() || '',
-      visible: product.visible ?? true
+      visible: product.visible ?? true,
+      variants: product.variants || [],
+      short_description: product.short_description || '',
+      long_description: product.long_description || '',
+      is_trending: product.is_trending || false
     });
     setEditingProduct(product);
     setShowProductForm(true);
@@ -64,56 +78,54 @@ const ProductManagement = ({
       transition={{ duration: 0.5 }}
       className="bg-white/5 rounded-xl p-4 shadow-md"
     >
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
-        <h2 className="text-lg font-bold text-white mb-2 sm:mb-0">Gestión de Productos</h2>
-        <div className="flex flex-col gap-2 w-full sm:w-auto sm:flex-row sm:items-center">
-          <div className="flex gap-2 w-full">
-            <input
-              type="text"
-              placeholder="Buscar productos..."
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              className="flex-1 px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <Button
-              onClick={() => { setShowProductForm(true); setEditingProduct(null); }}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm"
-              size="sm"
-            >
-              <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">Nuevo Producto</span>
-            </Button>
-          </div>
-          <div className="flex gap-2 w-full sm:w-auto">
-            <select
-              value={categoryFilter}
-              onChange={e => setCategoryFilter(e.target.value)}
-              className="px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto"
-            >
-              <option value="">Todas las categorías</option>
-              {categories.map(cat => (
-                <option key={cat.id} value={cat.id}>{cat.name}</option>
-              ))}
-            </select>
-            <select
-              value={stockFilter}
-              onChange={e => setStockFilter(e.target.value)}
-              className="px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto"
-            >
-              <option value="">Todo el stock</option>
-              <option value="with">Con stock</option>
-              <option value="without">Sin stock</option>
-              <option value="low">Stock bajo (≤5)</option>
-            </select>
-          </div>
+      <div className="mb-6">
+        <h2 className="text-3xl font-bold text-center capitalize text-white mb-6 tracking-tight" style={{letterSpacing: '0.01em'}}>Gestión de productos</h2>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-start gap-2 sm:gap-4 w-full">
+          <input
+            type="text"
+            placeholder="Buscar productos..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            className="flex-1 px-3 py-2 rounded-lg border border-gray-700 bg-[#23272f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[180px] max-w-xs"
+          />
+          <Button
+            onClick={() => { setShowProductForm(true); setEditingProduct(null); }}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm min-w-[120px]"
+            size="sm"
+          >
+            <Plus className="w-4 h-4" />
+            <span className="hidden sm:inline">Nuevo Producto</span>
+          </Button>
+          <select
+            value={categoryFilter}
+            onChange={e => setCategoryFilter(e.target.value)}
+            className="px-3 py-2 rounded-lg border border-gray-700 bg-[#23272f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[140px]"
+          >
+            <option value="">Todas las categorías</option>
+            {categories.map(cat => (
+              <option key={cat.id} value={cat.id}>{cat.name}</option>
+            ))}
+          </select>
+          <select
+            value={stockFilter}
+            onChange={e => setStockFilter(e.target.value)}
+            className="px-3 py-2 rounded-lg border border-gray-700 bg-[#23272f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[140px]"
+          >
+            <option value="">Todo el stock</option>
+            <option value="with">Con stock</option>
+            <option value="without">Sin stock</option>
+            <option value="low">Stock bajo (≤5)</option>
+          </select>
         </div>
       </div>
       {showProductForm && (
         <ProductForm
-          product={editingProduct}
+          formData={productFormData}
+          setFormData={setProductFormData}
+          handleSubmit={handleProductFormSubmitLocal}
+          resetForm={resetProductForm}
+          editingProduct={editingProduct}
           categories={categories}
-          onSubmit={handleProductFormSubmitLocal}
-          onCancel={resetProductForm}
         />
       )}
       <div className="grid gap-4 mt-4 md:grid-cols-2 xl:grid-cols-3">

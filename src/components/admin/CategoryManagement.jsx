@@ -98,11 +98,11 @@ const CategoryManagement = ({ categories, handleCreateCategory, handleSaveCatego
             value={newCategoryName}
             onChange={(e) => setNewCategoryName(e.target.value.toUpperCase())}
             placeholder="NOMBRE DE CATEGORÍA"
-            className="w-full px-3 py-2 text-sm text-white placeholder-gray-400 bg-gray-800 border border-gray-600 focus:outline-none focus:ring-1 focus:ring-white"
+            className="w-full px-3 py-2 text-sm text-white placeholder-gray-400 bg-[#23272f] border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <div className="flex items-center space-x-2">
-            <Button type="button" variant="outline" size="icon" className="border-gray-600" onClick={() => newImageInputRef.current?.click()}>
-              <ImageIcon className="w-4 h-4" />
+            <Button type="button" variant="outline" size="icon" className="border-gray-600 bg-[#23272f] hover:bg-black group" onClick={() => newImageInputRef.current?.click()}>
+              <ImageIcon className="w-4 h-4 text-black group-hover:text-white transition-colors" />
             </Button>
             <input type="file" ref={newImageInputRef} onChange={(e) => handleFileChange(e, true)} className="hidden" accept="image/*" />
             {newImagePreview && <img src={newImagePreview} alt="preview" className="object-cover w-10 h-10" />}
@@ -123,12 +123,12 @@ const CategoryManagement = ({ categories, handleCreateCategory, handleSaveCatego
                     type="text"
                     value={categoryName}
                     onChange={(e) => setCategoryName(e.target.value.toUpperCase())}
-                    className="w-full px-2 py-1 text-sm text-white bg-gray-700 border border-gray-600 focus:outline-none focus:ring-1 focus:ring-white"
+                    className="w-full px-2 py-1 text-sm text-white bg-[#23272f] border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     autoFocus
                   />
                   <div className="flex items-center space-x-2">
-                    <Button type="button" variant="outline" size="icon" className="border-gray-600" onClick={() => editImageInputRef.current?.click()}>
-                      <ImageIcon className="w-4 h-4" />
+                    <Button type="button" variant="outline" size="icon" className="border-gray-600 bg-[#23272f] hover:bg-black group" onClick={() => editImageInputRef.current?.click()}>
+                      <ImageIcon className="w-4 h-4 text-black group-hover:text-white transition-colors" />
                     </Button>
                     <input type="file" ref={editImageInputRef} onChange={(e) => handleFileChange(e, false)} className="hidden" accept="image/*" />
                     {imagePreview && <img src={imagePreview} alt="preview" className="object-cover w-10 h-10" />}

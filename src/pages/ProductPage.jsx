@@ -27,6 +27,10 @@ const ProductPage = () => {
   const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
   const imgContainerRef = useRef(null);
 
+  // Validación defensiva para las imágenes
+  const safeImages = product?.images || [];
+  const currentImage = safeImages[selectedImage] || safeImages[0] || 'https://placehold.co/400x500/e0e0e0/000000?text=Rolu';
+
   useEffect(() => {
     const fetchProduct = async () => {
       setLoading(true);
@@ -219,7 +223,7 @@ const ProductPage = () => {
               onTouchMove={handleTouchMove}
             >
               <img
-                src={product.images[selectedImage]}
+                src={currentImage}
                 alt={product.name}
                 className={`w-full h-full object-cover transition duration-300 ${zoomed ? 'pointer-events-none' : ''}`}
                 style={zoomed ? {
@@ -231,18 +235,18 @@ const ProductPage = () => {
                 draggable={false}
               />
               {/* Flechas navegación */}
-              {product.images.length > 1 && (
+              {safeImages.length > 1 && (
                 <>
                   <button
                     className="absolute z-30 p-2 -translate-y-1/2 rounded-full shadow left-2 top-1/2 bg-white/70 hover:bg-white"
-                    onClick={e => { e.stopPropagation(); setSelectedImage((prev) => (prev - 1 + product.images.length) % product.images.length); }}
+                    onClick={e => { e.stopPropagation(); setSelectedImage((prev) => (prev - 1 + safeImages.length) % safeImages.length); }}
                     aria-label="Imagen anterior"
                   >
                     <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
                   </button>
                   <button
                     className="absolute z-30 p-2 -translate-y-1/2 rounded-full shadow right-2 top-1/2 bg-white/70 hover:bg-white"
-                    onClick={e => { e.stopPropagation(); setSelectedImage((prev) => (prev + 1) % product.images.length); }}
+                    onClick={e => { e.stopPropagation(); setSelectedImage((prev) => (prev + 1) % safeImages.length); }}
                     aria-label="Imagen siguiente"
                   >
                     <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
@@ -251,9 +255,9 @@ const ProductPage = () => {
               )}
             </div>
             {/* Miniaturas */}
-            {product.images.length > 1 && (
+            {safeImages.length > 1 && (
               <div className="grid grid-cols-5 gap-2">
-                {product.images.map((image, index) => (
+                {safeImages.map((image, index) => (
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
@@ -274,7 +278,7 @@ const ProductPage = () => {
                 <Lightbox
                   open={lightboxOpen}
                   close={() => setLightboxOpen(false)}
-                  slides={product.images.map((img) => ({ src: img }))}
+                  slides={safeImages.map((img) => ({ src: img }))}
                   index={selectedImage}
                   on={{
                     view: ({ index }) => setSelectedImage(index),
