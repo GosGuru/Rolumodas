@@ -88,8 +88,8 @@ const ProductForm = ({ formData, setFormData, handleSubmit, resetForm, editingPr
       exit={{ opacity: 0, height: 0 }}
       className="border-b border-gray-700 bg-gray-900/50"
     >
-      <form onSubmit={handleSubmit} className="p-6 space-y-6">
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      <form onSubmit={handleSubmit} className="p-4 space-y-6 sm:p-6">
+        <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
           <div>
             <label htmlFor="name" className="block mb-1 text-sm text-gray-300 font-negro">
               Nombre del Producto
@@ -101,7 +101,8 @@ const ProductForm = ({ formData, setFormData, handleSubmit, resetForm, editingPr
               required
               value={formData.name}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 text-white placeholder-gray-400 bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-white"
+              className="w-full px-3 py-3 text-white placeholder-gray-400 bg-gray-800 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-white text-base"
+              autoComplete="off"
             />
           </div>
           <div>
@@ -117,7 +118,8 @@ const ProductForm = ({ formData, setFormData, handleSubmit, resetForm, editingPr
               step="0.01"
               value={formData.price}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 text-white placeholder-gray-400 bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-white"
+              className="w-full px-3 py-3 text-white placeholder-gray-400 bg-gray-800 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-white text-base"
+              inputMode="decimal"
             />
           </div>
           <div>
@@ -130,7 +132,7 @@ const ProductForm = ({ formData, setFormData, handleSubmit, resetForm, editingPr
               required
               value={formData.category_id}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 text-white bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-white"
+              className="w-full px-3 py-3 text-white bg-gray-800 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-white text-base"
             >
               <option value="">Seleccionar categoría</option>
               {categories.map(cat => (
@@ -150,7 +152,8 @@ const ProductForm = ({ formData, setFormData, handleSubmit, resetForm, editingPr
               min="0"
               value={formData.stock}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 text-white placeholder-gray-400 bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-white"
+              className="w-full px-3 py-3 text-white placeholder-gray-400 bg-gray-800 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-white text-base"
+              inputMode="numeric"
             />
           </div>
         </div>

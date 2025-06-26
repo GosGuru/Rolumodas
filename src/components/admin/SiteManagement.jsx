@@ -144,10 +144,10 @@ const SiteManagement = () => {
       className="bg-gray-900 border border-gray-700 shadow-sm lg:col-span-3"
     >
       <div className="p-6 border-b border-gray-700">
-        <h2 className="text-xl font-negro">Personalización del Sitio</h2>
+        <h2 className="text-xl font-bold text-white">Personalización del Sitio</h2>
       </div>
       <div className="p-6 space-y-4">
-        <h3 className="text-white font-negro">Imagen de Fondo Principal</h3>
+        <h3 className="text-white font-bold">Imagen de Fondo Principal</h3>
         {loading ? (
           <div className="flex items-center justify-center h-48">
             <Loader2 className="w-8 h-8 animate-spin" />
@@ -176,7 +176,7 @@ const SiteManagement = () => {
               />
               <Button
                 variant="outline"
-                className="w-full border-gray-600"
+                className="w-full border-gray-600 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm"
                 onClick={() => fileInputRef.current?.click()}
               >
                 <UploadCloud className="w-4 h-4 mr-2" />
@@ -195,57 +195,6 @@ const SiteManagement = () => {
             </div>
           </div>
         )}
-      </div>
-      <div className="pt-8 mt-8 space-y-4 border-t border-gray-700">
-        <h3 className="text-white font-negro">Cuotas Máximas Mercado Pago</h3>
-        <div className="flex items-end space-x-4">
-          <input
-            type="number"
-            min="1"
-            max="12"
-            value={mpInstallments}
-            onChange={(e) =>
-              setMpInstallments(parseInt(e.target.value, 10) || 1)
-            }
-            className="w-24 p-2 text-white bg-gray-800 border border-gray-700 rounded-md"
-          />
-          <Button
-            className="text-black bg-white hover:bg-gray-300"
-            onClick={handleSaveInstallments}
-            disabled={savingInstallments}
-          >
-            {savingInstallments ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : null}
-            {savingInstallments ? "Guardando..." : "Guardar"}
-          </Button>
-        </div>
-      </div>
-
-      <div className="pt-8 mt-8 space-y-4 border-t border-gray-700">
-        <h3 className="text-white font-negro">Cuotas Máximas Mercado Pago</h3>
-        <div className="flex items-end space-x-4">
-          <input
-            type="number"
-            min="1"
-            max="12"
-            value={mpInstallments}
-            onChange={(e) =>
-              setMpInstallments(parseInt(e.target.value, 10) || 1)
-            }
-            className="w-24 p-2 text-white bg-gray-800 border border-gray-700 rounded-md"
-          />
-          <Button
-            className="text-black bg-white hover:bg-gray-300"
-            onClick={handleSaveInstallments}
-            disabled={savingInstallments}
-          >
-            {savingInstallments ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : null}
-            {savingInstallments ? "Guardando..." : "Guardar"}
-          </Button>
-        </div>
       </div>
     </motion.div>
   );

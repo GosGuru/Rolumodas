@@ -3,7 +3,7 @@ import { useLocation, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, MessageCircle } from 'lucide-react';
+import { CheckCircle, MessageCircle, User, Mail, Phone, MapPin, Building2 } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from '@/components/ui/use-toast';
 
@@ -95,14 +95,14 @@ const OrderConfirmationPage = () => {
         transition={{ duration: 0.5 }}
         className="container mx-auto px-4 py-12"
       >
-        <div className="max-w-2xl mx-auto bg-white p-8 md:p-12 shadow-lg rounded-lg border">
+        <div className="max-w-2xl mx-auto bg-white p-8 pt-2 px-[20px] md:p-12 shadow-lg rounded-lg border">
           <div className="text-center">
             <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-6" />
             <h1 className="text-3xl font-bold text-gray-900">¡Muchas gracias por tu compra!</h1>
             <p className="text-muted-foreground mt-2 text-lg">Tu pedido <span className="font-semibold text-primary">{order.orderNumber}</span> ha sido recibido.</p>
           </div>
 
-          <div className="text-left bg-secondary/50 p-6 my-8 rounded-md border space-y-4">
+          <div className="text-left bg-secondary/50 p-6 my-8 pt-2 rounded-md border space-y-4">
             <h2 className="text-xl font-semibold text-gray-800">Métodos de Pago</h2>
             <p className="text-gray-700 text-sm">Dentro de Durazno podes utilizar estos métodos de pagos, o abonar en el Punto de Retiro cuando pases por tu pedido.</p>
             <div>
@@ -125,25 +125,66 @@ const OrderConfirmationPage = () => {
             <p className="text-green-700 mb-4">
               Para finalizar, envía el comprobante de pago por WhatsApp.
             </p>
-             <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
-              <Button className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 text-base">
-                <MessageCircle className="mr-2 h-5 w-5"/>
-                Enviar comprobante a 097 358 715
-              </Button>
+            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+              <button
+                className="w-full flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white font-bold py-3 text-base rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2"
+                style={{ fontSize: '1.15rem' }}
+              >
+                <img
+                  src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
+                  alt="WhatsApp"
+                  className="w-7 h-7 mr-2"
+                  style={{ background: 'none' }}
+                />
+                097 358 715
+              </button>
             </a>
           </div>
-          
+
+          {/* Detalles del cliente y envío */}
+          <div className="bg-gray-50 border border-gray-200 rounded-md p-5 mb-8">
+            <h3 className="font-semibold text-gray-800 text-lg mb-3 flex items-center gap-2">
+              <User className="w-5 h-5 text-gray-500" /> Detalles del Cliente
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-700">
+              <div className="flex items-center gap-2"><User className="w-4 h-4 text-gray-400" /> {order.customerName}</div>
+              <div className="flex items-center gap-2"><Mail className="w-4 h-4 text-gray-400" /> {order.customerEmail}</div>
+              {order.customerPhone && <div className="flex items-center gap-2"><Phone className="w-4 h-4 text-gray-400" /> {order.customerPhone}</div>}
+            </div>
+            <div className="mt-4">
+              <h4 className="font-semibold text-gray-800 text-md mb-1 flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-gray-500" /> Dirección de Entrega
+              </h4>
+              {order.shippingMethod === 'agency' ? (
+                <div className="text-sm text-gray-700 space-y-1">
+                  <div className="flex items-center gap-2"><Building2 className="w-4 h-4 text-gray-400" /> Agencia: {order.agencyName}</div>
+                  <div className="flex items-center gap-2"><MapPin className="w-4 h-4 text-gray-400" /> Dirección: {order.agencyAddress}</div>
+                  <div className="flex items-center gap-2"><MapPin className="w-4 h-4 text-gray-400" /> Ciudad: {order.agencyCity}</div>
+                  {order.agencyExtra && <div className="flex items-center gap-2"><MapPin className="w-4 h-4 text-gray-400" /> Detalles: {order.agencyExtra}</div>}
+                </div>
+              ) : (
+                <div className="text-sm text-gray-700">Retiro en persona</div>
+              )}
+            </div>
+          </div>
+
           <div className="text-left my-8 border-t pt-6">
-            <h3 className="font-semibold text-lg mb-3">Resumen del Pedido</h3>
-             <div className="space-y-2">
+            <h3 className="font-bold text-lg mb-3 text-primary">Resumen del Pedido</h3>
+            <div className="space-y-2">
               {order.items.map(item => (
                 <div key={item.cartId} className="flex justify-between items-center text-sm">
-                  <span>{item.name} x {item.quantity}</span>
+                  <Link
+                    to={item.id ? `/producto/${item.id}` : '#'}
+                    className="text-blue-600 hover:underline truncate max-w-[160px] block"
+                    title={item.name}
+                  >
+                    {item.name.length > 28 ? item.name.slice(0, 25) + '...' : item.name}
+                  </Link>
                   <span className="font-medium">{formatPrice(item.price * item.quantity)}</span>
                 </div>
               ))}
             </div>
-            <div className="flex justify-between font-bold text-lg border-t pt-3 mt-3">
+            <div className="flex justify-between font-bold text-xl border-t pt-3 mt-3 text-green-700">
               <span>Total</span>
               <span>{formatPrice(order.total)}</span>
             </div>
@@ -151,7 +192,9 @@ const OrderConfirmationPage = () => {
 
           <div className="text-center mt-8">
             <Link to="/tienda">
-              <Button variant="outline">Realizar otro pedido</Button>
+              <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 text-base rounded-md transition-colors">
+                Realizar otro pedido
+              </Button>
             </Link>
           </div>
         </div>

@@ -61,6 +61,10 @@ const CategoryPage = () => {
     fetchCategoryData();
   }, [slug]);
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [category?.id, slug]);
+
   return (
     <>
       <Helmet>

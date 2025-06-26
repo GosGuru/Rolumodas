@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -89,7 +88,7 @@ const CategoryManagement = ({ categories, handleCreateCategory, handleSaveCatego
       className="bg-gray-900 border border-gray-700 shadow-sm lg:col-span-1"
     >
       <div className="p-6 border-b border-gray-700">
-        <h2 className="text-xl font-negro">Gestión de Categorías</h2>
+        <h2 className="text-lg font-bold text-white mb-4">Gestión de Categorías</h2>
       </div>
       <div className="p-6 space-y-4">
         <form onSubmit={onCreate} className="p-4 space-y-3 border border-gray-700 bg-gray-800/50">
@@ -109,9 +108,9 @@ const CategoryManagement = ({ categories, handleCreateCategory, handleSaveCatego
             {newImagePreview && <img src={newImagePreview} alt="preview" className="object-cover w-10 h-10" />}
             <span className="text-xs text-gray-400">{newCategoryImageFile ? newCategoryImageFile.name : 'Subir imagen...'}</span>
           </div>
-          <Button type="submit" className="w-full text-black bg-white hover:bg-gray-300">
-            <Plus className="w-4 h-4 mr-2" />
-            Crear
+          <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm">
+            <Plus className="w-4 h-4" />
+            <span className="hidden sm:inline">Crear</span>
           </Button>
         </form>
         <div className="space-y-2">

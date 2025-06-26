@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import { ShoppingCart, Heart, User, Search, Menu, X } from 'lucide-react';
+import { ShoppingCart, Heart, User, Search, Menu, X, Grid, Home, ShoppingBag, HelpCircle, Wrench, LogOut, LogIn } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '@/contexts/CartContext';
 import { useWishlist } from '@/contexts/WishlistContext';
@@ -13,7 +13,7 @@ const Header = ({ openSearchModal }) => {
   const { isAuthenticated, user, logout } = useAuth();
   const totalCartItems = getTotalItems();
   const totalWishlistItems = wishlistItems.length;
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);  
   const mobileMenuRef = useRef(null);
 
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
@@ -66,50 +66,87 @@ const Header = ({ openSearchModal }) => {
           </nav>
 
           <div className="flex items-center space-x-2 text-white">
-            <Button variant="ghost" size="icon" onClick={openSearchModal} className="hover:bg-white/20 hover:text-white">
-              <Search className="w-5 h-5" />
-            </Button>
-            <Link to="/favoritos">
-              <Button variant="ghost" size="icon" className="relative hover:bg-white/20 hover:text-white">
-                <Heart className="w-5 h-5" />
-                {totalWishlistItems > 0 && (
+            {/* Iconos solo visibles en mobile */}
+            <div className="flex md:hidden items-center space-x-2">
+              <Link to="/favoritos">
+                <Button variant="ghost" size="icon" className="relative hover:bg-white/20 hover:text-white">
+                  <Heart className="w-5 h-5" />
+                  {totalWishlistItems > 0 && (
+                    <motion.span
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="absolute -top-1 -right-1 bg-white text-black text-[10px] rounded-full h-4 w-4 flex items-center justify-center font-bold"
+                    >
+                      {totalWishlistItems}
+                    </motion.span>
+                  )}
+                </Button>
+              </Link>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={toggleDrawer}
+                className="relative hover:bg-white/20 hover:text-white"
+              >
+                <ShoppingCart className="w-5 h-5" />
+                {totalCartItems > 0 && (
                   <motion.span
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     className="absolute -top-1 -right-1 bg-white text-black text-[10px] rounded-full h-4 w-4 flex items-center justify-center font-bold"
                   >
-                    {totalWishlistItems}
+                    {totalCartItems}
                   </motion.span>
                 )}
               </Button>
-            </Link>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={toggleDrawer}
-              className="relative hover:bg-white/20 hover:text-white"
-            >
-              <ShoppingCart className="w-5 h-5" />
-              {totalCartItems > 0 && (
-                <motion.span
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute -top-1 -right-1 bg-white text-black text-[10px] rounded-full h-4 w-4 flex items-center justify-center font-bold"
-                >
-                  {totalCartItems}
-                </motion.span>
-              )}
-            </Button>
-            {/* Botón de perfil siempre visible */}
-            <Link to={isAuthenticated && user ? "/admin" : "/admin/login"}>
-              <Button variant="ghost" size="icon" className="hover:bg-white/20 hover:text-white" aria-label="Perfil">
-                <User className="w-5 h-5" />
+            </div>
+            {/* Iconos solo visibles en desktop */}
+            <div className="hidden md:flex items-center space-x-2">
+              <Button variant="ghost" size="icon" onClick={openSearchModal} className="hover:bg-white/20 hover:text-white">
+                <Search className="w-5 h-5" />
               </Button>
-            </Link>
-            {/* Botón de cerrar sesión solo si está autenticado */}
+              <Link to="/favoritos">
+                <Button variant="ghost" size="icon" className="relative hover:bg-white/20 hover:text-white">
+                  <Heart className="w-5 h-5" />
+                  {totalWishlistItems > 0 && (
+                    <motion.span
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="absolute -top-1 -right-1 bg-white text-black text-[10px] rounded-full h-4 w-4 flex items-center justify-center font-bold"
+                    >
+                      {totalWishlistItems}
+                    </motion.span>
+                  )}
+                </Button>
+              </Link>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={toggleDrawer}
+                className="relative hover:bg-white/20 hover:text-white"
+              >
+                <ShoppingCart className="w-5 h-5" />
+                {totalCartItems > 0 && (
+                  <motion.span
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute -top-1 -right-1 bg-white text-black text-[10px] rounded-full h-4 w-4 flex items-center justify-center font-bold"
+                  >
+                    {totalCartItems}
+                  </motion.span>
+                )}
+              </Button>
+              {/* Botón de dashboard/admin siempre visible en desktop */}
+              <Link to={isAuthenticated && user ? "/admin/dashboard" : "/admin/login"}>
+                <Button variant="ghost" size="icon" className="hover:bg-white/20 hover:text-white" aria-label="Dashboard Admin">
+                  <Grid className="w-5 h-5" />
+                </Button>
+              </Link>
+            </div>
+            {/* Botón de cerrar sesión solo si está autenticado y en desktop */}
             {isAuthenticated && user && (
-              <Button variant="ghost" size="icon" onClick={logout} className="hover:bg-white/20 hover:text-white" aria-label="Cerrar sesión">
-                <X className="w-5 h-5" />
+              <Button variant="ghost" size="icon" onClick={logout} className="hidden md:inline-flex hover:bg-white/20 hover:text-white" aria-label="Cerrar sesión">
+                <LogOut className="w-5 h-5" />
               </Button>
             )}
             <Button 
@@ -137,11 +174,34 @@ const Header = ({ openSearchModal }) => {
             transition={{ duration: 0.3, ease: "easeInOut" }}
             className="overflow-hidden border-t md:hidden bg-black/95 backdrop-blur-sm border-white/10"
           >
-            <nav className="flex flex-col p-4 space-y-2">
-              <Link to="/" onClick={closeMobileMenu} className={mobileNavLinkClasses}>INICIO</Link>
-              <Link to="/tienda" onClick={closeMobileMenu} className={mobileNavLinkClasses}>TIENDA</Link>
-              <Link to="/faq" onClick={closeMobileMenu} className={mobileNavLinkClasses}>PREGUNTAS FRECUENTES</Link>
-              <Link to="/admin/login" onClick={closeMobileMenu} className={mobileNavLinkClasses}>PERFIL</Link>
+            <nav className="flex flex-col p-4 pt-1  pb-1 space-y-[5px]">
+              <Link to="/" onClick={closeMobileMenu} className={mobileNavLinkClasses}>
+                <span className="flex items-center gap-3"><Home className="w-5 h-5" />Inicio</span>
+              </Link>
+              <Link to="/tienda" onClick={closeMobileMenu} className={mobileNavLinkClasses}>
+                <span className="flex items-center gap-3"><ShoppingBag className="w-5 h-5" />Tienda</span>
+              </Link>
+              <Link to="/faq" onClick={closeMobileMenu} className={mobileNavLinkClasses}>
+                <span className="flex items-center gap-3"><HelpCircle className="w-5 h-5" />Preguntas Frecuentes</span>
+              </Link>
+              {/* Herramientas/Admin solo si es admin */}
+              {isAuthenticated && user && (
+                <Link to="/admin/dashboard" onClick={closeMobileMenu} className={mobileNavLinkClasses}>
+                  <span className="flex items-center gap-3"><Wrench className="w-5 h-5" />Herramientas</span>
+                </Link>
+              )}
+              {/* Cerrar sesión solo si es admin */}
+              {isAuthenticated && user && (
+                <button onClick={() => { logout(); closeMobileMenu(); }} className={mobileNavLinkClasses + ' flex items-center gap-3 text-left'}>
+                  <LogOut className="w-5 h-5" />Cerrar sesión
+                </button>
+              )}
+              {/* Login solo si NO está autenticado */}
+              {!(isAuthenticated && user) && (
+                <Link to="/admin/login" onClick={closeMobileMenu} className={mobileNavLinkClasses}>
+                  <span className="flex items-center gap-3"><LogIn className="w-5 h-5" />Iniciar sesión</span>
+                </Link>
+              )}
             </nav>
           </motion.div>
         )}

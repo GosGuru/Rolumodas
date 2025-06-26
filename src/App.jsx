@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
@@ -19,13 +18,14 @@ import AdminLogin from '@/pages/AdminLogin';
 import AdminDashboard from '@/pages/AdminDashboard';
 import CartDrawer from '@/components/CartDrawer';
 import SearchModal from '@/components/SearchModal';
-import WhatsAppButton from '@/components/WhatsAppButton';
+import AuthAwareWhatsAppButton from '@/components/AuthAwareWhatsAppButton';
 import TermsPage from '@/pages/TermsPage';
 import PrivacyPage from '@/pages/PrivacyPage';
 import OrderConfirmationPage from '@/pages/OrderConfirmationPage';
 import OrderStatusPage from '@/pages/OrderStatusPage';
 import AdminOrdersPage from '@/pages/AdminOrdersPage';
 import AdminReportsPage from '@/pages/AdminReportsPage';
+import AdminPanel, { AdminGestionPage } from '@/pages/AdminPanel';
 // Import the React variant of Vercel Analytics since this project uses
 // React Router instead of Next.js. The React build doesn't rely on
 // Next.js-specific APIs like `useParams`, which caused build errors.
@@ -60,9 +60,12 @@ function App() {
                   <Route path="/checkout" element={<CheckoutPage />} />
                   <Route path="/producto/:id" element={<ProductPage />} />
                   <Route path="/admin/login" element={<AdminLogin />} />
-                  <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                  <Route path="/admin/pedidos" element={<AdminOrdersPage />} />
-                  <Route path="/admin/informes" element={<AdminReportsPage />} />
+                  <Route path="/admin" element={<AdminPanel />}>
+                    <Route path="dashboard" element={<AdminDashboard />} />
+                    <Route path="pedidos" element={<AdminOrdersPage />} />
+                    <Route path="informes" element={<AdminReportsPage />} />
+                    <Route path="gestion" element={<AdminGestionPage />} />
+                  </Route>
                   <Route path="/terminos" element={<TermsPage />} />
                   <Route path="/privacidad" element={<PrivacyPage />} />
                   <Route path="/orden-confirmada" element={<OrderConfirmationPage />} />
@@ -72,7 +75,7 @@ function App() {
               <Footer />
               <CartDrawer />
               <SearchModal isOpen={isSearchModalOpen} onClose={closeSearchModal} />
-              <WhatsAppButton phoneNumber="+59897358715" />
+              <AuthAwareWhatsAppButton phoneNumber="+59897358715" />
               <Toaster />
             </div>
           </Router>

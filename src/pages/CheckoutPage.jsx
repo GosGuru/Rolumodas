@@ -134,6 +134,15 @@ const CheckoutPage = () => {
     }).format(price);
   };
 
+  // Función para generar un UUID si crypto.randomUUID no está disponible
+  function generateOrderNumber() {
+    if (window.crypto && window.crypto.randomUUID) {
+      return window.crypto.randomUUID();
+    }
+    // Fallback simple
+    return 'ORD-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+  }
+
   const handlePlaceOrder = async () => {
     // Validación básica
     if (!customerName || !customerEmail) {
@@ -157,9 +166,11 @@ const CheckoutPage = () => {
       return;
     }
     setIsProcessing(true);
+    const orderNumber = generateOrderNumber();
     // Guardar pedido en Supabase (ajusta según tu lógica)
     const { data, error } = await supabase.from('orders').insert([
       {
+        order_number: orderNumber,
         customer_name: customerName,
         customer_email: customerEmail,
         customer_phone: customerPhone,
@@ -184,9 +195,12 @@ const CheckoutPage = () => {
       return;
     }
     clearCart();
+    // Scroll hacia arriba antes de redirigir
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     navigate("/orden-confirmada", {
       state: {
         order: {
+          orderNumber,
           customerName,
           customerEmail,
           customerPhone,
@@ -507,7 +521,7 @@ const CheckoutPage = () => {
                   <Alert variant="destructive">
                     <AlertTitle>Error</AlertTitle>
                     <AlertDescription>
-                      No se pudo generar el link de Mercado Pago.
+                      No se pudo generar el link de Mercado Pago.
                     </AlertDescription>
                   </Alert>
                 )}

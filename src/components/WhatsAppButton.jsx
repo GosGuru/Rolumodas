@@ -1,8 +1,8 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 
-const WhatsAppButton = ({ phoneNumber }) => {
+const WhatsAppButton = ({ phoneNumber, hidden }) => {
+  if (hidden) return null;
   const whatsappUrl = `https://wa.me/${phoneNumber}`;
 
   return (
@@ -18,12 +18,13 @@ const WhatsAppButton = ({ phoneNumber }) => {
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         transition={{ duration: 0.5, type: 'spring', stiffness: 120 }}
-        className="fixed bottom-6 right-6 z-50 bg-green-500 w-16 h-16 rounded-full flex items-center justify-center shadow-lg"
+        className="fixed bottom-[5px] right-[5px] z-50 bg-green-500 w-16 h-16 rounded-full flex items-center justify-center shadow-lg"
       >
-        <img 
-          src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/512px-WhatsApp.svg.png" 
-          alt="WhatsApp Icon"
-          className="w-9 h-9 object-contain"
+        <img
+          src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
+          alt="WhatsApp"
+          className="w-9 h-9"
+          style={{ background: 'none' }}
         />
       </motion.div>
     </a>

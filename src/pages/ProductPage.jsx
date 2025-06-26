@@ -55,6 +55,11 @@ const ProductPage = () => {
     fetchProduct();
   }, [id]);
 
+  // Nuevo: Scroll animado hacia arriba al cargar producto
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [id]);
+
   const handleAddToCart = () => {
     if (!product) return;
     addToCart(product, quantity);

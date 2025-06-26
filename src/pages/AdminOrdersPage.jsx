@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Helmet } from 'react-helmet';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from '@/components/ui/use-toast';
-import { Loader2, Package, Search, ChevronDown, ChevronUp, ChevronRight, X } from 'lucide-react';
+import { Loader2, Package, Search, ChevronDown, ChevronUp, ChevronRight, X, MessageCircle, Trash2, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -128,59 +128,116 @@ const AdminOrdersPage = () => {
             <p className="mt-1 text-sm text-gray-400">Intenta ajustar tu búsqueda o espera a que llegue un nuevo pedido.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-max">
-              <thead className="bg-gray-800">
-                <tr>
-                  <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-400 uppercase"></th>
-                  <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-400 uppercase">Pedido</th>
-                  <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-400 uppercase">Cliente</th>
-                  <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-400 uppercase">Fecha</th>
-                  <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-400 uppercase">Total</th>
-                  <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-400 uppercase">Estado</th>
-                  <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-400 uppercase">Acciones</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-700">
+          <>
+            {/* Mobile: tarjetas apiladas, Desktop: tabla */}
+            <div className="block sm:hidden">
+              <div className="grid grid-cols-1 gap-4">
                 {filteredOrders.map(order => (
-                  <tr key={order.id} className="cursor-pointer hover:bg-gray-800/50" onClick={e => { if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'svg' && e.target.tagName !== 'path') setSelectedOrder(order); }}>
-                    <td className="px-4 py-3">
-                      <Button variant="ghost" size="icon" onClick={e => { e.stopPropagation(); setSelectedOrder(order); }}>
-                        <ChevronRight className="w-4 h-4" />
-                      </Button>
-                    </td>
-                    <td className="px-4 py-3 text-sm font-medium whitespace-nowrap">{order.order_number}</td>
-                    <td className="px-4 py-3 text-sm font-semibold whitespace-nowrap">{order.customer_name || 'N/A'}</td>
-                    <td className="px-4 py-3 text-sm text-gray-300 whitespace-nowrap">{new Date(order.created_at).toLocaleDateString('es-UY')}</td>
-                    <td className="px-4 py-3 text-sm whitespace-nowrap">{formatPrice(order.total_amount)}</td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusClass(order.status)}`}>
-                        {/* Estado en español */}
-                        {order.status === 'completed' ? 'Completado' : order.status === 'processing' ? 'En proceso' : order.status === 'pending_payment' ? 'Pendiente de pago' : order.status === 'cancelled' ? 'Cancelado' : order.status}
+                  <div
+                    key={order.id}
+                    className="bg-gray-800 rounded-xl p-4 shadow border border-gray-700 flex flex-col justify-between max-w-full w-full overflow-hidden"
+                    style={{ maxWidth: '100vw', boxSizing: 'border-box' }}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs text-gray-400 truncate max-w-[110px] block break-all" title={order.order_number}>Pedido #{order.order_number}</span>
+                      <span className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-full ${getStatusClass(order.status)} min-w-[90px] justify-center`} title={order.status}>
+                        {order.status === 'completed' ? 'Completado' : order.status === 'processing' ? 'En proceso' : order.status === 'pending_payment' ? 'Pendiente' : order.status === 'cancelled' ? 'Cancelado' : order.status}
                       </span>
-                    </td>
-                    <td className="flex items-center gap-2 px-4 py-3 whitespace-nowrap">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="outline" className="text-xs bg-gray-800 border-gray-600 hover:bg-gray-700">Cambiar Estado</Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                          {statusOptions.map(status => (
-                            <DropdownMenuItem key={status} onSelect={() => handleStatusChange(order.id, status)}>
-                              {status === 'completed' ? 'Completado' : status === 'processing' ? 'En proceso' : status === 'pending_payment' ? 'Pendiente de pago' : status === 'cancelled' ? 'Cancelado' : status}
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                      <Button variant="ghost" size="icon" onClick={e => { e.stopPropagation(); handleDeleteOrder(order.id); }} title="Eliminar pedido">
-                        <X className="w-4 h-4 text-red-400 hover:text-red-600" />
-                      </Button>
-                    </td>
-                  </tr>
+                    </div>
+                    <div className="flex flex-col gap-0.5 min-h-[48px] justify-center mb-2">
+                      <span className="text-base font-bold text-white leading-tight truncate break-all max-w-full">{order.customer_name || 'N/A'}</span>
+                      <span className="text-xs text-gray-400 truncate break-all max-w-full">{order.customer_email}</span>
+                      <span className="text-xs text-gray-500">{new Date(order.created_at).toLocaleDateString('es-UY')}</span>
+                    </div>
+                    <div className="flex flex-col items-center justify-center gap-2 mt-3 pt-2 border-t border-gray-700">
+                      <span className="text-2xl font-extrabold text-green-400 whitespace-nowrap text-center">{formatPrice(order.total_amount)}</span>
+                      <div className="flex flex-row items-center justify-center gap-2 w-full mt-1">
+                        <Button variant="outline" size="sm" className="flex-1 flex items-center justify-center gap-1 text-xs px-3 py-2 bg-gray-700 border-gray-600 hover:bg-gray-600 rounded-md max-w-[120px]" onClick={() => setSelectedOrder(order)}>
+                          <Eye className="w-4 h-4" />
+                          <span>Detalle</span>
+                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm" className="flex-1 flex items-center justify-center gap-1 text-xs px-3 py-2 bg-gray-700 border-gray-600 hover:bg-gray-600 rounded-md max-w-[120px]">
+                              <span>Estado</span>
+                              <ChevronDown className="w-4 h-4 ml-1" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent>
+                            {statusOptions.map(status => (
+                              <DropdownMenuItem key={status} onSelect={() => handleStatusChange(order.id, status)}>
+                                {status === 'completed' ? 'Completado' : status === 'processing' ? 'En proceso' : status === 'pending_payment' ? 'Pendiente' : status === 'cancelled' ? 'Cancelado' : status}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                        <button
+                          onClick={() => handleDeleteOrder(order.id)}
+                          title="Eliminar pedido"
+                          className="flex-1 p-1 rounded-full hover:bg-red-100/10 transition-colors flex items-center justify-center max-w-[40px] min-w-[40px]"
+                          style={{ lineHeight: 0 }}
+                        >
+                          <Trash2 className="w-5 h-5 text-red-400 hover:text-red-600" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </div>
+            </div>
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full min-w-max">
+                <thead className="bg-gray-800">
+                  <tr>
+                    <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-400 uppercase"></th>
+                    <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-400 uppercase">Pedido</th>
+                    <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-400 uppercase">Cliente</th>
+                    <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-400 uppercase">Fecha</th>
+                    <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-400 uppercase">Total</th>
+                    <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-400 uppercase">Estado</th>
+                    <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-400 uppercase">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-700">
+                  {filteredOrders.map(order => (
+                    <tr key={order.id} className="cursor-pointer hover:bg-gray-800/50" onClick={e => { if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'svg' && e.target.tagName !== 'path') setSelectedOrder(order); }}>
+                      <td className="px-4 py-3">
+                        <Button variant="ghost" size="icon" onClick={e => { e.stopPropagation(); setSelectedOrder(order); }}>
+                          <ChevronRight className="w-4 h-4" />
+                        </Button>
+                      </td>
+                      <td className="px-4 py-3 text-sm font-medium whitespace-nowrap">{order.order_number}</td>
+                      <td className="px-4 py-3 text-sm font-semibold whitespace-nowrap">{order.customer_name || 'N/A'}</td>
+                      <td className="px-4 py-3 text-sm text-gray-300 whitespace-nowrap">{new Date(order.created_at).toLocaleDateString('es-UY')}</td>
+                      <td className="px-4 py-3 text-sm whitespace-nowrap">{formatPrice(order.total_amount)}</td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusClass(order.status)}`}>
+                          {order.status === 'completed' ? 'Completado' : order.status === 'processing' ? 'En proceso' : order.status === 'pending_payment' ? 'Pendiente de pago' : order.status === 'cancelled' ? 'Cancelado' : order.status}
+                        </span>
+                      </td>
+                      <td className="flex items-center gap-2 px-4 py-3 whitespace-nowrap">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="text-xs bg-gray-800 border-gray-600 hover:bg-gray-700">Cambiar Estado</Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent>
+                            {statusOptions.map(status => (
+                              <DropdownMenuItem key={status} onSelect={() => handleStatusChange(order.id, status)}>
+                                {status === 'completed' ? 'Completado' : status === 'processing' ? 'En proceso' : status === 'pending_payment' ? 'Pendiente de pago' : status === 'cancelled' ? 'Cancelado' : status}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                        <Button variant="ghost" size="icon" onClick={e => { e.stopPropagation(); handleDeleteOrder(order.id); }} title="Eliminar pedido">
+                          <X className="w-4 h-4 text-red-400 hover:text-red-600" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
         {/* Modal de detalles */}
         {selectedOrder && (
