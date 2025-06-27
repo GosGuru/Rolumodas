@@ -10,36 +10,24 @@ const NewsletterForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email) return;
-
+  
     setLoading(true);
     setError("");
-
+  
     try {
-      // Intentar insertar en la tabla newsletter
-      let { error } = await supabase.from("newsletter").insert({ email });
-      
-      // Si la tabla no existe (error 42P01), mostrar mensaje de éxito temporal
-      if (error && error.code === '42P01') {
-        console.log('Tabla newsletter no existe, mostrando mensaje de éxito temporal');
-        setSuccess(true);
-        setEmail("");
-        setTimeout(() => setSuccess(false), 5000);
+      // Insertar solo el email en la tabla newsletter
+      const { data, error } = await supabase
+        .from('newsletter')
+        .insert([{ email }])
+        .select();
+      console.log("Respuesta Supabase:", { data, error });
+      if (error) {
+        setError(error.message || JSON.stringify(error) || "Error desconocido");
         return;
-      }
-      
-      // Si hay error de email duplicado, mostrar mensaje específico
-      if (error && error.code === '23505') {
-        setError("Este email ya está suscrito.");
-        return;
-      }
-      
-      if (!error) {
-        setSuccess(true);
-        setEmail("");
-        setTimeout(() => setSuccess(false), 5000);
       } else {
-        setError("Error al suscribirse. Inténtalo de nuevo.");
-        console.error('Error al insertar en newsletter:', error);
+        setSuccess(true);
+        setEmail("");
+        setTimeout(() => setSuccess(false), 5000);
       }
     } catch (err) {
       setError("Error de conexión. Inténtalo de nuevo.");
@@ -48,26 +36,7 @@ const NewsletterForm = () => {
       setLoading(false);
     }
   };
-
-  // Función opcional para sincronizar con MailerLite
-  const syncWithMailerLite = async (email) => {
-    try {
-      const response = await fetch('https://api.mailerlite.com/api/v2/subscribers', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-MailerLite-ApiKey': import.meta.env.VITE_MAILERLITE_API_KEY,
-        },
-        body: JSON.stringify({ email, resubscribe: true }),
-      });
-      
-      if (!response.ok) {
-        console.warn('Error al sincronizar con MailerLite');
-      }
-    } catch (err) {
-      console.warn('Error en sincronización con MailerLite:', err);
-    }
-  };
+ 
 
   return (
     <div className="w-full">

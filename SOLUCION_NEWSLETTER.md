@@ -37,9 +37,11 @@ CREATE INDEX IF NOT EXISTS idx_newsletter_created_at ON newsletter(created_at);
 ALTER TABLE newsletter ENABLE ROW LEVEL SECURITY;
 
 -- Crear política para permitir inserciones desde el cliente
-CREATE POLICY "Allow public insert" ON newsletter
-    FOR INSERT
-    WITH CHECK (true);
+CREATE POLICY "Allow anon insert"
+on "public"."newsletter"
+for insert
+to anon
+with check (true);
 
 -- Crear política para permitir lectura solo a usuarios autenticados (opcional)
 CREATE POLICY "Allow authenticated read" ON newsletter
@@ -82,7 +84,7 @@ Si después de ejecutar el script sigues teniendo problemas:
 ### Verifica las políticas RLS:
 1. En **Table Editor**, selecciona la tabla `newsletter`
 2. Ve a la pestaña **Policies**
-3. Asegúrate de que exista la política "Allow public insert"
+3. Asegúrate de que exista la política "Allow anon insert"
 
 ### Verifica la configuración del cliente:
 El archivo `src/lib/supabaseClient.js` está correcto, pero verifica que:
