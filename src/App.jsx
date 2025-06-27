@@ -18,6 +18,8 @@ import AdminLogin from '@/pages/AdminLogin';
 import AdminDashboard from '@/pages/AdminDashboard';
 import CartDrawer from '@/components/CartDrawer';
 import SearchModal from '@/components/SearchModal';
+import NewsletterModal from '@/components/NewsletterModal';
+import NewsletterButton from '@/components/NewsletterButton';
 import AuthAwareWhatsAppButton from '@/components/AuthAwareWhatsAppButton';
 import TermsPage from '@/pages/TermsPage';
 import PrivacyPage from '@/pages/PrivacyPage';
@@ -26,6 +28,7 @@ import OrderStatusPage from '@/pages/OrderStatusPage';
 import AdminOrdersPage from '@/pages/AdminOrdersPage';
 import AdminReportsPage from '@/pages/AdminReportsPage';
 import AdminPanel, { AdminGestionPage } from '@/pages/AdminPanel';
+import useNewsletterModal from '@/hooks/useNewsletterModal';
 // Import the React variant of Vercel Analytics since this project uses
 // React Router instead of Next.js. The React build doesn't rely on
 // Next.js-specific APIs like `useParams`, which caused build errors.
@@ -33,6 +36,7 @@ import { Analytics } from "@vercel/analytics/react"
 
 function App() {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const { isModalOpen, openModal, closeModal } = useNewsletterModal();
 
   const openSearchModal = () => setIsSearchModalOpen(true);
   const closeSearchModal = () => setIsSearchModalOpen(false);
@@ -75,6 +79,8 @@ function App() {
               <Footer />
               <CartDrawer />
               <SearchModal isOpen={isSearchModalOpen} onClose={closeSearchModal} />
+              <NewsletterModal isOpen={isModalOpen} onClose={closeModal} />
+              <NewsletterButton onClick={openModal} />
               <AuthAwareWhatsAppButton phoneNumber="+59897358715" />
               <Toaster />
             </div>

@@ -1,7 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Instagram, Facebook, Linkedin, MessageCircle } from 'lucide-react';
+import { Instagram, Facebook, Linkedin, MessageCircle, Mail } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { FaWhatsapp } from 'react-icons/fa';
+import NewsletterForm from './NewsletterForm';
 
 const Footer = () => {
   const socialLinks = [
@@ -9,7 +11,8 @@ const Footer = () => {
     { name: 'Facebook', icon: Facebook, url: 'https://www.facebook.com/LuMakeupUruguay' },
   ];
 
-  const whatsappLink = 'https://wa.me/59891864016';
+  const whatsappLink = 'https://wa.me/59896303934';
+  const email = 'rolumodas.uy@gmail.com';
 
   const footerLinks = [
     { name: 'Términos y Condiciones', path: '/terminos' },
@@ -60,7 +63,16 @@ const Footer = () => {
             transition={{ duration: 0.6, delay: 0.2 }}
           >
             <h4 className="mb-4 font-semibold tracking-wider text-white uppercase">Contacto</h4>
-            <div className="flex mb-4 space-x-4">
+            <div className="flex gap-4 mb-4">
+              <a
+                href={whatsappLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-400 transition-colors hover:text-white"
+                aria-label="WhatsApp"
+              >
+                <FaWhatsapp className="w-5 h-5" />
+              </a>
               {socialLinks.map((social) => (
                 <a
                   key={social.name}
@@ -73,19 +85,13 @@ const Footer = () => {
                   <social.icon className="w-5 h-5" />
                 </a>
               ))}
-              <a
-                href={whatsappLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-400 transition-colors hover:text-white"
-                aria-label="WhatsApp"
-              >
-                <MessageCircle className="w-5 h-5" />
+            </div>
+            <div className="flex items-center gap-2 mb-2">
+              <a href={`mailto:${email}`} className="flex items-center text-gray-400 transition-colors hover:text-white" aria-label="Email">
+                <Mail className="w-5 h-5 mr-1" />
+                <span className="text-sm">{email}</span>
               </a>
             </div>
-            <a href="mailto:contacto@rolumodas.uy" className="text-sm text-gray-400 transition-colors hover:text-white">
-              contacto@rolumodas.uy
-            </a>
           </motion.div>
 
            <motion.div
@@ -94,26 +100,31 @@ const Footer = () => {
             transition={{ duration: 0.6, delay: 0.3 }}
           >
             <h4 className="mb-4 font-semibold tracking-wider text-white uppercase">Newsletter</h4>
-            <p className="mb-3 text-sm text-gray-400">Suscríbete para recibir novedades y ofertas especiales.</p>
+            <p className="mb-3 text-sm text-gray-400">
+              Suscribite y enterate antes que nadie de nuestras promociones, lanzamientos y novedades exclusivas.
+            </p>
+            <NewsletterForm />
           </motion.div>
         </div>
 
-        <div className="flex flex-col items-center justify-center gap-2 pt-6 text-sm border-t border-gray-800 md:flex-row md:justify-between md:items-center">
-           <p className="mb-0 text-center text-gray-500">
+        <div className="pt-6 text-sm border-t border-gray-800">
+          <div className="flex flex-col items-center justify-center gap-2">
+            <p className="mb-0 text-center text-gray-500">
               © {new Date().getFullYear()} Rolu Modas. Todos los derechos reservados.
             </p>
-            <div className="text-gray-500">
-             <p className="flex items-center justify-center">
-              Diseño y Desarrollo por{' '}
-              <a 
-                href="https://www.linkedin.com/in/maximo-porcile-abb2b4338/" 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="inline-flex items-center ml-1 font-semibold text-white transition-colors hover:underline"
-              >
-                Máximo Porcile <Linkedin className="w-4 h-4 ml-1" />
-              </a>
-            </p>
+            <div className="flex flex-col items-center justify-center">
+              <p className="flex items-center justify-center text-center">
+                Diseño y Desarrollo por{' '}
+                <a 
+                  href="https://www.linkedin.com/in/maximo-porcile-abb2b4338/" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="inline-flex items-center ml-1 font-semibold text-white transition-colors hover:underline"
+                >
+                  Máximo Porcile <Linkedin className="w-6 h-6 ml-2 align-middle" />
+                </a>
+              </p>
+            </div>
           </div>
         </div>
       </div>
