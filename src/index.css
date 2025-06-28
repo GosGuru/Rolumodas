@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -42,10 +41,11 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply  text-foreground;
     font-family: 'Poppins', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  
   }
 
   .font-negro {
@@ -73,4 +73,72 @@
   .admin-login-page input, .admin-login-page select, .admin-login-page textarea {
     @apply bg-white border-gray-300 text-black placeholder-gray-500 focus:ring-black focus:border-black;
   }
+}
+
+@layer components {
+  /* Estilos para el header negro */
+  .header-black {
+    background-color: #000000;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Mejoras de accesibilidad para el header negro */
+  .header-nav-link {
+    position: relative;
+    transition: color 0.3s ease;
+    color: #ffffff;
+  }
+
+  .header-nav-link:hover {
+    color: #fbbf24; /* yellow-400 */
+  }
+
+  .header-nav-link[aria-current="page"]::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: #fbbf24;
+    border-radius: 1px;
+  }
+
+  /* Efectos hover para botones en header negro - SIN fondo blanco */
+  .header-button-hover {
+    transition: all 0.2s ease;
+    will-change: transform, opacity;
+    color: #fff !important;
+  }
+
+  .header-button-hover:hover {
+    background-color: transparent !important;
+    transform: translateY(-2px);
+    opacity: 0.8;
+    color: #ffffff !important; /* dorado */
+  }
+
+
+  .header-anim-icon {
+    transition:
+      background 0.18s cubic-bezier(0.4,0,0.2,1),
+      color 0.18s cubic-bezier(0.4,0,0.2,1),
+      transform 0.22s cubic-bezier(0.4,0,0.2,1);
+    color: #fff;
+  }
+  .header-anim-icon:hover {
+    @apply bg-white !important;   
+    background: #fff !important;
+    color: #000 !important;
+    transform: scale(1.08) translateY(-2px);
+
+  }
+  .header-anim-icon:hover svg {
+    color: #000 !important;
+    stroke: #000 !important;
+    transition: color 0.18s cubic-bezier(0.4,0,0.2,1), stroke 0.18s cubic-bezier(0.4,0,0.2,1);
+    
+  }
+
+
 }

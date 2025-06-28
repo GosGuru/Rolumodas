@@ -5,7 +5,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { CartProvider } from '@/contexts/CartContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { WishlistProvider } from '@/contexts/WishlistContext';
-import Header from '@/components/Header';
+import HeaderWrapper from '@/components/HeaderWrapper';
 import Footer from '@/components/Footer';
 import HomePage from '@/pages/HomePage';
 import ShopPage from '@/pages/ShopPage';
@@ -18,7 +18,6 @@ import AdminLogin from '@/pages/AdminLogin';
 import AdminDashboard from '@/pages/AdminDashboard';
 import CartDrawer from '@/components/CartDrawer';
 import SearchModal from '@/components/SearchModal';
-import NewsletterModal from '@/components/NewsletterModal';
 import NewsletterButton from '@/components/NewsletterButton';
 import AuthAwareWhatsAppButton from '@/components/AuthAwareWhatsAppButton';
 import TermsPage from '@/pages/TermsPage';
@@ -28,7 +27,6 @@ import OrderStatusPage from '@/pages/OrderStatusPage';
 import AdminOrdersPage from '@/pages/AdminOrdersPage';
 import AdminReportsPage from '@/pages/AdminReportsPage';
 import AdminPanel, { AdminGestionPage } from '@/pages/AdminPanel';
-import useNewsletterModal from '@/hooks/useNewsletterModal';
 // Import the React variant of Vercel Analytics since this project uses
 // React Router instead of Next.js. The React build doesn't rely on
 // Next.js-specific APIs like `useParams`, which caused build errors.
@@ -36,7 +34,6 @@ import { Analytics } from "@vercel/analytics/react"
 
 function App() {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
-  const { isModalOpen, openModal, closeModal } = useNewsletterModal();
 
   const openSearchModal = () => setIsSearchModalOpen(true);
   const closeSearchModal = () => setIsSearchModalOpen(false);
@@ -47,13 +44,13 @@ function App() {
         <WishlistProvider>
         <Analytics />
           <Router>
-            <div className="flex flex-col min-h-screen bg-background text-foreground">
+            <div className="flex flex-col min-h-screen bg-background text-foreground" style={{ paddingTop: '110px' }}>
               <Helmet>
                 <title>Rolu Modas - Moda Femenina Exclusiva</title>
                 <meta name="description" content="Descubre las últimas tendencias en moda femenina. Ropa exclusiva, accesorios únicos y estilo incomparable en Rolu Modas." />
               </Helmet>
               
-              <Header openSearchModal={openSearchModal} />
+              <HeaderWrapper openSearchModal={openSearchModal} />
               <main className="flex-1">
                 <Routes>
                   <Route path="/" element={<HomePage />} />
@@ -79,8 +76,7 @@ function App() {
               <Footer />
               <CartDrawer />
               <SearchModal isOpen={isSearchModalOpen} onClose={closeSearchModal} />
-              <NewsletterModal isOpen={isModalOpen} onClose={closeModal} />
-              <NewsletterButton onClick={openModal} />
+              <NewsletterButton />
               <AuthAwareWhatsAppButton phoneNumber="+59897358715" />
               <Toaster />
             </div>

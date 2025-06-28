@@ -43,12 +43,6 @@ for insert
 to anon
 with check (true);
 
--- Crear política para permitir lectura solo a usuarios autenticados (opcional)
-CREATE POLICY "Allow authenticated read" ON newsletter
-    FOR SELECT
-    TO authenticated
-    USING (true);
-
 -- Crear función para actualizar updated_at automáticamente
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$

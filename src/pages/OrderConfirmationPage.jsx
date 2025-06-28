@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { CheckCircle, MessageCircle, User, Mail, Phone, MapPin, Building2 } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from '@/components/ui/use-toast';
-import NewsletterForm from '@/components/NewsletterForm';
 
 const OrderConfirmationPage = () => {
   const location = useLocation();
@@ -197,21 +196,6 @@ const OrderConfirmationPage = () => {
                 Realizar otro pedido
               </Button>
             </Link>
-          </div>
-
-          {/* Newsletter Section */}
-          <div className="mt-12 p-6 bg-gray-50 rounded-lg border border-gray-200">
-            <div className="text-center mb-4">
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                ¿Querés enterarte antes que nadie?
-              </h3>
-              <p className="text-gray-600 text-sm">
-                Suscribite y recibí novedades, lanzamientos exclusivos y ofertas especiales.
-              </p>
-            </div>
-            <div className="flex justify-center">
-              <NewsletterForm />
-            </div>
           </div>
         </div>
       </motion.div>

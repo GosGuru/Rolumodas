@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { Instagram, Facebook, Linkedin, MessageCircle, Mail } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { FaWhatsapp } from 'react-icons/fa';
-import NewsletterForm from './NewsletterForm';
 
 const Footer = () => {
   const socialLinks = [
@@ -23,12 +22,12 @@ const Footer = () => {
   return (
     <footer className="text-white bg-black">
       <div className="container px-4 py-12 mx-auto">
-        <div className="grid grid-cols-1 gap-8 mb-8 md:grid-cols-4">
+        <div className="grid grid-cols-1 gap-8 mb-8 md:grid-cols-3 justify-center text-left md:text-left">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="flex flex-col"
+            className="flex flex-col items-start mx-auto"
           >
             <Link to="/" className="mb-4">
               <img 
@@ -60,7 +59,8 @@ const Footer = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="flex flex-col items-start mx-auto"
           >
             <h4 className="mb-4 font-semibold tracking-wider text-white uppercase">Contacto</h4>
             <div className="flex gap-4 mb-4">
@@ -93,21 +93,9 @@ const Footer = () => {
               </a>
             </div>
           </motion.div>
-
-           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-          >
-            <h4 className="mb-4 font-semibold tracking-wider text-white uppercase">Newsletter</h4>
-            <p className="mb-3 text-sm text-gray-400">
-              Suscribite y enterate antes que nadie de nuestras promociones, lanzamientos y novedades exclusivas.
-            </p>
-            <NewsletterForm />
-          </motion.div>
         </div>
 
-        <div className="pt-6 text-sm border-t border-gray-800">
+        <div className="mt-8 md:text-left text-left border-t border-gray-800 pt-6 text-gray-500">
           <div className="flex flex-col items-center justify-center gap-2">
             <p className="mb-0 text-center text-gray-500">
               © {new Date().getFullYear()} Rolu Modas. Todos los derechos reservados.
