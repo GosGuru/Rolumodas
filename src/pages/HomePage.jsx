@@ -123,10 +123,10 @@ const HomePage = () => {
         <>
           <section
             id="categories-section"
-            className="py-8 mt-[-40px] sm:py-12 bg-secondary"
+            className="py-8  mt-[-30px] md:mt-[-40px] sm:py-12 bg-secondary"
           >
             <div className="w-full max-w-6xl mx-auto px-4">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-x-4 gap-y-8 md:gap-x-3 md:gap-y-3">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-x-3 gap-y-3 md:gap-x-3 md:gap-y-3">
                 {categories.slice(0, 6).map((category, index) => (
                   <motion.div
                     key={category.id}
@@ -142,7 +142,7 @@ const HomePage = () => {
                       className="object-cover w-full h-full"
                     />
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white bg-black/30">
-                      <h3 className="text-2xl font-bold tracking-wider uppercase drop-shadow">
+                      <h3 className="text-base sm:text-lg md:text-2xl font-bold tracking-wider uppercase drop-shadow">
                         {category.name}
                       </h3>
                       <Link
@@ -164,7 +164,7 @@ const HomePage = () => {
             </div>
           </section>
 
-          <h2 className="text-3xl font-bold tracking-tight text-center uppercase md:text-4xl text-foreground">
+          <h2 className="text-xl sm:text-2xl md:text-4xl font-bold tracking-tight text-center uppercase text-foreground">
             PRODUCTOS TENDENCIA
           </h2>
 
