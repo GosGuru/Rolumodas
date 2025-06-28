@@ -22,7 +22,7 @@ const HomePage = () => {
         .from("categories")
         .select("*")
         .order("name")
-        .limit(3);
+        .limit(6);
       const fetchTrendingProducts = supabase
         .from("products")
         .select("*, categories(name)")
@@ -123,45 +123,31 @@ const HomePage = () => {
         <>
           <section
             id="categories-section"
-            className="py-8 sm:py-12 bg-secondary"
+            className="py-8 mt-[-40px] sm:py-12 bg-secondary"
           >
-            <div className="container px-4 mx-auto">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6 }}
-                className="mb-8 text-center"
-              >
-                <h2 className="text-3xl font-bold tracking-tight uppercase md:text-4xl text-foreground">
-                  Categorías
-                </h2>
-              </motion.div>
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                {categories.map((category, index) => (
+            <div className="w-full max-w-6xl mx-auto px-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-x-4 gap-y-8 md:gap-x-3 md:gap-y-3">
+                {categories.slice(0, 6).map((category, index) => (
                   <motion.div
                     key={category.id}
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5, delay: index * 0.1 }}
-                    className="relative overflow-hidden aspect-square group"
+                    className="relative w-full aspect-[1.2/1] overflow-hidden"
                   >
                     <img
-                      src={
-                        category.image ||
-                        "https://placehold.co/400x500/e0e0e0/000000?text=Rolu"
-                      }
+                      src={category.image || "https://placehold.co/400x400/e0e0e0/000000?text=Rolu"}
                       alt={category.name}
-                      className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
+                      className="object-cover w-full h-full"
                     />
-                    <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-white bg-black bg-opacity-30">
-                      <h3 className="text-2xl font-bold tracking-wider uppercase">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white bg-black/30">
+                      <h3 className="text-2xl font-bold tracking-wider uppercase drop-shadow">
                         {category.name}
                       </h3>
                       <Link
                         to={`/categoria/${category.slug}`}
-                        className="inline-flex items-center mt-2 text-sm font-semibold hover:underline"
+                        className="inline-flex items-center mt-2 text-base font-semibold hover:underline"
                       >
                         Ver más <ArrowRight className="w-4 h-4 ml-1" />
                       </Link>
@@ -179,9 +165,9 @@ const HomePage = () => {
           </section>
 
           <h2 className="text-3xl font-bold tracking-tight text-center uppercase md:text-4xl text-foreground">
-         PRODUCTOS TENDENCIA
+            PRODUCTOS TENDENCIA
           </h2>
-        
+
           <section className="py-8 sm:py-12 bg-background">
             <div className="container px-4 mx-auto">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-8 md:gap-x-6 md:gap-y-10">

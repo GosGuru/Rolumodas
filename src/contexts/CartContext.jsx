@@ -10,13 +10,19 @@ const cartReducer = (state, action) => {
         items: action.payload,
       };
     case 'ADD_ITEM':
-      // Crear una clave única basada en el ID del producto y las variantes seleccionadas
+      // Crear una clave única basada en el ID del producto, variantes y color seleccionados
       const variantKey = action.payload.selectedVariants 
         ? Object.entries(action.payload.selectedVariants)
             .sort(([a], [b]) => a.localeCompare(b))
             .map(([key, value]) => `${key}:${value}`)
             .join('|')
         : 'no-variants';
+      
+      const colorKey = action.payload.selectedColor 
+        ? `color:${action.payload.selectedColor.value}`
+        : 'no-color';
+      
+      const fullKey = `${variantKey}-${colorKey}`;
       
       const existingItem = state.items.find(item => {
         if (item.id !== action.payload.id) return false;
@@ -28,7 +34,13 @@ const cartReducer = (state, action) => {
               .join('|')
           : 'no-variants';
         
-        return itemVariantKey === variantKey;
+        const itemColorKey = item.selectedColor 
+          ? `color:${item.selectedColor.value}`
+          : 'no-color';
+        
+        const itemFullKey = `${itemVariantKey}-${itemColorKey}`;
+        
+        return itemFullKey === fullKey;
       });
       
       if (existingItem) {
@@ -42,7 +54,13 @@ const cartReducer = (state, action) => {
                   .join('|')
               : 'no-variants';
             
-            if (item.id === action.payload.id && itemVariantKey === variantKey) {
+            const itemColorKey = item.selectedColor 
+              ? `color:${item.selectedColor.value}`
+              : 'no-color';
+            
+            const itemFullKey = `${itemVariantKey}-${itemColorKey}`;
+            
+            if (item.id === action.payload.id && itemFullKey === fullKey) {
               return { ...item, quantity: item.quantity + action.payload.quantity };
             }
             return item;
@@ -113,7 +131,7 @@ export const CartProvider = ({ children }) => {
   }, [state.items]);
 
   const addToCart = (product, quantity = 1) => {
-    // Crear una clave única para el carrito basada en el ID y las variantes
+    // Crear una clave única para el carrito basada en el ID, variantes y color
     const variantKey = product.selectedVariants 
       ? Object.entries(product.selectedVariants)
           .sort(([a], [b]) => a.localeCompare(b))
@@ -121,7 +139,12 @@ export const CartProvider = ({ children }) => {
           .join('|')
       : 'no-variants';
     
-    const cartId = `${product.id}-${variantKey}-${Date.now()}`;
+    const colorKey = product.selectedColor 
+      ? `color:${product.selectedColor.value}`
+      : 'no-color';
+    
+    const fullKey = `${variantKey}-${colorKey}`;
+    const cartId = `${product.id}-${fullKey}-${Date.now()}`;
     
     dispatch({
       type: 'ADD_ITEM',

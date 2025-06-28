@@ -206,6 +206,9 @@ const AdminDashboard = () => {
         is_trending: productFormData.is_trending,
         images: imageUrls,
         variants: variants.length > 0 ? variants : null,
+        colors: productFormData.colors && productFormData.colors.length > 0 ? productFormData.colors : null,
+        short_description: productFormData.short_description || null,
+        long_description: productFormData.long_description || null,
       };
 
       if (editingProduct) {

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Plus, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
 import ProductForm from '@/components/admin/ProductForm';
 import ProductTable from '@/components/admin/ProductTable';
+import ColorDisplay from '@/components/ColorDisplay';
 
 const ProductManagement = ({
   products,
@@ -25,6 +26,7 @@ const ProductManagement = ({
     stock: '', 
     visible: true,
     variants: [],
+    colors: [],
     short_description: '',
     long_description: '',
     is_trending: false
@@ -33,7 +35,20 @@ const ProductManagement = ({
   const [stockFilter, setStockFilter] = useState('');
 
   const resetProductForm = () => {
-    setProductFormData({ name: '', price: '', description: '', category_id: '', images: [], stock: '', visible: true, variants: [], short_description: '', long_description: '', is_trending: false });
+    setProductFormData({ 
+      name: '', 
+      price: '', 
+      description: '', 
+      category_id: '', 
+      images: [], 
+      stock: '', 
+      visible: true, 
+      variants: [], 
+      colors: [],
+      short_description: '', 
+      long_description: '', 
+      is_trending: false 
+    });
     setEditingProduct(null);
     setShowProductForm(false);
   };
@@ -52,6 +67,7 @@ const ProductManagement = ({
       stock: product.stock?.toString() || '',
       visible: product.visible ?? true,
       variants: product.variants || [],
+      colors: product.colors || [],
       short_description: product.short_description || '',
       long_description: product.long_description || '',
       is_trending: product.is_trending || false
@@ -86,6 +102,19 @@ const ProductManagement = ({
             {variant.name}: {Array.isArray(variant.options) ? variant.options.join(', ') : variant.options}
           </span>
         ))}
+      </div>
+    );
+  };
+
+  const renderColors = (colors) => {
+    if (!colors || colors.length === 0) {
+      return null;
+    }
+
+    return (
+      <div className="mt-2">
+        <span className="text-xs text-gray-400 font-medium">Colores:</span>
+        <ColorDisplay colors={colors} size="sm" className="mt-1" />
       </div>
     );
   };
@@ -182,6 +211,9 @@ const ProductManagement = ({
                 </div>
               </div>
               
+              {/* Mostrar colores */}
+              {renderColors(product.colors)}
+              
               {/* Mostrar variantes */}
               {renderVariants(product.variants)}
               
@@ -199,8 +231,8 @@ const ProductManagement = ({
                   variant="ghost"
                   size="icon"
                   onClick={() => toggleProductVisibility(product.id, product.visible)}
-                  className={product.visible ? 'text-green-600 hover:text-green-800' : 'text-gray-400 hover:text-gray-600'}
-                  title={product.visible ? 'Ocultar' : 'Mostrar'}
+                  className={product.visible ? "text-green-600 hover:text-green-800" : "text-gray-600 hover:text-gray-800"}
+                  title={product.visible ? "Ocultar" : "Mostrar"}
                 >
                   {product.visible ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
                 </Button>
@@ -208,7 +240,7 @@ const ProductManagement = ({
                   variant="ghost"
                   size="icon"
                   onClick={() => handleDeleteProduct(product.id)}
-                  className="text-red-500 hover:text-red-700"
+                  className="text-red-600 hover:text-red-800"
                   title="Eliminar"
                 >
                   <Trash2 className="w-5 h-5" />

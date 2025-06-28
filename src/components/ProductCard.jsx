@@ -9,6 +9,7 @@ import { useCart } from '@/contexts/CartContext';
 import Lightbox from 'yet-another-react-lightbox';
 import 'yet-another-react-lightbox/styles.css';
 import './product-lightbox.css';
+import ColorDisplay from './ColorDisplay';
 
 const ProductCard = ({ product, index, listMode }) => {
   const { addToWishlist, isInWishlist } = useWishlist();
@@ -112,6 +113,12 @@ const ProductCard = ({ product, index, listMode }) => {
             {product.short_description && (
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">{product.short_description}</p>
             )}
+            {/* Colores */}
+            {product.colors && product.colors.length > 0 && (
+              <div className="mt-1">
+                <ColorDisplay colors={product.colors} size="sm" />
+              </div>
+            )}
             <p className="text-sm text-gray-500 truncate dark:text-gray-300">UYU {formatPrice(product.price)}</p>
           </Link>
         </div>
@@ -187,9 +194,9 @@ const ProductCard = ({ product, index, listMode }) => {
           onClick={() => { setLightboxOpen(true); setLightboxIndex(0); }}
         >
           <img
-            src={hovered && product.images?.[1] ? product.images[1] : product.images?.[0] || 'https://placehold.co/400x500/e0e0e0/000000?text=Rolu'}
+            src={hovered && product.images?.[1] ? product.images[1] : product.images?.[0] || 'https://placehold.co/400x400/e0e0e0/000000?text=Rolu'}
             alt={product.name}
-            className={`w-full h-full object-cover aspect-[3/4] transition-transform duration-300 group-hover:scale-105 ${hovered && product.images?.[1] ? 'scale-105 blur-[1px]' : ''}`}
+            className={`w-full object-cover aspect-square transition-transform duration-300 group-hover:scale-105 ${hovered && product.images?.[1] ? 'scale-105 blur-[1px]' : ''}`}
           />
           <div className="absolute flex flex-col items-end gap-2 transition-opacity duration-300 opacity-0 top-2 right-2 group-hover:opacity-100">
             <Button
@@ -229,6 +236,12 @@ const ProductCard = ({ product, index, listMode }) => {
           {/* Descripción corta */}
           {product.short_description && (
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">{product.short_description}</p>
+          )}
+          {/* Colores */}
+          {product.colors && product.colors.length > 0 && (
+            <div className="mt-1">
+              <ColorDisplay colors={product.colors} size="sm" />
+            </div>
           )}
           <div className="flex items-center justify-between gap-2 mt-0.5">
             <p className="m-0 text-base font-semibold text-foreground">

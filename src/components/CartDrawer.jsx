@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Trash2, Plus, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/contexts/CartContext';
+import ColorDisplay from './ColorDisplay';
 
 const CartDrawer = () => {
   const { isDrawerOpen, closeDrawer, items, removeFromCart, updateQuantity, getTotalPrice, getTotalItems } = useCart();
@@ -32,6 +33,23 @@ const CartDrawer = () => {
             {variantName}: {option}
           </span>
         ))}
+      </div>
+    );
+  };
+
+  const renderSelectedColor = (selectedColor) => {
+    if (!selectedColor) return null;
+
+    return (
+      <div className="flex items-center gap-2 mt-1">
+        <span className="text-xs text-muted-foreground">Color:</span>
+        <div className="flex items-center gap-1">
+          <div
+            className="w-4 h-4 rounded-full border border-gray-300"
+            style={{ backgroundColor: selectedColor.value }}
+          />
+          <span className="text-xs font-medium">{selectedColor.name}</span>
+        </div>
       </div>
     );
   };
@@ -95,6 +113,9 @@ const CartDrawer = () => {
                           <h3 className="font-medium text-sm truncate hover:underline">{item.name}</h3>
                         </Link>
                         <p className="text-muted-foreground text-sm">{formatPrice(item.price)}</p>
+                        
+                        {/* Mostrar color seleccionado */}
+                        {renderSelectedColor(item.selectedColor)}
                         
                         {/* Mostrar variantes seleccionadas */}
                         {renderVariants(item.selectedVariants)}

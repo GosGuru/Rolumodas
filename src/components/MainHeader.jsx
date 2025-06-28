@@ -10,8 +10,7 @@ import LogoHeader from '@/assets/LogoHeader.png';
 
 const LOGO_HEIGHT = 64; // px
 const HEADER_HEIGHT = 72; // px
-const HEADER_MARGIN_TOP = 24; // px separación del TopNav
-const TOPNAV_HEIGHT = 40; // px
+const HEADER_MARGIN_TOP = 0; // Sin separación de TopNav
 const ANIMATION_DURATION = 0.2;
 
 const MainHeader = ({ openSearchModal, atTop }) => {
@@ -41,8 +40,8 @@ const MainHeader = ({ openSearchModal, atTop }) => {
   const headerStyle = {
     width: '100%',
     height: `${HEADER_HEIGHT}px`,
-    background: 'linear-gradient(to top, rgba(0, 0, 0, 0.85) 25%, rgb(0, 0, 0) 80%)',
-    backdropFilter: 'blur(12px)',
+    background: 'rgba(0,0,0,0.60)',
+    backdropFilter: 'blur(7px)',
     WebkitBackdropFilter: 'blur(12px)',
     boxShadow: '0 2px 16px 0 rgba(0,0,0,0.10)',
     display: 'flex',
@@ -52,7 +51,6 @@ const MainHeader = ({ openSearchModal, atTop }) => {
     transition: 'margin-top 0.12s cubic-bezier(0.4,0,0.2,1), background 0.12s',
     zIndex: 50,
     padding: '0 16px',
-    marginTop: atTop ? HEADER_MARGIN_TOP : 0,
   };
 
   const logoStyle = {
@@ -63,9 +61,9 @@ const MainHeader = ({ openSearchModal, atTop }) => {
 
   return (
     <motion.header
-      className="fixed top-[-18px] pt-[15px] md:pt-[15px] bg-black/90 left-0 right-0 w-[102vw] md:w-full "
+      className="fixed top-[-18px] pt-[15px] md:pt-[15px] bg-black/40 left-0 right-0 w-[102vw] md:w-full "
       style={{
-        background: 'black',
+        background: 'rgba(0,0,0,0.80)',
         WebkitBackdropFilter: 'blur(8px)',
         zIndex: 50,
       }}
@@ -140,7 +138,7 @@ const MainHeader = ({ openSearchModal, atTop }) => {
               aria-label="Abrir menú móvil"
               aria-expanded={isMobileMenuOpen}
             >
-              {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6 " />}
             </Button>
           </div>
           {/* Login/Logout y Herramientas solo en desktop */}
@@ -175,10 +173,10 @@ const MainHeader = ({ openSearchModal, atTop }) => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: ANIMATION_DURATION }}
-              className="absolute top-[71px] left-0 w-full  bg-black/90 backdrop-blur-md border-t border-white/10 flex flex-col md:hidden z-50"
+              className="absolute top-[71px] left-0 w-full  bg-black/40 backdrop-blur-md border-t border-white/10 flex flex-col md:hidden z-50"
             >
 
-              <nav className="flex flex-col p-4 gap-2 text-white" aria-label="Menú móvil" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: '16px' }}>
+              <nav className="flex flex-col p-4 gap-2 text-white bg-black/80" aria-label="Menú móvil" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: '16px' }}>
                 <NavLink to="/" onClick={() => setIsMobileMenuOpen(false)} className="py-2 px-2 rounded flex items-center gap-2 hover:bg-white hover:text-black transition-all">
                   <Search className="w-5 h-5" /> INICIO
                 </NavLink>

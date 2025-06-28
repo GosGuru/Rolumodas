@@ -10,6 +10,7 @@ import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabaseClient';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import ProductVariants from '@/components/ProductVariants';
+import ColorDisplay from '@/components/ColorDisplay';
 import Lightbox from 'yet-another-react-lightbox';
 import 'yet-another-react-lightbox/styles.css';
 
@@ -27,6 +28,7 @@ const ProductPage = () => {
   const [zoomed, setZoomed] = useState(false);
   const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
   const [selectedVariants, setSelectedVariants] = useState({});
+  const [selectedColor, setSelectedColor] = useState(null);
   const imgContainerRef = useRef(null);
 
   // Validación defensiva para las imágenes
@@ -63,6 +65,11 @@ const ProductPage = () => {
           });
           setSelectedVariants(initialVariants);
         }
+
+        // Inicializar color seleccionado con el primer color disponible
+        if (data.colors && data.colors.length > 0) {
+          setSelectedColor(data.colors[0]);
+        }
       }
       setLoading(false);
       setSelectedImage(0);
@@ -80,13 +87,14 @@ const ProductPage = () => {
   const handleAddToCart = () => {
     if (!product) return;
     
-    // Crear un objeto de producto con las variantes seleccionadas
-    const productWithVariants = {
+    // Crear un objeto de producto con las variantes y color seleccionados
+    const productWithSelections = {
       ...product,
-      selectedVariants: Object.keys(selectedVariants).length > 0 ? selectedVariants : null
+      selectedVariants: Object.keys(selectedVariants).length > 0 ? selectedVariants : null,
+      selectedColor: selectedColor
     };
     
-    addToCart(productWithVariants, quantity);
+    addToCart(productWithSelections, quantity);
     toast({
       title: "¡Producto agregado!",
       description: `${product.name} se agregó a tu carrito.`,
@@ -96,14 +104,15 @@ const ProductPage = () => {
   const handleBuyNow = () => {
     if (!product) return;
     
-    // Crear un objeto de producto con las variantes seleccionadas
-    const productWithVariants = {
+    // Crear un objeto de producto con las variantes y color seleccionados
+    const productWithSelections = {
       ...product,
-      selectedVariants: Object.keys(selectedVariants).length > 0 ? selectedVariants : null
+      selectedVariants: Object.keys(selectedVariants).length > 0 ? selectedVariants : null,
+      selectedColor: selectedColor
     };
     
     clearCart();
-    addToCart(productWithVariants, quantity);
+    addToCart(productWithSelections, quantity);
     navigate('/checkout');
   };
 
@@ -119,6 +128,10 @@ const ProductPage = () => {
 
   const handleVariantChange = (newSelectedVariants) => {
     setSelectedVariants(newSelectedVariants);
+  };
+
+  const handleColorSelect = (color) => {
+    setSelectedColor(color);
   };
   
   const shareOn = (platform) => {
@@ -342,14 +355,52 @@ const ProductPage = () => {
 
             <p className="text-base leading-relaxed text-muted-foreground">{product.description}</p>
             
-            {/* Componente de variantes */}
-            <ProductVariants 
-              variants={product.variants} 
-              onVariantChange={handleVariantChange}
-              selectedVariants={selectedVariants}
-            />
+            {/* Opciones disponibles: Color y variantes */}
+            <div className="space-y-4">
+              {/* Selector de color como variante */}
+              {product.colors && product.colors.length > 0 && (
+                <div>
+                  <span className="block mb-1 text-sm font-medium text-foreground">Color:</span>
+                  <div className="flex flex-wrap gap-2">
+                    {product.colors.map((color, index) => (
+                      <button
+                        key={`${color.value}-${color.name}-${index}`}
+                        onClick={() => handleColorSelect(color)}
+                        className={`flex items-center justify-center p-0 rounded-full border border-black transition-all focus:outline-none focus:ring-2 focus:ring-black
+                          ${selectedColor && selectedColor.value === color.value
+                            ? 'ring-2 ring-black scale-110 shadow'
+                            : ''}
+                        `}
+                        style={{ width: '32px', height: '32px', minWidth: '32px', minHeight: '32px', background: color.value, position: 'relative', boxShadow: 'none' }}
+                        type="button"
+                        title={color.name}
+                        tabIndex={0}
+                      >
+                        {selectedColor && selectedColor.value === color.value && (
+                          <svg
+                            viewBox="0 0 20 20"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="absolute inset-0 m-auto w-5 h-5 text-white pointer-events-none"
+                            style={{ zIndex: 2 }}
+                          >
+                            <path d="M6 10.5L9 13.5L15 7.5" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {/* Variantes normales */}
+              <ProductVariants 
+                variants={product.variants} 
+                onVariantChange={handleVariantChange}
+                selectedVariants={selectedVariants}
+              />
+            </div>
             
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-3 mt-6">
               <h3 className="text-sm font-medium text-foreground">CANTIDAD:</h3>
               <div className="flex items-center border rounded-md">
                 <Button

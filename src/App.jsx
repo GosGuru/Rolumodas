@@ -44,7 +44,7 @@ function App() {
         <WishlistProvider>
         <Analytics />
           <Router>
-            <div className="flex flex-col min-h-screen bg-background text-foreground" style={{ paddingTop: '110px' }}>
+            <div className="flex flex-col min-h-screen bg-background text-foreground" style={{ paddingTop: '60px' }}>
               <Helmet>
                 <title>Rolu Modas - Moda Femenina Exclusiva</title>
                 <meta name="description" content="Descubre las últimas tendencias en moda femenina. Ropa exclusiva, accesorios únicos y estilo incomparable en Rolu Modas." />

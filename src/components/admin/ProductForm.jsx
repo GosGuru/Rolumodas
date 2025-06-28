@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { UploadCloud, X, Star, Plus, Trash2 } from 'lucide-react';
+import ColorPicker from './ColorPicker';
 
 const ProductForm = ({ formData, setFormData, handleSubmit, resetForm, editingProduct, categories }) => {
   // Validación defensiva: asegurar que formData siempre tenga un valor por defecto
@@ -14,6 +15,7 @@ const ProductForm = ({ formData, setFormData, handleSubmit, resetForm, editingPr
     stock: '',
     visible: true,
     variants: [],
+    colors: [],
     short_description: '',
     long_description: '',
     is_trending: false
@@ -96,6 +98,10 @@ const ProductForm = ({ formData, setFormData, handleSubmit, resetForm, editingPr
   const removeVariant = (variantIndex) => {
     const newVariants = (safeFormData.variants || []).filter((_, index) => index !== variantIndex);
     setFormData(prev => ({ ...prev, variants: newVariants }));
+  };
+
+  const handleColorsChange = (newColors) => {
+    setFormData(prev => ({ ...prev, colors: newColors }));
   };
 
   return (
@@ -208,6 +214,15 @@ const ProductForm = ({ formData, setFormData, handleSubmit, resetForm, editingPr
             onChange={handleInputChange}
             className="bg-[#23272f] text-white border border-gray-700 focus:border-blue-500 focus:ring-blue-500 placeholder-gray-400 rounded-lg px-3 py-2 w-full"
             placeholder="Agrega detalles, materiales, cuidados, inspiración, etc."
+          />
+        </div>
+
+        {/* NUEVO: Selector de Colores */}
+        <div className="pt-4 border-t border-gray-700">
+          <h3 className="mb-4 text-gray-200 text-md font-negro">Colores Disponibles</h3>
+          <ColorPicker
+            selectedColors={safeFormData.colors || []}
+            onColorsChange={handleColorsChange}
           />
         </div>
 
