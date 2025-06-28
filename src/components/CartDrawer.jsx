@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -16,6 +15,25 @@ const CartDrawer = () => {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(price);
+  };
+
+  const renderVariants = (selectedVariants) => {
+    if (!selectedVariants || Object.keys(selectedVariants).length === 0) {
+      return null;
+    }
+
+    return (
+      <div className="flex flex-wrap gap-1 mt-1">
+        {Object.entries(selectedVariants).map(([variantName, option]) => (
+          <span
+            key={variantName}
+            className="inline-flex items-center px-2 py-1 text-xs font-medium bg-primary/10 text-primary rounded-md"
+          >
+            {variantName}: {option}
+          </span>
+        ))}
+      </div>
+    );
   };
 
   return (
@@ -77,6 +95,10 @@ const CartDrawer = () => {
                           <h3 className="font-medium text-sm truncate hover:underline">{item.name}</h3>
                         </Link>
                         <p className="text-muted-foreground text-sm">{formatPrice(item.price)}</p>
+                        
+                        {/* Mostrar variantes seleccionadas */}
+                        {renderVariants(item.selectedVariants)}
+                        
                         <div className="flex items-center justify-between mt-2">
                           <div className="flex items-center border border-border rounded-md">
                             <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => updateQuantity(item.cartId, item.quantity - 1)}>

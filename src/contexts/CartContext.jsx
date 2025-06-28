@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 
 const CartContext = createContext();
@@ -11,22 +10,43 @@ const cartReducer = (state, action) => {
         items: action.payload,
       };
     case 'ADD_ITEM':
-      const existingItem = state.items.find(item => 
-        item.id === action.payload.id && 
-        item.selectedSize === action.payload.selectedSize &&
-        item.selectedColor === action.payload.selectedColor
-      );
+      // Crear una clave única basada en el ID del producto y las variantes seleccionadas
+      const variantKey = action.payload.selectedVariants 
+        ? Object.entries(action.payload.selectedVariants)
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([key, value]) => `${key}:${value}`)
+            .join('|')
+        : 'no-variants';
+      
+      const existingItem = state.items.find(item => {
+        if (item.id !== action.payload.id) return false;
+        
+        const itemVariantKey = item.selectedVariants 
+          ? Object.entries(item.selectedVariants)
+              .sort(([a], [b]) => a.localeCompare(b))
+              .map(([key, value]) => `${key}:${value}`)
+              .join('|')
+          : 'no-variants';
+        
+        return itemVariantKey === variantKey;
+      });
       
       if (existingItem) {
         return {
           ...state,
-          items: state.items.map(item =>
-            item.id === action.payload.id && 
-            item.selectedSize === action.payload.selectedSize &&
-            item.selectedColor === action.payload.selectedColor
-              ? { ...item, quantity: item.quantity + action.payload.quantity }
-              : item
-          ),
+          items: state.items.map(item => {
+            const itemVariantKey = item.selectedVariants 
+              ? Object.entries(item.selectedVariants)
+                  .sort(([a], [b]) => a.localeCompare(b))
+                  .map(([key, value]) => `${key}:${value}`)
+                  .join('|')
+              : 'no-variants';
+            
+            if (item.id === action.payload.id && itemVariantKey === variantKey) {
+              return { ...item, quantity: item.quantity + action.payload.quantity };
+            }
+            return item;
+          }),
         };
       }
       
@@ -92,16 +112,23 @@ export const CartProvider = ({ children }) => {
     localStorage.setItem('rolu-cart', JSON.stringify(state.items));
   }, [state.items]);
 
-  const addToCart = (product, quantity = 1, selectedSize = null, selectedColor = null) => {
-    const cartId = `${product.id}-${selectedSize || 'default'}-${selectedColor || 'default'}-${Date.now()}`;
+  const addToCart = (product, quantity = 1) => {
+    // Crear una clave única para el carrito basada en el ID y las variantes
+    const variantKey = product.selectedVariants 
+      ? Object.entries(product.selectedVariants)
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([key, value]) => `${key}:${value}`)
+          .join('|')
+      : 'no-variants';
+    
+    const cartId = `${product.id}-${variantKey}-${Date.now()}`;
+    
     dispatch({
       type: 'ADD_ITEM',
       payload: {
         ...product,
         cartId,
         quantity,
-        selectedSize,
-        selectedColor,
       },
     });
   };

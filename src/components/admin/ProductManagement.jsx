@@ -71,6 +71,25 @@ const ProductManagement = ({
     return matchesSearch && matchesCategory && matchesStock;
   });
 
+  const renderVariants = (variants) => {
+    if (!variants || variants.length === 0) {
+      return null;
+    }
+
+    return (
+      <div className="flex flex-wrap gap-1 mt-2">
+        {variants.map((variant, index) => (
+          <span
+            key={index}
+            className="inline-flex items-center px-1.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 rounded dark:bg-blue-900/20 dark:text-blue-400"
+          >
+            {variant.name}: {Array.isArray(variant.options) ? variant.options.join(', ') : variant.options}
+          </span>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -162,6 +181,10 @@ const ProductManagement = ({
                   </div>
                 </div>
               </div>
+              
+              {/* Mostrar variantes */}
+              {renderVariants(product.variants)}
+              
               <div className="flex gap-2 mt-2">
                 <Button
                   variant="ghost"

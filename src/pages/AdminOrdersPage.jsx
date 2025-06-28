@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Helmet } from 'react-helmet';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from '@/components/ui/use-toast';
-import { Loader2, Package, Search, ChevronDown, ChevronUp, ChevronRight, X, MessageCircle, Trash2, Eye } from 'lucide-react';
+import { Loader2, Package, Search, ChevronDown, ChevronRight, X, Trash2, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -10,14 +10,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import AdminOrderDetail from '@/components/admin/AdminOrderDetail';
 
 const AdminOrdersPage = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [expandedOrderId, setExpandedOrderId] = useState(null);
-  const [selectedOrder, setSelectedOrder] = useState(null);
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
@@ -71,7 +68,6 @@ const AdminOrdersPage = () => {
     } else {
       toast({ title: 'Pedido eliminado', description: 'El pedido fue eliminado correctamente.' });
       fetchOrders();
-      setSelectedOrder(null);
     }
   };
 
@@ -83,7 +79,6 @@ const AdminOrdersPage = () => {
     } else {
       toast({ title: 'Pedidos eliminados', description: 'Todos los pedidos fueron eliminados correctamente.' });
       fetchOrders();
-      setSelectedOrder(null);
     }
   };
 
@@ -173,10 +168,6 @@ const AdminOrdersPage = () => {
                     <div className="flex flex-col items-center justify-center gap-2 mt-3 pt-2 border-t border-gray-700">
                       <span className="text-2xl font-extrabold text-green-400 whitespace-nowrap text-center">{formatPrice(order.total_amount)}</span>
                       <div className="flex flex-row items-center justify-center gap-2 w-full mt-1">
-                        <Button variant="outline" size="sm" className="flex-1 flex items-center justify-center gap-1 text-xs px-3 py-2 bg-gray-700 border-gray-600 hover:bg-gray-600 rounded-md max-w-[120px]" onClick={() => setSelectedOrder(order)}>
-                          <Eye className="w-4 h-4" />
-                          <span>Detalle</span>
-                        </Button>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="outline" size="sm" className="flex-1 flex items-center justify-center gap-1 text-xs px-3 py-2 bg-gray-700 border-gray-600 hover:bg-gray-600 rounded-md max-w-[120px]">
@@ -210,7 +201,6 @@ const AdminOrdersPage = () => {
               <table className="w-full min-w-max">
                 <thead className="bg-gray-800">
                   <tr>
-                    <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-400 uppercase"></th>
                     <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-400 uppercase">Pedido</th>
                     <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-400 uppercase">Cliente</th>
                     <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-400 uppercase">Fecha</th>
@@ -221,12 +211,7 @@ const AdminOrdersPage = () => {
                 </thead>
                 <tbody className="divide-y divide-gray-700">
                   {filteredOrders.map(order => (
-                    <tr key={order.id} className="cursor-pointer hover:bg-gray-800/50" onClick={e => { if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'svg' && e.target.tagName !== 'path') setSelectedOrder(order); }}>
-                      <td className="px-4 py-3">
-                        <Button variant="ghost" size="icon" onClick={e => { e.stopPropagation(); setSelectedOrder(order); }}>
-                          <ChevronRight className="w-4 h-4" />
-                        </Button>
-                      </td>
+                    <tr key={order.id} className="hover:bg-gray-800/50">
                       <td className="px-4 py-3 text-sm font-medium whitespace-nowrap">{order.order_number}</td>
                       <td className="px-4 py-3 text-sm font-semibold whitespace-nowrap">{order.customer_name || 'N/A'}</td>
                       <td className="px-4 py-3 text-sm text-gray-300 whitespace-nowrap">{new Date(order.created_at).toLocaleDateString('es-UY')}</td>
@@ -249,7 +234,7 @@ const AdminOrdersPage = () => {
                             ))}
                           </DropdownMenuContent>
                         </DropdownMenu>
-                        <Button variant="ghost" size="icon" onClick={e => { e.stopPropagation(); handleDeleteOrder(order.id); }} title="Eliminar pedido">
+                        <Button variant="ghost" size="icon" onClick={() => handleDeleteOrder(order.id)} title="Eliminar pedido">
                           <X className="w-4 h-4 text-red-400 hover:text-red-600" />
                         </Button>
                       </td>
@@ -259,15 +244,6 @@ const AdminOrdersPage = () => {
               </table>
             </div>
           </>
-        )}
-        {/* Modal de detalles */}
-        {selectedOrder && (
-          <AdminOrderDetail
-            order={selectedOrder}
-            onClose={() => setSelectedOrder(null)}
-            onDelete={handleDeleteOrder}
-            onStatusChange={handleStatusChange}
-          />
         )}
       </div>
     </>

@@ -1,12 +1,13 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, ShoppingBag, BarChart2, Wrench } from 'lucide-react';
+import { Home, ShoppingBag, BarChart2, Wrench, Eye } from 'lucide-react';
 
 const navItems = [
   { to: '/admin/dashboard', icon: Home, label: 'Dashboard' },
-  { to: '/admin/pedidos', icon: ShoppingBag, label: 'Pedidos' },
-  { to: '/admin/informes', icon: BarChart2, label: 'Informes' },
-  { to: '/admin/gestion', icon: Wrench, label: 'Gestión' },
+  { to: '/admin/dashboard?tab=pedidos', icon: ShoppingBag, label: 'Pedidos' },
+  { to: '/admin/dashboard?tab=detalles-pedido', icon: Eye, label: 'Detalles' },
+  { to: '/admin/dashboard?tab=informes', icon: BarChart2, label: 'Informes' },
+  { to: '/admin/dashboard?tab=gestion', icon: Wrench, label: 'Gestión' },
 ];
 
 const DashboardMobileNav = () => {

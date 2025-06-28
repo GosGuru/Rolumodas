@@ -134,6 +134,26 @@ const CheckoutPage = () => {
     }).format(price);
   };
 
+  // Función para renderizar variantes
+  const renderVariants = (selectedVariants) => {
+    if (!selectedVariants || Object.keys(selectedVariants).length === 0) {
+      return null;
+    }
+
+    return (
+      <div className="flex flex-wrap gap-1 mt-1">
+        {Object.entries(selectedVariants).map(([variantName, option]) => (
+          <span
+            key={variantName}
+            className="inline-flex items-center px-1.5 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded"
+          >
+            {variantName}: {option}
+          </span>
+        ))}
+      </div>
+    );
+  };
+
   // Función para generar un UUID si crypto.randomUUID no está disponible
   function generateOrderNumber() {
     if (window.crypto && window.crypto.randomUUID) {
@@ -467,6 +487,8 @@ const CheckoutPage = () => {
                       <p className="text-muted-foreground">
                         {formatPrice(item.price)} c/u
                       </p>
+                      {/* Mostrar variantes seleccionadas */}
+                      {renderVariants(item.selectedVariants)}
                     </div>
                   </div>
                   <p className="font-medium">

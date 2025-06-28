@@ -9,6 +9,7 @@ import { useWishlist } from '@/contexts/WishlistContext';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabaseClient';
 import Breadcrumbs from '@/components/Breadcrumbs';
+import ProductVariants from '@/components/ProductVariants';
 import Lightbox from 'yet-another-react-lightbox';
 import 'yet-another-react-lightbox/styles.css';
 
@@ -25,6 +26,7 @@ const ProductPage = () => {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [zoomed, setZoomed] = useState(false);
   const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
+  const [selectedVariants, setSelectedVariants] = useState({});
   const imgContainerRef = useRef(null);
 
   // Validación defensiva para las imágenes
@@ -50,6 +52,17 @@ const ProductPage = () => {
           inStock: data.stock > 0,
         };
         setProduct(productData);
+        
+        // Inicializar variantes seleccionadas con la primera opción de cada variante
+        if (data.variants && data.variants.length > 0) {
+          const initialVariants = {};
+          data.variants.forEach(variant => {
+            if (variant.options && variant.options.length > 0) {
+              initialVariants[variant.name] = variant.options[0];
+            }
+          });
+          setSelectedVariants(initialVariants);
+        }
       }
       setLoading(false);
       setSelectedImage(0);
@@ -66,7 +79,14 @@ const ProductPage = () => {
 
   const handleAddToCart = () => {
     if (!product) return;
-    addToCart(product, quantity);
+    
+    // Crear un objeto de producto con las variantes seleccionadas
+    const productWithVariants = {
+      ...product,
+      selectedVariants: Object.keys(selectedVariants).length > 0 ? selectedVariants : null
+    };
+    
+    addToCart(productWithVariants, quantity);
     toast({
       title: "¡Producto agregado!",
       description: `${product.name} se agregó a tu carrito.`,
@@ -75,8 +95,15 @@ const ProductPage = () => {
 
   const handleBuyNow = () => {
     if (!product) return;
+    
+    // Crear un objeto de producto con las variantes seleccionadas
+    const productWithVariants = {
+      ...product,
+      selectedVariants: Object.keys(selectedVariants).length > 0 ? selectedVariants : null
+    };
+    
     clearCart();
-    addToCart(product, quantity);
+    addToCart(productWithVariants, quantity);
     navigate('/checkout');
   };
 
@@ -88,6 +115,10 @@ const ProductPage = () => {
       title: isCurrentlyInWishlist ? "Eliminado de Favoritos" : "Agregado a Favoritos",
       description: `${product.name} se ${isCurrentlyInWishlist ? 'eliminó de' : 'agregó a'} tus favoritos.`,
     });
+  };
+
+  const handleVariantChange = (newSelectedVariants) => {
+    setSelectedVariants(newSelectedVariants);
   };
   
   const shareOn = (platform) => {
@@ -310,6 +341,13 @@ const ProductPage = () => {
             </div>
 
             <p className="text-base leading-relaxed text-muted-foreground">{product.description}</p>
+            
+            {/* Componente de variantes */}
+            <ProductVariants 
+              variants={product.variants} 
+              onVariantChange={handleVariantChange}
+              selectedVariants={selectedVariants}
+            />
             
             <div className="flex items-center space-x-3">
               <h3 className="text-sm font-medium text-foreground">CANTIDAD:</h3>

@@ -3,6 +3,25 @@ import { Button } from '@/components/ui/button';
 import { Edit, Trash2, Eye, EyeOff } from 'lucide-react';
 
 const ProductTable = ({ products, handleEdit, handleDelete, toggleVisibility, formatPrice }) => {
+  const renderVariants = (variants) => {
+    if (!variants || variants.length === 0) {
+      return <span className="text-xs text-gray-500">Sin variantes</span>;
+    }
+
+    return (
+      <div className="flex flex-wrap gap-1">
+        {variants.map((variant, index) => (
+          <span
+            key={index}
+            className="inline-flex items-center px-1.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 rounded dark:bg-blue-900/20 dark:text-blue-400"
+          >
+            {variant.name}: {Array.isArray(variant.options) ? variant.options.join(', ') : variant.options}
+          </span>
+        ))}
+      </div>
+    );
+  };
+
   if (!products || products.length === 0) {
     return <p className="p-6 text-center text-gray-400 font-negro">No hay productos para mostrar.</p>;
   }
@@ -31,6 +50,10 @@ const ProductTable = ({ products, handleEdit, handleDelete, toggleVisibility, fo
             <div className="flex flex-wrap items-center gap-2 mt-2">
               <span className="text-sm font-negro">Stock: <span className={product.stock < 10 ? 'text-red-400' : 'text-white'}>{product.stock}</span></span>
               <span className="text-sm font-negro">{formatPrice(product.price)}</span>
+            </div>
+            {/* Mostrar variantes en mobile */}
+            <div className="mt-2">
+              {renderVariants(product.variants)}
             </div>
             <div className="flex gap-2 mt-2">
               <Button
@@ -81,6 +104,9 @@ const ProductTable = ({ products, handleEdit, handleDelete, toggleVisibility, fo
                 Stock
               </th>
               <th className="px-6 py-3 text-left text-xs font-negro text-gray-400 uppercase tracking-wider">
+                Variantes
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-negro text-gray-400 uppercase tracking-wider">
                 Estado
               </th>
               <th className="px-6 py-3 text-left text-xs font-negro text-gray-400 uppercase tracking-wider">
@@ -117,6 +143,9 @@ const ProductTable = ({ products, handleEdit, handleDelete, toggleVisibility, fo
                   <span className={`text-sm font-negro ${product.stock < 10 ? 'text-red-400' : 'text-white'}`}>
                     {product.stock}
                   </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {renderVariants(product.variants)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`inline-flex px-2 py-1 text-xs font-negro ${

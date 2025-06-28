@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import { ShoppingCart, Heart, Search, LogOut, LogIn, Menu, X } from 'lucide-react';
+import { ShoppingCart, Heart, Search, LogOut, LogIn, Menu, X, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '@/contexts/CartContext';
 import { useWishlist } from '@/contexts/WishlistContext';
@@ -143,8 +143,8 @@ const MainHeader = ({ openSearchModal, atTop }) => {
               {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </Button>
           </div>
-          {/* Login/Logout solo en desktop */}
-          <div className="hidden md:inline-flex">
+          {/* Login/Logout y Herramientas solo en desktop */}
+          <div className="hidden md:inline-flex items-center gap-1">
             {!isAuthenticated && (
               <Link to="/admin/login">
                 <Button variant="ghost" size="icon" className="header-button-hover header-anim-icon" aria-label="Iniciar sesión">
@@ -153,9 +153,16 @@ const MainHeader = ({ openSearchModal, atTop }) => {
               </Link>
             )}
             {isAuthenticated && user && (
-              <Button variant="ghost" size="icon" onClick={logout} className="header-button-hover header-anim-icon" aria-label="Cerrar sesión">
-                <LogOut className="w-5 h-5" />
-              </Button>
+              <>
+                <Link to="/admin/dashboard">
+                  <Button variant="ghost" size="icon" className="header-button-hover header-anim-icon" aria-label="Panel de administración">
+                    <Settings className="w-5 h-5" />
+                  </Button>
+                </Link>
+                <Button variant="ghost" size="icon" onClick={logout} className="header-button-hover header-anim-icon" aria-label="Cerrar sesión">
+                  <LogOut className="w-5 h-5" />
+                </Button>
+              </>
             )}
           </div>
         </div>
@@ -187,9 +194,14 @@ const MainHeader = ({ openSearchModal, atTop }) => {
                   </NavLink>
                 )}
                 {isAuthenticated && user && (
-                  <button onClick={() => { logout(); setIsMobileMenuOpen(false); }} className="py-2 px-2 rounded flex items-center gap-2 hover:bg-white hover:text-black transition-all text-left">
-                    <LogOut className="w-5 h-5 " /> CERRAR SESIÓN
-                  </button>
+                  <>
+                    <NavLink to="/admin/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="py-2 px-2 rounded flex items-center gap-2 hover:bg-white hover:text-black transition-all">
+                      <Settings className="w-5 h-5" /> HERRAMIENTAS
+                    </NavLink>
+                    <button onClick={() => { logout(); setIsMobileMenuOpen(false); }} className="py-2 px-2 rounded flex items-center gap-2 hover:bg-white hover:text-black transition-all text-left">
+                      <LogOut className="w-5 h-5 " /> CERRAR SESIÓN
+                    </button>
+                  </>
                 )}
               </nav>
 
