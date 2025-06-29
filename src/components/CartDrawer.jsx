@@ -149,11 +149,9 @@ const CartDrawer = () => {
                       FINALIZAR COMPRA
                     </Button>
                   </Link>
-                  <Link to="/tienda" onClick={closeDrawer} className="block">
-                     <Button variant="outline" className="w-full">
-                      SEGUIR COMPRANDO
-                    </Button>
-                  </Link>
+                  <Button variant="outline" className="w-full" onClick={closeDrawer}>
+                    SEGUIR COMPRANDO
+                  </Button>
                 </footer>
               </>
             )}

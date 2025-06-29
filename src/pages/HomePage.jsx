@@ -119,6 +119,7 @@ const HomePage = () => {
             className="py-8  mt-[-30px] md:mt-[-40px] sm:py-12 bg-secondary"
           >
             <div className="w-full max-w-6xl mx-auto px-4">
+              <h2 className="text-xl sm:text-2xl md:text-4xl font-bold tracking-tight text-center uppercase text-foreground mb-6">CATEGORÍAS</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-x-3 gap-y-3 md:gap-x-3 md:gap-y-3">
                 {categories.slice(0, 6).map((category, index) => (
                   <motion.div
@@ -138,12 +139,6 @@ const HomePage = () => {
                       <h3 className="text-base sm:text-lg md:text-2xl font-bold tracking-wider uppercase drop-shadow">
                         {category.name}
                       </h3>
-                      <Link
-                        to={`/categoria/${category.slug}`}
-                        className="inline-flex items-center mt-2 text-base font-semibold hover:underline"
-                      >
-                        Ver más <ArrowRight className="w-4 h-4 ml-1" />
-                      </Link>
                     </div>
                     <Link
                       to={`/categoria/${category.slug}`}
