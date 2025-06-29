@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import { ShoppingCart, Heart, Search, LogOut, LogIn, Menu, X, Settings } from 'lucide-react';
+import { ShoppingCart, Heart, Search, LogOut, LogIn, Menu, X, Settings, Home, HelpCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '@/contexts/CartContext';
 import { useWishlist } from '@/contexts/WishlistContext';
@@ -178,13 +178,13 @@ const MainHeader = ({ openSearchModal, atTop }) => {
 
               <nav className="flex flex-col p-4 gap-2 text-white bg-black/80" aria-label="Menú móvil" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: '16px' }}>
                 <NavLink to="/" onClick={() => setIsMobileMenuOpen(false)} className="py-2 px-2 rounded flex items-center gap-2 hover:bg-white hover:text-black transition-all">
-                  <Search className="w-5 h-5" /> INICIO
+                  <Home className="w-5 h-5" /> INICIO
                 </NavLink>
                 <NavLink to="/tienda" onClick={() => setIsMobileMenuOpen(false)} className="py-2 px-2 rounded flex items-center gap-2 hover:bg-white hover:text-black transition-all">
                   <ShoppingCart className="w-5 h-5" /> TIENDA
                 </NavLink>
                 <NavLink to="/faq" onClick={() => setIsMobileMenuOpen(false)} className="py-2 px-2 rounded flex items-center gap-2 hover:bg-white hover:text-black transition-all">
-                  <Heart className="w-5 h-5" /> PREGUNTAS FRECUENTES
+                  <HelpCircle className="w-5 h-5" /> PREGUNTAS FRECUENTES
                 </NavLink>
                 {!isAuthenticated && (
                   <NavLink to="/admin/login" onClick={() => setIsMobileMenuOpen(false)} className="py-2 px-2 rounded flex items-center gap-2 hover:bg-white hover:text-black transition-all">

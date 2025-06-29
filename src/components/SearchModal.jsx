@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Search as SearchIcon, Loader2 } from 'lucide-react';
@@ -81,21 +80,22 @@ const SearchModal = ({ isOpen, onClose }) => {
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: -20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="bg-background border border-border rounded-lg w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden shadow-2xl"
+            className="bg-background border border-border rounded-lg w-full max-w-xl min-h-[220px] max-h-[80vh] flex flex-col overflow-hidden shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center p-3 border-b border-border">
-              <SearchIcon className="h-5 w-5 text-muted-foreground mr-3 flex-shrink-0" />
+            <div className="flex items-center p-2 md:p-3 border-b border-border gap-2">
+              <SearchIcon className="h-5 w-5 text-muted-foreground flex-shrink-0" />
               <input
                 ref={inputRef}
                 type="text"
                 placeholder="Buscar productos..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="flex-grow bg-transparent text-foreground placeholder-muted-foreground focus:outline-none text-base"
+                className="flex-grow bg-transparent text-foreground placeholder-muted-foreground focus:outline-none text-base px-1"
+                style={{ minWidth: 0 }}
               />
-              {loading && <Loader2 className="h-5 w-5 text-muted-foreground animate-spin ml-3" />}
-              <Button variant="ghost" size="icon" onClick={onClose} className="ml-2 text-muted-foreground hover:text-foreground">
+              {loading && <Loader2 className="h-5 w-5 text-muted-foreground animate-spin ml-2" />}
+              <Button variant="ghost" size="icon" onClick={onClose} className="ml-1 text-muted-foreground hover:text-foreground flex-shrink-0">
                 <X className="h-5 w-5" />
               </Button>
             </div>
@@ -129,9 +129,9 @@ const SearchModal = ({ isOpen, onClose }) => {
               )}
               
               {searchTerm.length < 2 && (
-                   <div className="p-6 text-center text-muted-foreground">
-                      Escribe para buscar en toda la tienda...
-                   </div>
+                <div className="flex flex-col items-center justify-center min-h-[120px] py-4 px-2 text-center text-muted-foreground text-base">
+                  Escribe para buscar en toda la tienda...
+                </div>
               )}
             </div>
           </motion.div>

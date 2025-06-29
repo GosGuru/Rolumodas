@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { toast } from "@/components/ui/use-toast";
 import ProductCard from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
+import HeroImage from '../assets/Heroimage.png';
 
 const HomePage = () => {
   const [categories, setCategories] = useState([]);
@@ -95,23 +96,15 @@ const HomePage = () => {
         )}
         <div className="absolute inset-0 bg-black/40"></div>
 
-        <div className="relative z-10 px-4">
-          <motion.h1
+        <div className="relative z-10 px-4 flex flex-col items-center justify-center">
+          <motion.img
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-4xl font-bold tracking-tight uppercase md:text-6xl"
-          >
-            Estilo que Inspira
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="max-w-2xl mx-auto mt-4 text-lg md:text-xl"
-          >
-            Descubre las últimas tendencias y encuentra tu look perfecto.
-          </motion.p>
+            src={HeroImage}
+            alt="Estilo que Inspira"
+            className="w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-2xl h-auto rounded-lg shadow-lg object-cover"
+          />
         </div>
       </section>
 

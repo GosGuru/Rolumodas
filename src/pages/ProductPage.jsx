@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Heart, Minus, Plus, Loader2, Facebook, MessageCircle, ShoppingCart } from 'lucide-react';
+import { FaWhatsapp } from 'react-icons/fa';
 import { Helmet } from 'react-helmet';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/contexts/CartContext';
@@ -13,6 +14,7 @@ import ProductVariants from '@/components/ProductVariants';
 import ColorDisplay from '@/components/ColorDisplay';
 import Lightbox from 'yet-another-react-lightbox';
 import 'yet-another-react-lightbox/styles.css';
+import ProductCard from '@/components/ProductCard';
 
 const ProductPage = () => {
   const { id } = useParams();
@@ -30,6 +32,7 @@ const ProductPage = () => {
   const [selectedVariants, setSelectedVariants] = useState({});
   const [selectedColor, setSelectedColor] = useState(null);
   const imgContainerRef = useRef(null);
+  const [relatedProducts, setRelatedProducts] = useState([]);
 
   // Validación defensiva para las imágenes
   const safeImages = product?.images || [];
@@ -69,6 +72,24 @@ const ProductPage = () => {
         // Inicializar color seleccionado con el primer color disponible
         if (data.colors && data.colors.length > 0) {
           setSelectedColor(data.colors[0]);
+        }
+
+        // --- Productos relacionados ---
+        if (data.category_id) {
+          const { data: related, error: relatedError } = await supabase
+            .from('products')
+            .select('*, categories(name, slug)')
+            .eq('category_id', data.category_id)
+            .eq('visible', true)
+            .neq('id', data.id)
+            .limit(4);
+          if (!relatedError && related) {
+            setRelatedProducts(related);
+          } else {
+            setRelatedProducts([]);
+          }
+        } else {
+          setRelatedProducts([]);
         }
       }
       setLoading(false);
@@ -245,7 +266,7 @@ const ProductPage = () => {
 
       <Breadcrumbs product={product} />
 
-      <div className="container px-4 py-8 mx-auto">
+      <div className="container px-4 pt-1 pb-8 mx-auto">
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -340,27 +361,27 @@ const ProductPage = () => {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="space-y-6"
+            className="space-y-4 md:space-y-6"
           >
             <div>
-              <h1 className="mb-2 text-2xl font-bold md:text-3xl text-foreground">{product?.name}</h1>
+              <h1 className="mb-1 text-lg font-bold md:text-2xl text-foreground leading-tight">{product?.name}</h1>
               {/* Descripción corta */}
               {product?.short_description && (
-                <p className="mb-2 text-base text-gray-500 dark:text-gray-300">{product.short_description}</p>
+                <p className="mb-1 text-sm md:text-base text-gray-500 dark:text-gray-300 leading-snug">{product.short_description}</p>
               )}
-              <div className="mt-4 text-3xl font-bold text-foreground">
+              <div className="mt-2 text-xl md:text-2xl font-bold text-foreground">
                 {formatPrice(product.price)}
               </div>
             </div>
 
-            <p className="text-base leading-relaxed text-muted-foreground">{product.description}</p>
+            <p className="text-sm md:text-base leading-relaxed text-muted-foreground">{product.description}</p>
             
             {/* Opciones disponibles: Color y variantes */}
             <div className="space-y-4">
               {/* Selector de color como variante */}
               {product.colors && product.colors.length > 0 && (
                 <div>
-                  <span className="block mb-1 text-sm font-medium text-foreground">Color:</span>
+                  <span className="block mb-1 text-xs md:text-sm font-medium text-foreground">Color:</span>
                   <div className="flex flex-wrap gap-2">
                     {product.colors.map((color, index) => (
                       <button
@@ -371,7 +392,7 @@ const ProductPage = () => {
                             ? 'ring-2 ring-black scale-110 shadow'
                             : ''}
                         `}
-                        style={{ width: '32px', height: '32px', minWidth: '32px', minHeight: '32px', background: color.value, position: 'relative', boxShadow: 'none' }}
+                        style={{ width: '28px', height: '28px', minWidth: '28px', minHeight: '28px', background: color.value, position: 'relative', boxShadow: 'none' }}
                         type="button"
                         title={color.name}
                         tabIndex={0}
@@ -381,7 +402,7 @@ const ProductPage = () => {
                             viewBox="0 0 20 20"
                             fill="none"
                             xmlns="http://www.w3.org/2000/svg"
-                            className="absolute inset-0 m-auto w-5 h-5 text-white pointer-events-none"
+                            className="absolute inset-0 m-auto w-4 h-4 text-white pointer-events-none"
                             style={{ zIndex: 2 }}
                           >
                             <path d="M6 10.5L9 13.5L15 7.5" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
@@ -400,35 +421,35 @@ const ProductPage = () => {
               />
             </div>
             
-            <div className="flex items-center space-x-3 mt-6">
-              <h3 className="text-sm font-medium text-foreground">CANTIDAD:</h3>
+            <div className="flex items-center space-x-2 mt-4 md:mt-6">
+              <h3 className="text-xs md:text-sm font-medium text-foreground">CANTIDAD:</h3>
               <div className="flex items-center border rounded-md">
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="w-10 h-10"
+                  className="w-8 h-8 md:w-10 md:h-10"
                 >
                   <Minus className="w-4 h-4"/>
                 </Button>
-                <span className="w-12 text-lg font-semibold text-center">{quantity}</span>
+                <span className="w-8 md:w-12 text-base md:text-lg font-semibold text-center">{quantity}</span>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => setQuantity(quantity + 1)}
-                  className="w-10 h-10"
+                  className="w-8 h-8 md:w-10 md:h-10"
                 >
                   <Plus className="w-4 h-4"/>
                 </Button>
               </div>
             </div>
 
-            <div className="pt-2 space-y-3">
+            <div className="pt-2 space-y-2 md:space-y-3">
               <div className="flex space-x-2">
                 <Button
                   onClick={handleBuyNow}
                   size="lg"
-                  className="w-full font-semibold bg-primary text-primary-foreground hover:bg-primary/90"
+                  className="w-full font-semibold bg-primary text-primary-foreground hover:bg-primary/90 py-2 md:py-3 text-sm md:text-base"
                   disabled={!product.inStock}
                 >
                   {product.inStock ? 'COMPRAR AHORA' : 'AGOTADO'}
@@ -436,7 +457,7 @@ const ProductPage = () => {
                 <Button
                   variant="outline"
                   size="icon"
-                  className="h-11 w-11"
+                  className="h-10 w-10 md:h-11 md:w-11"
                   onClick={handleAddToCart}
                   disabled={!product.inStock}
                 >
@@ -445,37 +466,48 @@ const ProductPage = () => {
               </div>
               <Button 
                 variant="outline"
-                size="lg"
-                className="w-full"
+                size="sm"
+                className="w-full py-2 md:py-3 text-xs md:text-base flex items-center justify-center"
                 onClick={handleToggleWishlist}
               >
-                <Heart className={`h-5 w-5 mr-2 transition-colors ${isProductInWishlist ? 'fill-current text-red-500' : ''}`} />
+                <Heart className={`h-4 w-4 mr-2 transition-colors ${isProductInWishlist ? 'fill-current text-red-500' : ''}`} />
                 {isProductInWishlist ? 'EN FAVORITOS' : 'AÑADIR A FAVORITOS'}
               </Button>
             </div>
 
             <div className="pt-6 border-t">
-              <h3 className="mb-3 text-sm font-medium uppercase text-foreground">Compartir</h3>
+              <h3 className="mb-2 text-xs md:text-sm font-medium uppercase text-foreground">Compartir</h3>
               <div className="flex space-x-2">
-                 <Button variant="outline" size="icon" onClick={() => shareOn('whatsapp')}>
-                   <MessageCircle className="w-5 h-5"/>
+                 <Button variant="outline" size="icon" className="h-9 w-9 md:h-10 md:w-10" onClick={() => shareOn('whatsapp')}>
+                   <FaWhatsapp className="w-5 h-5 md:w-6 md:h-6" />
                  </Button>
-                 <Button variant="outline" size="icon" onClick={() => shareOn('facebook')}>
-                   <Facebook className="w-5 h-5"/>
+                 <Button variant="outline" size="icon" className="h-9 w-9 md:h-10 md:w-10" onClick={() => shareOn('facebook')}>
+                   <Facebook className="w-4 h-4 md:w-5 md:h-5"/>
                  </Button>
               </div>
             </div>
 
             {/* Descripción larga */}
             {product?.long_description && (
-              <div className="p-4 mt-6 prose-sm prose bg-gray-100 rounded-lg dark:prose-invert max-w-none dark:bg-gray-900/40">
-                <h2 className="mb-2 text-lg font-semibold text-foreground">Descripción</h2>
-                <p style={{whiteSpace: 'pre-line'}}>{product.long_description}</p>
+              <div className="p-3 md:p-4 mt-4 md:mt-6 prose-sm prose bg-gray-100 rounded-lg dark:prose-invert max-w-none dark:bg-gray-900/40">
+                <h2 className="mb-2 text-base md:text-lg font-semibold text-foreground">Descripción</h2>
+                <p className="text-xs md:text-base" style={{whiteSpace: 'pre-line'}}>{product.long_description}</p>
               </div>
             )}
           </motion.div>
         </div>
       </div>
+      {/* Productos relacionados */}
+      {relatedProducts && relatedProducts.length > 0 && (
+        <div className="container mx-auto px-4 pb-12">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-center uppercase text-foreground mb-6 mt-10">Productos relacionados</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-8 md:gap-x-6 md:gap-y-10">
+            {relatedProducts.map((prod, idx) => (
+              <ProductCard key={prod.id} product={prod} index={idx} />
+            ))}
+          </div>
+        </div>
+      )}
     </>
   );
 };

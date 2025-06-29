@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -19,8 +19,21 @@ const ProductCard = ({ product, index, listMode }) => {
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [lightboxClosing, setLightboxClosing] = useState(false);
   const [lightboxAnimProps, setLightboxAnimProps] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [showMobileActions, setShowMobileActions] = useState(false);
   const thumbRef = useRef(null);
   const lightboxImgRef = useRef(null);
+
+  // Detectar si estamos en móvil
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const handleToggleWishlist = (e) => {
     e.preventDefault();
@@ -175,10 +188,29 @@ const ProductCard = ({ product, index, listMode }) => {
       viewport={{ once: true }}
       transition={{ duration: 0.5, delay: (index % 4) * 0.05 }}
       className="group"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      onTouchStart={() => setHovered(true)}
-      onTouchEnd={() => setHovered(false)}
+      onMouseEnter={() => !isMobile && setHovered(true)}
+      onMouseLeave={() => !isMobile && setHovered(false)}
+      onTouchStart={() => {
+        if (isMobile) {
+          // En móvil, mostrar acciones después de un delay corto
+          const timer = setTimeout(() => {
+            setShowMobileActions(true);
+          }, 200);
+          return () => clearTimeout(timer);
+        } else {
+          setHovered(true);
+        }
+      }}
+      onTouchEnd={() => {
+        if (isMobile) {
+          // En móvil, ocultar acciones después de un delay
+          setTimeout(() => {
+            setShowMobileActions(false);
+          }, 1000);
+        } else {
+          setHovered(false);
+        }
+      }}
       tabIndex={0}
       onKeyDown={e => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -198,7 +230,11 @@ const ProductCard = ({ product, index, listMode }) => {
             alt={product.name}
             className={`w-full object-cover aspect-square transition-transform duration-300 group-hover:scale-105 ${hovered && product.images?.[1] ? 'scale-105 blur-[1px]' : ''}`}
           />
-          <div className="absolute flex flex-col items-end gap-2 transition-opacity duration-300 opacity-0 top-2 right-2 group-hover:opacity-100">
+          <div className={`absolute flex flex-col items-end gap-2 transition-opacity duration-300 top-2 right-2 ${
+            isMobile 
+              ? showMobileActions ? 'opacity-100' : 'opacity-0' 
+              : 'opacity-0 group-hover:opacity-100'
+          }`}>
             <Button
               size="icon"
               variant="ghost"
