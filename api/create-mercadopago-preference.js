@@ -20,7 +20,7 @@ export default async function handler(req, res) {
   try {
     // Validar variables de entorno primero
     const required = [
-      "NEXT_PUBLIC_SUPABASE_URL",
+      "VITE_SUPABASE_URL",
       "SUPABASE_SERVICE_ROLE_KEY",
       "MERCADOPAGO_ACCESS_TOKEN",
     ];
@@ -29,7 +29,7 @@ export default async function handler(req, res) {
     });
 
     // Inicializar clientes externos
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseUrl = process.env.VITE_SUPABASE_URL;
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     const mpToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
 
