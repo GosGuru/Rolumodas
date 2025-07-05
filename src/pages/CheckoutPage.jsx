@@ -324,17 +324,27 @@ const CheckoutPage = () => {
               >
                 <Label
                   htmlFor="pickup"
-                  className="flex items-center space-x-3 p-4 border rounded-md has-[:checked]:border-primary has-[:checked]:bg-accent transition-colors cursor-pointer"
+                  className="flex flex-col items-start p-4 border rounded-md has-[:checked]:border-primary has-[:checked]:bg-accent transition-colors cursor-pointer"
                 >
-                  <RadioGroupItem value="pickup" id="pickup" />
-                  <span>Retiro en persona (Durazno)</span>
+                  <div className="flex items-center">
+                    <RadioGroupItem value="pickup" id="pickup" />
+                    <span className="ml-2">Retiro en persona (Durazno)</span>
+                  </div>
+                  {shippingMethod === "pickup" && (
+                    <span className="block text-[11px] text-gray-400 mt-1 w-full text-center">Retirá en Durazno.</span>
+                  )}
                 </Label>
                 <Label
                   htmlFor="agency"
-                  className="flex items-center space-x-3 p-4 border rounded-md has-[:checked]:border-primary has-[:checked]:bg-accent transition-colors cursor-pointer"
+                  className="flex flex-col items-start p-4 border rounded-md has-[:checked]:border-primary has-[:checked]:bg-accent transition-colors cursor-pointer"
                 >
-                  <RadioGroupItem value="agency" id="agency" />
-                  <span>Agencia (con costo a cuenta del cliente)</span>
+                  <div className="flex items-center">
+                    <RadioGroupItem value="agency" id="agency" />
+                    <span className="ml-2">Agencia (con costo a cuenta del cliente)</span>
+                  </div>
+                  {shippingMethod === "agency" && (
+                    <span className="block text-[11px] text-gray-400 mt-1 w-full text-center">Envío por agencia, costo a cargo.</span>
+                  )}
                 </Label>
               </RadioGroup>
             </div>
@@ -352,17 +362,27 @@ const CheckoutPage = () => {
               >
                 <Label
                   htmlFor="manual"
-                  className="flex items-center space-x-3 p-4 border rounded-md has-[:checked]:border-primary has-[:checked]:bg-accent transition-colors cursor-pointer"
+                  className="flex flex-col items-start p-4 border rounded-md has-[:checked]:border-primary has-[:checked]:bg-accent transition-colors cursor-pointer"
                 >
-                  <RadioGroupItem value="manual" id="manual" />
-                  <span>Pago manual</span>
+                  <div className="flex items-center">
+                    <RadioGroupItem value="manual" id="manual" />
+                    <span className="ml-2">Pago Manual</span>
+                  </div>
+                  {paymentMethod === "manual" && (
+                    <span className="block text-[11px] text-gray-400 mt-1 w-full text-center">Transferencia o acuerdo.</span>
+                  )}
                 </Label>
                 <Label
                   htmlFor="mp"
-                  className="flex items-center space-x-3 p-4 border rounded-md has-[:checked]:border-primary has-[:checked]:bg-accent transition-colors cursor-pointer"
+                  className="flex flex-col items-start p-4 border rounded-md has-[:checked]:border-primary has-[:checked]:bg-accent transition-colors cursor-pointer"
                 >
-                  <RadioGroupItem value="mp" id="mp" />
-                  <span>Mercado Pago</span>
+                  <div className="flex items-center">
+                    <RadioGroupItem value="mp" id="mp" />
+                    <span className="ml-2">Mercado Pago</span>
+                  </div>
+                  {paymentMethod === "mp" && (
+                    <span className="block text-[11px] text-gray-400 mt-1 w-full text-center">Pago online seguro.</span>
+                  )}
                 </Label>
               </RadioGroup>
 
@@ -379,9 +399,7 @@ const CheckoutPage = () => {
                         Instrucciones para el pago
                       </AlertTitle>
                       <AlertDescription>
-                        Al finalizar, te daremos los datos para que puedas
-                        abonar. Tu pedido no se procesará hasta recibir el
-                        importe.
+                        Al finalizar la compra te daremos los datos para poder abonar. Si eres de Durazno podrás usar esos datos o abonar en efectivo cuando pases por tu pedido.
                       </AlertDescription>
                     </Alert>
                   </motion.div>
