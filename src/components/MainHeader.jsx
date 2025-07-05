@@ -119,7 +119,8 @@ const MainHeader = ({ openSearchModal, atTop }) => {
               <motion.span
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="absolute -top-1 -right-1 bg-white text-black text-[10px] rounded-full h-4 w-4 flex items-center justify-center font-bold"
+                className="absolute top-[1.2px] right-[-1px] bg-white text-black text-[10px] rounded-full h-4 w-4 flex items-center justify-center font-bold border border-gray-200 shadow-sm"
+                style={{ transform: 'translate(30%, -30%)' }}
                 aria-label={`${totalCartItems} productos en el carrito`}
                 transition={{ duration: ANIMATION_DURATION }}
               >
