@@ -27,6 +27,7 @@ import OrderStatusPage from '@/pages/OrderStatusPage';
 import AdminOrdersPage from '@/pages/AdminOrdersPage';
 import AdminReportsPage from '@/pages/AdminReportsPage';
 import AdminPanel, { AdminGestionPage } from '@/pages/AdminPanel';
+import WhatsAppButton from './components/WhatsAppButton';
 // Import the React variant of Vercel Analytics since this project uses
 // React Router instead of Next.js. The React build doesn't rely on
 // Next.js-specific APIs like `useParams`, which caused build errors.
@@ -78,6 +79,7 @@ function App() {
               <SearchModal isOpen={isSearchModalOpen} onClose={closeSearchModal} />
               <NewsletterButton />
               <AuthAwareWhatsAppButton phoneNumber="+59897358715" />
+              <WhatsAppButton phoneNumber="59891234567" />
               <Toaster />
             </div>
           </Router>
