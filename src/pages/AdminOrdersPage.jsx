@@ -10,11 +10,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import OrderDetailsTab from '@/components/admin/OrderDetailsTab';
+import { useNavigate } from 'react-router-dom';
 
 const AdminOrdersPage = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const navigate = useNavigate();
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
@@ -45,6 +49,23 @@ const AdminOrdersPage = () => {
       supabase.removeChannel(channel);
     };
   }, [fetchOrders]);
+
+  useEffect(() => {
+    const savedOrder = localStorage.getItem('admin_selected_order');
+    if (savedOrder) {
+      try {
+        setSelectedOrder(JSON.parse(savedOrder));
+      } catch {}
+    }
+  }, []);
+
+  useEffect(() => {
+    if (selectedOrder) {
+      localStorage.setItem('admin_selected_order', JSON.stringify(selectedOrder));
+    } else {
+      localStorage.removeItem('admin_selected_order');
+    }
+  }, [selectedOrder]);
 
   const handleStatusChange = async (orderId, newStatus) => {
     const { error } = await supabase
@@ -103,6 +124,17 @@ const AdminOrdersPage = () => {
   };
   
   const statusOptions = ['pending_payment', 'processing', 'completed', 'cancelled'];
+
+  if (selectedOrder) {
+    return (
+      <OrderDetailsTab
+        order={selectedOrder}
+        onBack={() => setSelectedOrder(null)}
+        onDelete={handleDeleteOrder}
+        onStatusChange={handleStatusChange}
+      />
+    );
+  }
 
   return (
     <>
@@ -201,8 +233,8 @@ const AdminOrdersPage = () => {
               <table className="w-full min-w-max">
                 <thead className="bg-gray-800">
                   <tr>
-                    <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-400 uppercase">Pedido</th>
-                    <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-400 uppercase">Cliente</th>
+                    <th className="px-4 py-3 text-xs font-medium tracking-wider text-center text-gray-400 uppercase">Cliente</th>
+                    <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-400 uppercase">Email</th>
                     <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-400 uppercase">Fecha</th>
                     <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-400 uppercase">Total</th>
                     <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-400 uppercase">Estado</th>
@@ -211,9 +243,14 @@ const AdminOrdersPage = () => {
                 </thead>
                 <tbody className="divide-y divide-gray-700">
                   {filteredOrders.map(order => (
-                    <tr key={order.id} className="hover:bg-gray-800/50">
-                      <td className="px-4 py-3 text-sm font-medium whitespace-nowrap">{order.order_number}</td>
-                      <td className="px-4 py-3 text-sm font-semibold whitespace-nowrap">{order.customer_name || 'N/A'}</td>
+                    <tr key={order.id} className="hover:bg-gray-800/50 cursor-pointer" onClick={() => {
+                      navigate('/admin/detalles', { state: { order } });
+                    }}>
+                      <td className="px-4 py-3 text-center">
+                        <span className="text-base md:text-lg font-bold text-white text-center break-all">{order.customer_name || 'N/A'}</span>
+                        <span className="text-xs text-gray-400 mt-1 block">#{order.order_number}</span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-300 whitespace-nowrap">{order.customer_email}</td>
                       <td className="px-4 py-3 text-sm text-gray-300 whitespace-nowrap">{new Date(order.created_at).toLocaleDateString('es-UY')}</td>
                       <td className="px-4 py-3 text-sm whitespace-nowrap">{formatPrice(order.total_amount)}</td>
                       <td className="px-4 py-3 whitespace-nowrap">
@@ -224,7 +261,7 @@ const AdminOrdersPage = () => {
                       <td className="flex items-center gap-2 px-4 py-3 whitespace-nowrap">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="outline" className="text-xs bg-gray-800 border-gray-600 hover:bg-gray-700">Cambiar Estado</Button>
+                            <Button variant="outline" className="text-xs bg-gray-800 border-gray-600 hover:bg-gray-700" onClick={e => e.stopPropagation()}>Cambiar Estado</Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent>
                             {statusOptions.map(status => (
@@ -234,7 +271,7 @@ const AdminOrdersPage = () => {
                             ))}
                           </DropdownMenuContent>
                         </DropdownMenu>
-                        <Button variant="ghost" size="icon" onClick={() => handleDeleteOrder(order.id)} title="Eliminar pedido">
+                        <Button variant="ghost" size="icon" onClick={e => { e.stopPropagation(); handleDeleteOrder(order.id); }} title="Eliminar pedido">
                           <X className="w-4 h-4 text-red-400 hover:text-red-600" />
                         </Button>
                       </td>
@@ -246,6 +283,14 @@ const AdminOrdersPage = () => {
           </>
         )}
       </div>
+      {selectedOrder && (
+        <OrderDetailsTab
+          order={selectedOrder}
+          onBack={() => setSelectedOrder(null)}
+          onDelete={handleDeleteOrder}
+          onStatusChange={handleStatusChange}
+        />
+      )}
     </>
   );
 };

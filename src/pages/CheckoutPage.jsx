@@ -326,9 +326,9 @@ const CheckoutPage = () => {
                   htmlFor="pickup"
                   className="flex flex-col items-start p-4 border rounded-md has-[:checked]:border-primary has-[:checked]:bg-accent transition-colors cursor-pointer"
                 >
-                  <div className="flex items-center">
+                  <div className="flex items-center gap-2">
                     <RadioGroupItem value="pickup" id="pickup" />
-                    <span className="ml-2">Retiro en persona (Durazno)</span>
+                    <span>Retiro en persona (Durazno)</span>
                   </div>
                   {shippingMethod === "pickup" && (
                     <span className="block text-[11px] text-gray-400 mt-1 w-full text-center">Retirá en Durazno.</span>
@@ -338,9 +338,9 @@ const CheckoutPage = () => {
                   htmlFor="agency"
                   className="flex flex-col items-start p-4 border rounded-md has-[:checked]:border-primary has-[:checked]:bg-accent transition-colors cursor-pointer"
                 >
-                  <div className="flex items-center">
+                  <div className="flex items-center gap-2">
                     <RadioGroupItem value="agency" id="agency" />
-                    <span className="ml-2">Agencia (con costo a cuenta del cliente)</span>
+                    <span>Agencia (con costo a cuenta del cliente)</span>
                   </div>
                   {shippingMethod === "agency" && (
                     <span className="block text-[11px] text-gray-400 mt-1 w-full text-center">Envío por agencia, costo a cargo.</span>
@@ -364,9 +364,9 @@ const CheckoutPage = () => {
                   htmlFor="manual"
                   className="flex flex-col items-start p-4 border rounded-md has-[:checked]:border-primary has-[:checked]:bg-accent transition-colors cursor-pointer"
                 >
-                  <div className="flex items-center">
+                  <div className="flex items-center gap-2">
                     <RadioGroupItem value="manual" id="manual" />
-                    <span className="ml-2">Pago Manual</span>
+                    <span>Pago Manual</span>
                   </div>
                   {paymentMethod === "manual" && (
                     <span className="block text-[11px] text-gray-400 mt-1 w-full text-center">Transferencia o acuerdo.</span>
@@ -376,9 +376,9 @@ const CheckoutPage = () => {
                   htmlFor="mp"
                   className="flex flex-col items-start p-4 border rounded-md has-[:checked]:border-primary has-[:checked]:bg-accent transition-colors cursor-pointer"
                 >
-                  <div className="flex items-center">
+                  <div className="flex items-center gap-2">
                     <RadioGroupItem value="mp" id="mp" />
-                    <span className="ml-2">Mercado Pago</span>
+                    <span>Mercado Pago</span>
                   </div>
                   {paymentMethod === "mp" && (
                     <span className="block text-[11px] text-gray-400 mt-1 w-full text-center">Pago online seguro.</span>

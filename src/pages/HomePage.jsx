@@ -14,6 +14,7 @@ const HomePage = () => {
   const [trendingProducts, setTrendingProducts] = useState([]);
   const [heroImage, setHeroImage] = useState("");
   const [loading, setLoading] = useState(true);
+  const [isHeroLoaded, setIsHeroLoaded] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -87,11 +88,16 @@ const HomePage = () => {
       </Helmet>
 
       <section className="relative h-screen min-h-[600px] flex items-center justify-center text-center text-white bg-gray-400">
+        {!isHeroLoaded && (
+          <div className="absolute inset-0 w-full h-full bg-gray-400 animate-pulse z-0" />
+        )}
         {heroImage && (
           <img
-            className="absolute inset-0 object-cover w-full h-full"
+            className={`absolute inset-0 object-cover w-full h-full transition-opacity duration-300 ${isHeroLoaded ? 'opacity-100' : 'opacity-0'}`}
             alt="Hero background showing a fashion product"
             src={heroImage}
+            onLoad={() => setIsHeroLoaded(true)}
+            draggable={false}
           />
         )}
         <div className="absolute inset-0 bg-black/40"></div>
@@ -100,7 +106,7 @@ const HomePage = () => {
           <motion.img
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
+            transition={{ duration: 0.18, delay: 0.05 }}
             src={HeroImage}
             alt="Estilo que Inspira"
             className="w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-2xl h-auto rounded-lg shadow-lg object-cover"

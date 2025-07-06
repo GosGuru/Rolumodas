@@ -51,6 +51,7 @@ const MainHeader = ({ openSearchModal, atTop }) => {
     transition: 'margin-top 0.12s cubic-bezier(0.4,0,0.2,1), background 0.12s',
     zIndex: 50,
     padding: '0 16px',
+    
   };
 
   const logoStyle = {
@@ -158,7 +159,7 @@ const MainHeader = ({ openSearchModal, atTop }) => {
                     <Settings className="w-5 h-5" />
                   </Button>
                 </Link>
-                <Button variant="ghost" size="icon" onClick={logout} className="header-button-hover header-anim-icon" aria-label="Cerrar sesión">
+                <Button variant="ghost" size="icon" onClick={() => window.location.href = '/admin/pedidos'} className="header-button-hover header-anim-icon" aria-label="Cerrar sesión">
                   <LogOut className="w-5 h-5" />
                 </Button>
               </>
@@ -197,7 +198,7 @@ const MainHeader = ({ openSearchModal, atTop }) => {
                     <NavLink to="/admin/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="py-2 px-2 rounded flex items-center gap-2 hover:bg-white hover:text-black transition-all">
                       <Settings className="w-5 h-5" /> HERRAMIENTAS
                     </NavLink>
-                    <button onClick={() => { logout(); setIsMobileMenuOpen(false); }} className="py-2 px-2 rounded flex items-center gap-2 hover:bg-white hover:text-black transition-all text-left">
+                    <button onClick={() => { setIsMobileMenuOpen(false); window.location.href = '/admin/pedidos'; }} className="py-2 px-2 rounded flex items-center gap-2 hover:bg-white hover:text-black transition-all text-left">
                       <LogOut className="w-5 h-5 " /> CERRAR SESIÓN
                     </button>
                   </>

@@ -10,20 +10,22 @@ const Breadcrumbs = ({ product, category }) => {
     { name: 'Inicio', path: '/' },
   ];
 
-  if (pathnames.includes('tienda')) {
+  if (
+    pathnames.includes('tienda') ||
+    pathnames.includes('categoria') ||
+    pathnames.includes('producto')
+  ) {
     breadcrumbs.push({ name: 'Tienda', path: '/tienda' });
   }
 
-  if (pathnames.includes('categoria') && category) {
-    breadcrumbs.push({ name: category.name, path: `/categoria/${category.slug}` });
+  if ((pathnames.includes('categoria') && category) || (product && product.categories)) {
+    const cat = category || (product && product.categories);
+    if (cat && !breadcrumbs.find(b => b.path === `/categoria/${cat.slug}`)) {
+      breadcrumbs.push({ name: cat.name, path: `/categoria/${cat.slug}` });
+    }
   }
 
   if (pathnames.includes('producto') && product) {
-    if (product.categories) {
-       if (!breadcrumbs.find(b => b.path.includes('categoria'))) {
-         breadcrumbs.push({ name: product.categories.name, path: `/categoria/${product.categories.slug}`});
-       }
-    }
     breadcrumbs.push({ name: product.name, path: `/producto/${product.id}` });
   }
 

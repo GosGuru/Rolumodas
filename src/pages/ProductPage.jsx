@@ -231,7 +231,7 @@ const ProductPage = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8 flex justify-center items-center min-h-[50vh]">
+      <div className="container mx-auto px-4 py-8 flex justify-center items-center min-h-[300px]">
         <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
       </div>
     );
@@ -271,7 +271,7 @@ const ProductPage = () => {
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.12, delay: 0 }}
             className="space-y-4"
           >
             <div
@@ -360,7 +360,7 @@ const ProductPage = () => {
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            transition={{ duration: 0.12, delay: 0.01 }}
             className="space-y-4 md:space-y-6"
           >
             <div>

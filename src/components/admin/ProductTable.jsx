@@ -41,7 +41,7 @@ const ProductTable = ({ products, handleEdit, handleDelete, toggleVisibility, fo
   return (
     <>
       {/* Mobile: tarjetas apiladas, Desktop: tabla */}
-      <div className="block sm:hidden space-y-4">
+      <div className="block sm:hidden space-y-4 ">
         {products.map((product) => (
           <div key={product.id} className="bg-gray-800 rounded-lg p-4 shadow flex flex-col gap-2">
             <div className="flex items-center gap-3">
@@ -106,7 +106,7 @@ const ProductTable = ({ products, handleEdit, handleDelete, toggleVisibility, fo
           </div>
         ))}
       </div>
-      <div className="hidden sm:block overflow-x-auto">
+      <div className="hidden sm:block overflow-x-auto ">
         <table className="w-full">
           <thead className="bg-gray-800">
             <tr>

@@ -7,6 +7,7 @@ import CategoryManagement from '@/components/admin/CategoryManagement';
 import SiteManagement from '@/components/admin/SiteManagement';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from '@/components/ui/use-toast';
+import Sidebar from '@/components/admin/Sidebar';
 
 export const AdminGestionPage = () => {
   const { isAuthenticated, user } = useAuth();
@@ -178,7 +179,10 @@ const AdminPanel = () => {
 
   return (
     <div className="relative min-h-screen bg-gradient-to-b from-gray-900 via-gray-950 to-black">
-      <Outlet />
+      <Sidebar />
+      <div className="md:pl-56">
+        <Outlet />
+      </div>
       {isAuthenticated && user && <DashboardMobileNav />}
     </div>
   );

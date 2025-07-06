@@ -37,7 +37,7 @@ const ShopPage = () => {
       <div className="min-h-screen bg-background text-foreground">
         <div className="container px-4 py-6 !pt-[15px] mx-auto sm:py-8">
           {loading ? (
-            <div className="flex items-center justify-center h-64">
+            <div className="flex items-center justify-center min-h-[300px]">
               <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
             </div>
           ) : (
@@ -48,7 +48,7 @@ const ShopPage = () => {
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: index * 0.05 }}
+                  transition={{ duration: 0.12, delay: index * 0.01 }}
                   className="relative overflow-hidden aspect-square group"
                 >
                   <img
