@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Trash2, MessageCircle, ChevronLeft } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -123,17 +123,25 @@ const OrderDetailsTab = ({ order: orderProp, onBack, onDelete, onStatusChange })
             items.map((item, idx) => (
               <li key={item.cartId || item.id || idx} className="flex flex-col md:flex-row md:justify-between py-2 gap-2 md:gap-0">
                 <div className="flex flex-col md:flex-row md:items-center gap-2">
-                  <a
-                    href={item && item.id ? `/producto/${item.id}` : '#'}
-                    className="text-blue-400 hover:underline truncate max-w-[180px] block"
-                    title={item && item.name ? item.name : ''}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {item && item.name
-                      ? (item.name.length > 28 ? item.name.slice(0, 25) + '...' : item.name)
-                      : 'Producto sin nombre'} x {item && item.quantity ? item.quantity : '?'}
-                  </a>
+                  {item && item.id ? (
+                    <Link
+                      to={`/producto/${item.id}`}
+                      className="text-blue-400 hover:underline truncate max-w-[180px] block"
+                      title={item && item.name ? item.name : ''}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {item && item.name
+                        ? (item.name.length > 28 ? item.name.slice(0, 25) + '...' : item.name)
+                        : 'Producto sin nombre'} x {item && item.quantity ? item.quantity : '?'}
+                    </Link>
+                  ) : (
+                    <span className="text-gray-400 truncate max-w-[180px] block">
+                      {item && item.name
+                        ? (item.name.length > 28 ? item.name.slice(0, 25) + '...' : item.name)
+                        : 'Producto sin nombre'} x {item && item.quantity ? item.quantity : '?'}
+                    </span>
+                  )}
                   {/* Mostrar variantes si existen */}
                   {item.selectedVariants && Object.keys(item.selectedVariants).length > 0 && (
                     <div className="flex flex-wrap gap-1 text-xs text-gray-300">

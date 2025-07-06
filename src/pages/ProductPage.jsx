@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Heart, Minus, Plus, Loader2, Facebook, MessageCircle, ShoppingCart } from 'lucide-react';
+import { ArrowLeft, Heart, Minus, Plus, Loader2, Facebook, MessageCircle, ShoppingCart, ChevronLeft, Menu, Wrench } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa';
 import { Helmet } from 'react-helmet';
 import { Button } from '@/components/ui/button';
@@ -15,12 +15,19 @@ import ColorDisplay from '@/components/ColorDisplay';
 import Lightbox from 'yet-another-react-lightbox';
 import 'yet-another-react-lightbox/styles.css';
 import ProductCard from '@/components/ProductCard';
+import MainHeader from '@/components/MainHeader';
+import DashboardMobileNav from '@/components/admin/DashboardMobileNav';
+import { useAuth } from '@/contexts/AuthContext';
+import Sidebar from '@/components/admin/Sidebar';
 
 const ProductPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart, clearCart } = useCart();
   const { addToWishlist, isInWishlist } = useWishlist();
+  const location = useLocation();
+  const { isAuthenticated } = useAuth();
+  const fromAdmin = location.state && location.state.fromAdmin;
 
   const [quantity, setQuantity] = useState(1);
   const [product, setProduct] = useState(null);
@@ -33,6 +40,7 @@ const ProductPage = () => {
   const [selectedColor, setSelectedColor] = useState(null);
   const imgContainerRef = useRef(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // Validación defensiva para las imágenes
   const safeImages = product?.images || [];
@@ -259,6 +267,7 @@ const ProductPage = () => {
 
   return (
     <>
+      {(isAuthenticated || fromAdmin) && <MainHeader />}
       <Helmet>
         <title>{product.name} - Rolu Modas</title>
         <meta name="description" content={product.description} />
@@ -267,234 +276,229 @@ const ProductPage = () => {
       <Breadcrumbs product={product} />
 
       <div className="container px-4 pt-1 pb-8 mx-auto">
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.12, delay: 0 }}
-            className="space-y-4"
-          >
-            <div
-              ref={imgContainerRef}
-              className="relative w-full overflow-hidden aspect-square bg-secondary group"
-              tabIndex={0}
-              style={{ cursor: zoomed ? 'zoom-out' : 'zoom-in' }}
-              onClick={() => setLightboxOpen(true)}
-              onMouseEnter={() => setZoomed(true)}
-              onMouseLeave={() => setZoomed(false)}
-              onMouseMove={handleMouseMove}
-              onTouchStart={() => setZoomed(true)}
-              onTouchEnd={() => setZoomed(false)}
-              onTouchMove={handleTouchMove}
-            >
-              <img
-                src={currentImage}
-                alt={product.name}
-                className={`w-full h-full object-cover transition duration-300 ${zoomed ? 'pointer-events-none' : ''}`}
-                style={zoomed ? {
-                  transform: `scale(2)`,
-                  transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
-                  transition: 'transform 0.2s cubic-bezier(.4,2,.6,1)',
-                  zIndex: 20,
-                } : {}}
-                draggable={false}
-              />
-              {/* Flechas navegación */}
-              {safeImages.length > 1 && (
-                <>
-                  <button
-                    className="absolute z-30 p-2 -translate-y-1/2 rounded-full shadow left-2 top-1/2 bg-white/70 hover:bg-white"
-                    onClick={e => { e.stopPropagation(); setSelectedImage((prev) => (prev - 1 + safeImages.length) % safeImages.length); }}
-                    aria-label="Imagen anterior"
-                  >
-                    <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
-                  </button>
-                  <button
-                    className="absolute z-30 p-2 -translate-y-1/2 rounded-full shadow right-2 top-1/2 bg-white/70 hover:bg-white"
-                    onClick={e => { e.stopPropagation(); setSelectedImage((prev) => (prev + 1) % safeImages.length); }}
-                    aria-label="Imagen siguiente"
-                  >
-                    <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
-                  </button>
-                </>
-              )}
-            </div>
-            {/* Miniaturas */}
-            {safeImages.length > 1 && (
-              <div className="grid grid-cols-5 gap-2">
-                {safeImages.map((image, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setSelectedImage(index)}
-                    className={`aspect-square w-full overflow-hidden border-2 transition-colors ${selectedImage === index ? 'border-primary' : 'border-transparent hover:border-border'}`}
-                  >
-                    <img
-                      src={image}
-                      alt={`${product.name} ${index + 1}`}
-                      className="object-cover w-full h-full"
-                    />
-                  </button>
-                ))}
-              </div>
-            )}
-            {/* Lightbox con fondo blur discreto */}
-            {lightboxOpen && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center" style={{backdropFilter: 'blur(8px)', background: 'rgba(255,255,255,0.15)'}}>
-                <Lightbox
-                  open={lightboxOpen}
-                  close={() => setLightboxOpen(false)}
-                  slides={safeImages.map((img) => ({ src: img }))}
-                  index={selectedImage}
-                  on={{
-                    view: ({ index }) => setSelectedImage(index),
-                  }}
-                  render={{
-                    // Elimina overlay opaco por defecto
-                    backdrop: () => null,
-                  }}
-                />
-              </div>
-            )}
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.12, delay: 0.01 }}
-            className="space-y-4 md:space-y-6"
-          >
-            <div>
-              <h1 className="mb-1 text-lg font-bold md:text-2xl text-foreground leading-tight">{product?.name}</h1>
-              {/* Descripción corta */}
-              {product?.short_description && (
-                <p className="mb-1 text-sm md:text-base text-gray-500 dark:text-gray-300 leading-snug">{product.short_description}</p>
-              )}
-              <div className="mt-2 text-xl md:text-2xl font-bold text-foreground">
-                {formatPrice(product.price)}
-              </div>
-            </div>
-
-            <p className="text-sm md:text-base leading-relaxed text-muted-foreground">{product.description}</p>
-            
-            {/* Opciones disponibles: Color y variantes */}
-            <div className="space-y-4">
-              {/* Selector de color como variante */}
-              {product.colors && product.colors.length > 0 && (
-                <div>
-                  <span className="block mb-1 text-xs md:text-sm font-medium text-foreground">Color:</span>
-                  <div className="flex flex-wrap gap-2">
-                    {product.colors.map((color, index) => (
+        <div className="flex relative">
+          {(isAuthenticated || fromAdmin) && sidebarOpen && (
+            <Sidebar />
+          )}
+          <div className={`flex-1 transition-all duration-200 ${sidebarOpen && (isAuthenticated || fromAdmin) ? 'ml-56' : ''}`}>
+            <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.12, delay: 0 }}
+                className="space-y-4"
+              >
+                <div
+                  ref={imgContainerRef}
+                  className="relative w-full overflow-hidden aspect-square bg-secondary group"
+                  tabIndex={0}
+                  style={{ cursor: zoomed ? 'zoom-out' : 'zoom-in' }}
+                  onClick={() => setLightboxOpen(true)}
+                  onMouseEnter={() => setZoomed(true)}
+                  onMouseLeave={() => setZoomed(false)}
+                  onMouseMove={handleMouseMove}
+                  onTouchStart={() => setZoomed(true)}
+                  onTouchEnd={() => setZoomed(false)}
+                  onTouchMove={handleTouchMove}
+                >
+                  <img
+                    src={currentImage}
+                    alt={product.name}
+                    className={`w-full h-full object-cover transition duration-300 ${zoomed ? 'pointer-events-none' : ''}`}
+                    style={zoomed ? {
+                      transform: `scale(2)`,
+                      transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
+                      transition: 'transform 0.2s cubic-bezier(.4,2,.6,1)',
+                      zIndex: 20,
+                    } : {}}
+                    draggable={false}
+                  />
+                  {/* Flechas navegación */}
+                  {safeImages.length > 1 && (
+                    <>
                       <button
-                        key={`${color.value}-${color.name}-${index}`}
-                        onClick={() => handleColorSelect(color)}
-                        className={`flex items-center justify-center p-0 rounded-full border border-black transition-all focus:outline-none focus:ring-2 focus:ring-black
-                          ${selectedColor && selectedColor.value === color.value
-                            ? 'ring-2 ring-black scale-110 shadow'
-                            : ''}
-                        `}
-                        style={{ width: '28px', height: '28px', minWidth: '28px', minHeight: '28px', background: color.value, position: 'relative', boxShadow: 'none' }}
-                        type="button"
-                        title={color.name}
-                        tabIndex={0}
+                        className="absolute z-30 p-2 -translate-y-1/2 rounded-full shadow left-2 top-1/2 bg-white/70 hover:bg-white"
+                        onClick={e => { e.stopPropagation(); setSelectedImage((prev) => (prev - 1 + safeImages.length) % safeImages.length); }}
+                        aria-label="Imagen anterior"
                       >
-                        {selectedColor && selectedColor.value === color.value && (
-                          <svg
-                            viewBox="0 0 20 20"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="absolute inset-0 m-auto w-4 h-4 text-white pointer-events-none"
-                            style={{ zIndex: 2 }}
-                          >
-                            <path d="M6 10.5L9 13.5L15 7.5" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        )}
+                        <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
+                      </button>
+                      <button
+                        className="absolute z-30 p-2 -translate-y-1/2 rounded-full shadow right-2 top-1/2 bg-white/70 hover:bg-white"
+                        onClick={e => { e.stopPropagation(); setSelectedImage((prev) => (prev + 1) % safeImages.length); }}
+                        aria-label="Imagen siguiente"
+                      >
+                        <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+                      </button>
+                    </>
+                  )}
+                </div>
+                {/* Miniaturas */}
+                {safeImages.length > 1 && (
+                  <div className="grid grid-cols-5 gap-2">
+                    {safeImages.map((image, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setSelectedImage(index)}
+                        className={`aspect-square w-full overflow-hidden border-2 transition-colors ${selectedImage === index ? 'border-primary' : 'border-transparent hover:border-border'}`}
+                      >
+                        <img
+                          src={image}
+                          alt={`${product.name} ${index + 1}`}
+                          className="object-cover w-full h-full"
+                        />
                       </button>
                     ))}
                   </div>
-                </div>
-              )}
-              {/* Variantes normales */}
-              <ProductVariants 
-                variants={product.variants} 
-                onVariantChange={handleVariantChange}
-                selectedVariants={selectedVariants}
-              />
-            </div>
-            
-            <div className="flex items-center space-x-2 mt-4 md:mt-6">
-              <h3 className="text-xs md:text-sm font-medium text-foreground">CANTIDAD:</h3>
-              <div className="flex items-center border rounded-md">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="w-8 h-8 md:w-10 md:h-10"
-                >
-                  <Minus className="w-4 h-4"/>
-                </Button>
-                <span className="w-8 md:w-12 text-base md:text-lg font-semibold text-center">{quantity}</span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setQuantity(quantity + 1)}
-                  className="w-8 h-8 md:w-10 md:h-10"
-                >
-                  <Plus className="w-4 h-4"/>
-                </Button>
-              </div>
-            </div>
+                )}
+                {/* Lightbox con fondo blur discreto */}
+                {lightboxOpen && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center" style={{backdropFilter: 'blur(8px)', background: 'rgba(255,255,255,0.15)'}}>
+                    <Lightbox
+                      open={lightboxOpen}
+                      close={() => setLightboxOpen(false)}
+                      slides={safeImages.map((img) => ({ src: img }))}
+                      index={selectedImage}
+                      on={{
+                        view: ({ index }) => setSelectedImage(index),
+                      }}
+                      render={{
+                        // Elimina overlay opaco por defecto
+                        backdrop: () => null,
+                      }}
+                    />
+                  </div>
+                )}
+              </motion.div>
 
-            <div className="pt-2 space-y-2 md:space-y-3">
-              <div className="flex space-x-2">
-                <Button
-                  onClick={handleBuyNow}
-                  size="lg"
-                  className="w-full font-semibold bg-primary text-primary-foreground hover:bg-primary/90 py-2 md:py-3 text-sm md:text-base"
-                  disabled={!product.inStock}
-                >
-                  {product.inStock ? 'COMPRAR AHORA' : 'AGOTADO'}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-10 w-10 md:h-11 md:w-11"
-                  onClick={handleAddToCart}
-                  disabled={!product.inStock}
-                >
-                  <ShoppingCart className="w-5 h-5" />
-                </Button>
-              </div>
-              <Button 
-                variant="outline"
-                size="sm"
-                className="w-full py-2 md:py-3 text-xs md:text-base flex items-center justify-center"
-                onClick={handleToggleWishlist}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.12, delay: 0.01 }}
+                className="space-y-4 md:space-y-6"
               >
-                <Heart className={`h-4 w-4 mr-2 transition-colors ${isProductInWishlist ? 'fill-current text-red-500' : ''}`} />
-                {isProductInWishlist ? 'EN FAVORITOS' : 'AÑADIR A FAVORITOS'}
-              </Button>
-            </div>
+                <div>
+                  <h1 className="mb-1 text-lg font-bold md:text-2xl text-foreground leading-tight">{product?.name}</h1>
+                  {/* Descripción corta */}
+                  {product?.short_description && (
+                    <p className="mb-1 text-sm md:text-base text-gray-500 dark:text-gray-300 leading-snug">{product.short_description}</p>
+                  )}
+                  <div className="mt-2 text-xl md:text-2xl font-bold text-foreground">
+                    {formatPrice(product.price)}
+                  </div>
+                </div>
 
-            <div className="pt-6 border-t">
-              <h3 className="mb-2 text-xs md:text-sm font-medium uppercase text-foreground">Compartir</h3>
-              <div className="flex space-x-2">
-                 <Button variant="outline" size="icon" className="h-9 w-9 md:h-10 md:w-10" onClick={() => shareOn('whatsapp')}>
-                   <FaWhatsapp className="w-5 h-5 md:w-6 md:h-6" />
-                 </Button>
-                 <Button variant="outline" size="icon" className="h-9 w-9 md:h-10 md:w-10" onClick={() => shareOn('facebook')}>
-                   <Facebook className="w-4 h-4 md:w-5 md:h-5"/>
-                 </Button>
-              </div>
-            </div>
+                <p className="text-sm md:text-base leading-relaxed text-muted-foreground">{product.description}</p>
+                
+                {/* Opciones disponibles: Color y variantes */}
+                <div className="space-y-4">
+                  {/* Selector de color como variante */}
+                  {product.colors && product.colors.length > 0 && (
+                    <div>
+                      <span className="block mb-1 text-xs md:text-sm font-medium text-foreground">Color:</span>
+                      <div className="flex flex-wrap gap-2">
+                        {product.colors.map((color, index) => (
+                          <button
+                            key={`${color.value}-${color.name}-${index}`}
+                            onClick={() => handleColorSelect(color)}
+                            className={`flex items-center justify-center p-0 rounded-full border border-black transition-all focus:outline-none focus:ring-2 focus:ring-black
+                              ${selectedColor && selectedColor.value === color.value
+                                ? 'ring-2 ring-black scale-110 shadow'
+                                : ''}
+                            `}
+                            style={{ width: '28px', height: '28px', minWidth: '28px', minHeight: '28px', background: color.value, position: 'relative', boxShadow: 'none' }}
+                            type="button"
+                            title={color.name}
+                            tabIndex={0}
+                          >
+                            {selectedColor && selectedColor.value === color.value && (
+                              <svg
+                                viewBox="0 0 20 20"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="absolute inset-0 m-auto w-4 h-4 text-white pointer-events-none"
+                                style={{ zIndex: 2 }}
+                              >
+                                <path d="M6 10.5L9 13.5L15 7.5" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {/* Variantes normales */}
+                  <ProductVariants 
+                    variants={product.variants} 
+                    onVariantChange={handleVariantChange}
+                    selectedVariants={selectedVariants}
+                  />
+                </div>
+                
+                <div className="flex items-center space-x-2 mt-4 md:mt-6">
+                  <h3 className="text-xs md:text-sm font-medium text-foreground">CANTIDAD:</h3>
+                  <div className="flex items-center border rounded-md">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                      className="w-8 h-8 md:w-10 md:h-10"
+                    >
+                      <Minus className="w-4 h-4"/>
+                    </Button>
+                    <span className="w-8 md:w-12 text-base md:text-lg font-semibold text-center">{quantity}</span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setQuantity(quantity + 1)}
+                      className="w-8 h-8 md:w-10 md:h-10"
+                    >
+                      <Plus className="w-4 h-4"/>
+                    </Button>
+                  </div>
+                </div>
 
-            {/* Descripción larga */}
-            {product?.long_description && (
-              <div className="p-3 md:p-4 mt-4 md:mt-6 prose-sm prose bg-gray-100 rounded-lg dark:prose-invert max-w-none dark:bg-gray-900/40">
-                <h2 className="mb-2 text-base md:text-lg font-semibold text-foreground">Descripción</h2>
-                <p className="text-xs md:text-base" style={{whiteSpace: 'pre-line'}}>{product.long_description}</p>
-              </div>
-            )}
-          </motion.div>
+                <div className="pt-2 space-y-2 md:space-y-3">
+                  <div className="flex space-x-2">
+                    <Button
+                      onClick={handleBuyNow}
+                      size="lg"
+                      className="w-full font-semibold bg-primary text-primary-foreground hover:bg-primary/90 py-2 md:py-3 text-sm md:text-base"
+                      disabled={!product.inStock}
+                    >
+                      {product.inStock ? 'COMPRAR AHORA' : 'AGOTADO'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-10 w-10 md:h-11 md:w-11"
+                      onClick={handleAddToCart}
+                      disabled={!product.inStock}
+                    >
+                      <ShoppingCart className="w-5 h-5" />
+                    </Button>
+                  </div>
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    className="w-full py-2 md:py-3 text-xs md:text-base flex items-center justify-center"
+                    onClick={handleToggleWishlist}
+                  >
+                    <Heart className={`h-4 w-4 mr-2 transition-colors ${isProductInWishlist ? 'fill-current text-red-500' : ''}`} />
+                    {isProductInWishlist ? 'EN FAVORITOS' : 'AÑADIR A FAVORITOS'}
+                  </Button>
+                </div>
+
+                {/* Descripción larga */}
+                {product?.long_description && (
+                  <div className="p-3 md:p-4 mt-4 md:mt-6 prose-sm prose bg-gray-100 rounded-lg dark:prose-invert max-w-none dark:bg-gray-900/40">
+                    <h2 className="mb-2 text-base md:text-lg font-semibold text-foreground">Descripción</h2>
+                    <p className="text-xs md:text-base" style={{whiteSpace: 'pre-line'}}>{product.long_description}</p>
+                  </div>
+                )}
+              </motion.div>
+            </div>
+          </div>
         </div>
       </div>
       {/* Productos relacionados */}
@@ -508,6 +512,7 @@ const ProductPage = () => {
           </div>
         </div>
       )}
+      {(isAuthenticated || fromAdmin) && <DashboardMobileNav />}
     </>
   );
 };
