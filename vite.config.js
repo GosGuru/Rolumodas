@@ -34,5 +34,10 @@ export default defineConfig({
     react(),
     // ... otros plugins si los hay
   ],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
   // ... otras configuraciones si las hay
 });
