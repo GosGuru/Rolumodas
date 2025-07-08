@@ -1,0 +1,7 @@
+## Pages
+- [- Rolu Modas` : 'Categoría'}](/category): No description available
+- [Admin Login - Rolu Modas](/adminlogin): No description available
+- [Dashboard Admin - Rolu Modas](/admindashboard): Panel de administración para Rolu Modas
+- [Finalizar Compra - Rolu Modas](/checkout): Completa tu pedido en Rolu Modas.
+- [Preguntas Frecuentes - Rolu Modas](/faq): Encuentra respuestas a las preguntas más comunes sobre compras, envíos y pagos en Rolu Modas.
+- [Tienda - Rolu Modas](/shop): Explora todas nuestras categorías de productos en Rolu Modas.

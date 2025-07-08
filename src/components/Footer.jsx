@@ -24,11 +24,7 @@ const Footer = () => {
         {/* Columna 1: Logo y descripción */}
         <div className="flex flex-col items-center md:items-start mb-6 md:mb-0 w-full md:w-1/3">
           <Link to="/" className="mb-3">
-            <img
-              src="https://storage.googleapis.com/hostinger-horizons-assets-prod/51b3ed79-9556-4473-9300-b6672a6c2c9e/bcaac9251c06448f37208b48ec5f52f4.png"
-              alt="Rolu Modas Logo"
-              className="h-10 w-auto mx-auto md:mx-0"
-            />
+            {/* Imagen eliminada por referencia a hostinger-horizons-assets-prod */}
           </Link>
           <p className="text-gray-400 text-base leading-snug max-w-xs md:max-w-none">
             Moda femenina exclusiva para realzar tu estilo.
