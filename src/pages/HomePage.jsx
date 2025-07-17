@@ -100,16 +100,14 @@ const HomePage = () => {
             draggable={false}
           />
         )}
-        <div className="absolute inset-0 bg-black/40"></div>
-
+        <div className="absolute inset-0 bg-black/60"></div>
         <div className="relative z-10 px-4 flex flex-col items-center justify-center">
-          <motion.img
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.18, delay: 0.05 }}
+          {/* Imagen central más chica y centrada, sin texto */}
+          <img
             src={HeroImage}
             alt="Estilo que Inspira"
-            className="w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-2xl h-auto rounded-lg shadow-lg object-cover"
+            className="w-[60%] max-w-xs sm:max-w-md md:max-w-lg lg:max-w-xl h-auto rounded-lg object-cover"
+            style={{marginTop: '40px'}}
           />
         </div>
       </section>

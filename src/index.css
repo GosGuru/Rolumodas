@@ -90,18 +90,15 @@
   }
 
   .header-nav-link:hover {
-    color: #fbbf24; /* yellow-400 */
+    color: #b3b3b3; /* gris claro */
   }
 
   .header-nav-link[aria-current="page"]::after {
-    content: '';
-    position: absolute;
-    bottom: -4px;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background-color: #fbbf24;
-    border-radius: 1px;
+    content: none;
+  }
+
+  .header-nav-link[aria-current="page"] {
+    color: #b3b3b3 !important; /* gris claro */
   }
 
   /* Efectos hover para botones en header negro - SIN fondo blanco */
