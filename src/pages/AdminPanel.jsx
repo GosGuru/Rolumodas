@@ -180,7 +180,7 @@ const AdminPanel = () => {
   return (
     <div className="relative min-h-screen bg-gradient-to-b from-gray-900 via-gray-950 to-black">
       <Sidebar />
-      <div className="md:pl-56">
+      <div className="md:pl-56 pt-16">
         <Outlet />
       </div>
       {isAuthenticated && user && <DashboardMobileNav />}

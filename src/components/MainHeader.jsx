@@ -79,7 +79,7 @@ const MainHeader = ({ openSearchModal, atTop }) => {
         style={headerStyle}
         className="main-header-inner flex w-full items-center px-2 py-1 md:px-4 md:py-0 md:w-full ml-[-1px] md:ml-0"
       >
-        {/* Layout flexible: logo | enlaces | iconos */}
+        {/* Layout flexible: logo | iconos mobile | enlaces desktop | iconos desktop | menu mobile */}
         <Link to="/" aria-label="Ir al inicio" className="flex items-center h-full min-w-[45px] md:min-w-[44px]">
           <img
             src={LogoHeader}
@@ -88,6 +88,45 @@ const MainHeader = ({ openSearchModal, atTop }) => {
             className="block  md:h-[44px]"
           />
         </Link>
+        
+        {/* Iconos para móvil - entre logo y menú hamburguesa */}
+        <div className="flex md:hidden items-center gap-1">
+          <Button variant="ghost" size="icon" onClick={openSearchModal} className="header-button-hover header-anim-icon" aria-label="Buscar productos">
+            <Search className="w-4 h-4" />
+          </Button>
+          <Link to="/favoritos" aria-label="Ver favoritos">
+            <Button variant="ghost" size="icon" className="relative header-button-hover header-anim-icon">
+              <Heart className="w-4 h-4" />
+              {totalWishlistItems > 0 && (
+                <motion.span
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute -top-0.5 -right-0.5 bg-white text-black text-[9px] rounded-full h-3.5 w-3.5 flex items-center justify-center font-bold"
+                  aria-label={`${totalWishlistItems} productos en favoritos`}
+                  transition={{ duration: ANIMATION_DURATION }}
+                >
+                  {totalWishlistItems}
+                </motion.span>
+              )}
+            </Button>
+          </Link>
+          <Button variant="ghost" size="icon" onClick={toggleDrawer} className="relative header-button-hover header-anim-icon" aria-label="Abrir carrito de compras">
+            <ShoppingCart className="w-4 h-4" />
+            {totalCartItems > 0 && (
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="absolute -top-0.5 -right-0.5 bg-white text-black text-[9px] rounded-full h-3.5 w-3.5 flex items-center justify-center font-bold border border-gray-200 shadow-sm"
+                aria-label={`${totalCartItems} productos en el carrito`}
+                transition={{ duration: ANIMATION_DURATION }}
+              >
+                {totalCartItems}
+              </motion.span>
+            )}
+          </Button>
+        </div>
+
+        {/* Enlaces y iconos para desktop */}
         <div className="hidden md:flex flex-1 justify-end items-center">
           <div className="flex gap-6 mr-8" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: '18px' }}>
             <NavLink to="/" className="header-nav-link">INICIO</NavLink>
@@ -153,6 +192,20 @@ const MainHeader = ({ openSearchModal, atTop }) => {
               )}
             </div>
           </div>
+        </div>
+        {/* Botón de menú móvil */}
+        <div className="flex md:hidden items-center ml-1">
+          <Button
+            id="mobile-menu-button"
+            variant="ghost"
+            size="icon"
+            className="header-button-hover header-anim-icon"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label="Abrir menú móvil"
+            aria-expanded={isMobileMenuOpen}
+          >
+            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6 " />}
+          </Button>
         </div>
         {/* Menú mobile desplegable */}
         <AnimatePresence>

@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Heart, Minus, Plus, Loader2, Facebook, MessageCircle, ShoppingCart, ChevronLeft, Menu, Wrench } from 'lucide-react';
-import { FaWhatsapp } from 'react-icons/fa';
+import { ArrowLeft, Heart, Minus, Plus, Loader2, ShoppingCart } from 'lucide-react';
 import { Helmet } from 'react-helmet';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/contexts/CartContext';
@@ -11,14 +10,12 @@ import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabaseClient';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import ProductVariants from '@/components/ProductVariants';
-import ColorDisplay from '@/components/ColorDisplay';
 import Lightbox from 'yet-another-react-lightbox';
 import 'yet-another-react-lightbox/styles.css';
 import ProductCard from '@/components/ProductCard';
 import MainHeader from '@/components/MainHeader';
 import DashboardMobileNav from '@/components/admin/DashboardMobileNav';
 import { useAuth } from '@/contexts/AuthContext';
-import Sidebar from '@/components/admin/Sidebar';
 
 const ProductPage = () => {
   const { id } = useParams();
@@ -40,7 +37,6 @@ const ProductPage = () => {
   const [selectedColor, setSelectedColor] = useState(null);
   const imgContainerRef = useRef(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // Validación defensiva para las imágenes
   const safeImages = product?.images || [];
@@ -276,11 +272,7 @@ const ProductPage = () => {
       <Breadcrumbs product={product} />
 
       <div className="container px-4 pt-1 pb-8 mx-auto">
-        <div className="flex relative">
-          {(isAuthenticated || fromAdmin) && sidebarOpen && (
-            <Sidebar />
-          )}
-          <div className={`flex-1 transition-all duration-200 ${sidebarOpen && (isAuthenticated || fromAdmin) ? 'ml-56' : ''}`}>
+        <div>
             <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16">
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
@@ -498,7 +490,6 @@ const ProductPage = () => {
                 )}
               </motion.div>
             </div>
-          </div>
         </div>
       </div>
       {/* Productos relacionados */}

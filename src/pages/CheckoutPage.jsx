@@ -330,9 +330,7 @@ const CheckoutPage = () => {
                     <RadioGroupItem value="pickup" id="pickup" />
                     <span>Retiro en persona (Durazno)</span>
                   </div>
-                  {shippingMethod === "pickup" && (
-                    <span className="block text-[11px] text-gray-400 mt-1 w-full text-center">Retirá en Durazno.</span>
-                  )}
+               
                 </Label>
                 <Label
                   htmlFor="agency"
@@ -342,9 +340,7 @@ const CheckoutPage = () => {
                     <RadioGroupItem value="agency" id="agency" />
                     <span>Agencia (con costo a cuenta del cliente)</span>
                   </div>
-                  {shippingMethod === "agency" && (
-                    <span className="block text-[11px] text-gray-400 mt-1 w-full text-center">Envío por agencia, costo a cargo.</span>
-                  )}
+               
                 </Label>
               </RadioGroup>
             </div>
@@ -368,9 +364,7 @@ const CheckoutPage = () => {
                     <RadioGroupItem value="manual" id="manual" />
                     <span>Pago Manual</span>
                   </div>
-                  {paymentMethod === "manual" && (
-                    <span className="block text-[11px] text-gray-400 mt-1 w-full text-center">Transferencia o acuerdo.</span>
-                  )}
+                
                 </Label>
                 <Label
                   htmlFor="mp"
@@ -380,9 +374,7 @@ const CheckoutPage = () => {
                     <RadioGroupItem value="mp" id="mp" />
                     <span>Mercado Pago</span>
                   </div>
-                  {paymentMethod === "mp" && (
-                    <span className="block text-[11px] text-gray-400 mt-1 w-full text-center">Pago online seguro.</span>
-                  )}
+              
                 </Label>
               </RadioGroup>
 

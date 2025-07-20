@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Instagram, Facebook, Linkedin, Mail } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa';
+import LogoHeader from '@/assets/LogoHeader.png';
 
 const Footer = () => {
   const socialLinks = [
@@ -23,10 +24,14 @@ const Footer = () => {
       <div className="max-w-5xl mx-auto flex flex-col gap-10 md:gap-0 md:flex-row md:justify-between md:items-start">
         {/* Columna 1: Logo y descripción */}
         <div className="flex flex-col items-center md:items-start mb-6 md:mb-0 w-full md:w-1/3">
-          <Link to="/" className="mb-3">
-            {/* Imagen eliminada por referencia a hostinger-horizons-assets-prod */}
+          <Link to="/" className="mb-4">
+            <img
+              src={LogoHeader}
+              alt="Rolu Modas Logo"
+              className="h-12 w-auto mx-auto md:mx-0"
+            />
           </Link>
-          <p className="text-gray-400 text-base leading-snug max-w-xs md:max-w-none">
+          <p className="text-gray-400 text-base leading-snug max-w-xs md:max-w-none text-center md:text-left">
             Moda femenina exclusiva para realzar tu estilo.
           </p>
         </div>

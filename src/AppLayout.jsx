@@ -23,7 +23,6 @@ import OrderStatusPage from '@/pages/OrderStatusPage';
 import AdminOrdersPage from '@/pages/AdminOrdersPage';
 import AdminReportsPage from '@/pages/AdminReportsPage';
 import AdminPanel, { AdminGestionPage } from '@/pages/AdminPanel';
-import WhatsAppButton from './components/WhatsAppButton';
 import OrderDetailsTab from '@/components/admin/OrderDetailsTab';
 import { Toaster } from '@/components/ui/toaster';
 
@@ -38,7 +37,7 @@ const AppLayout = ({ isSearchModalOpen, openSearchModal, closeSearchModal }) => 
         <meta name="description" content="Descubre las últimas tendencias en moda femenina. Ropa exclusiva, accesorios únicos y estilo incomparable en Rolu Modas." />
       </Helmet>
       <HeaderWrapper openSearchModal={openSearchModal} />
-      <main className="flex-1 pt-[0px]">
+      <main className="flex-1 pt-16">
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/tienda" element={<ShopPage />} />
@@ -65,8 +64,7 @@ const AppLayout = ({ isSearchModalOpen, openSearchModal, closeSearchModal }) => 
       <CartDrawer />
       <SearchModal isOpen={isSearchModalOpen} onClose={closeSearchModal} />
       <NewsletterButton />
-      <AuthAwareWhatsAppButton phoneNumber="+59897358715" />
-      <WhatsAppButton phoneNumber="59891234567" />
+      <AuthAwareWhatsAppButton phoneNumber="59896303934" />
       <Toaster />
     </div>
   );
