@@ -29,7 +29,7 @@ const ProductCard = ({ product, index, listMode }) => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth <= 768);
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
@@ -159,7 +159,7 @@ const ProductCard = ({ product, index, listMode }) => {
             aria-label="Agregar al carrito"
             title="Agregar al carrito"
           >
-            <ShoppingCart className="w-4 h-4" />
+            <ShoppingBag className="w-4 h-4" />
           </Button>
         </div>
         {lightboxOpen && (
@@ -230,11 +230,10 @@ const ProductCard = ({ product, index, listMode }) => {
             alt={product.name}
             className={`w-full object-cover aspect-square transition-transform duration-300 group-hover:scale-105 ${hovered && product.images?.[1] ? 'scale-105 blur-[1px]' : ''}`}
           />
-          <div className={`absolute flex flex-col items-end gap-2 transition-opacity duration-300 top-2 right-2 ${
-            isMobile 
-              ? showMobileActions ? 'opacity-100' : 'opacity-0' 
+          <div className={`absolute flex flex-col items-end gap-2 transition-opacity duration-300 top-2 right-2 ${isMobile
+              ? showMobileActions ? 'opacity-100' : 'opacity-0'
               : 'opacity-0 group-hover:opacity-100'
-          }`}>
+            }`}>
             <Button
               size="icon"
               variant="ghost"
@@ -266,7 +265,7 @@ const ProductCard = ({ product, index, listMode }) => {
           </div>
         </div>
         <div className="pt-1 text-left">
-          <h3 className="text-sm font-normal text-foreground">
+          <h3 className="text-sm font-normal text-foreground pb-0">
             {product.name}
           </h3>
           {/* Descripción corta */}
@@ -279,10 +278,10 @@ const ProductCard = ({ product, index, listMode }) => {
               <ColorDisplay colors={product.colors} size="sm" />
             </div>
           )}
-          <div className="flex items-center justify-between gap-2 mt-0.5">
-            <p className="m-0 text-base font-semibold text-foreground">
-              UYU {formatPrice(product.price)}
-            </p>
+          <div className="flex items-center justify-between gap-2 content-center place-content-center">
+            <span className="text-sm font-normal text-foreground flex items-left">
+              $UYU {formatPrice(product.price)}
+            </span>
             <Button
               size="icon"
               variant="ghost"
@@ -293,17 +292,17 @@ const ProductCard = ({ product, index, listMode }) => {
                 toast({ title: 'Agregado al carrito', description: `${product.name} se agregó a tu carrito.` });
                 toggleDrawer();
               }}
-              className="rounded-full shadow text-primary bg-white/80 hover:bg-primary hover:text-white w-9 h-9"
+              className="rounded-full shadow text-primary bg-white/80 hover:bg-primary hover:text-white w-8 h-8 flex-shrink-0 flex items-center justify-center"
               aria-label="Agregar al carrito"
               title="Agregar al carrito"
             >
-              <ShoppingCart className="w-4 h-4" />
+              <ShoppingCart className="w-5 h-5" />
             </Button>
           </div>
         </div>
       </Link>
       {lightboxOpen && (
-        <div style={{zIndex: 50}}>
+        <div style={{ zIndex: 50 }}>
           <Lightbox
             open={lightboxOpen}
             close={handleLightboxClose}

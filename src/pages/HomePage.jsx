@@ -122,9 +122,9 @@ const HomePage = () => {
             id="categories-section"
             className="mt-[-30px] md:mt-[-40px] sm:py-12 bg-secondary py-8 -mb-8"
           >
-            <div className="w-full max-w-6xl mx-auto px-4">
+            <div className="w-full max-w-6xl mx-auto px-6 sm:px-8">
               <h2 className="text-lg sm:text-xl md:text-3xl font-bold tracking-tight text-center uppercase text-foreground pt-0 px-0 mb-2">CATEGORÍAS</h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-x-2 gap-y-3 md:gap-x-3 md:gap-y-4 justify-items-center mx-auto max-w-4xl">
+              <div className="grid grid-cols-2 gap-x-2 gap-y-3 md:grid-cols-3 md:gap-x-3 md:gap-y-4 justify-items-center mx-auto max-w-4xl">
                 {categories.slice(0, 6).map((category, index) => (
                   <motion.div
                     key={category.id}
@@ -156,13 +156,13 @@ const HomePage = () => {
             </div>
           </section>
 
-          <h2 className="text-xl sm:text-2xl md:text-4xl font-bold tracking-tight text-center uppercase text-foreground py-0 mt-0">
+          <h2 className="text-lg sm:text-xl md:text-3xl font-bold tracking-tight text-center uppercase text-foreground mb-2 pt-2 px-0">
             PRODUCTOS TENDENCIA
           </h2>
 
           <section className="py-8 sm:py-12 bg-background -mt-8">
-            <div className="container px-4 mx-auto">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-x-2 gap-y-4 md:gap-x-3 md:gap-y-6 justify-items-center mx-auto max-w-4xl">
+            <div className="container px-6 sm:px-8 mx-auto">
+              <div className="grid grid-cols-2 gap-x-2 gap-y-4 md:grid-cols-3 md:gap-x-3 md:gap-y-6 justify-items-center mx-auto max-w-4xl">
                 {trendingProducts.map((product, index) => (
                   <ProductCard
                     key={product.id}
