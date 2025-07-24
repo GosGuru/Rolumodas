@@ -133,7 +133,7 @@ const MainHeader = ({ openSearchModal, atTop }) => {
             <NavLink to="/tienda" className="header-nav-link">TIENDA</NavLink>
             <NavLink to="/faq" className="header-nav-link">PREGUNTAS FRECUENTES</NavLink>
           </div>
-          <div className="flex items-center gap-5">
+          <div className="flex items-center gap-1">
             <Button variant="ghost" size="icon" onClick={openSearchModal} className="mx-0 header-button-hover header-anim-icon md:inline-flex" aria-label="Buscar productos">
               <Search className="w-5 h-5" />
             </Button>

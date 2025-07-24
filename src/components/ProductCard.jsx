@@ -110,13 +110,14 @@ const ProductCard = ({ product, index, listMode }) => {
       >
         <div
           ref={thumbRef}
-          className="flex-shrink-0 w-16 h-16 overflow-hidden rounded-md cursor-pointer bg-secondary"
+          className="w-full aspect-square overflow-hidden rounded-md cursor-pointer bg-secondary flex items-center justify-center"
           onClick={() => { setLightboxOpen(true); setLightboxIndex(0); }}
         >
           <img
-            src={product.images?.[0] || 'https://placehold.co/400x500/e0e0e0/000000?text=Rolu'}
+            src={product.images?.[0] || 'https://placehold.co/400x400/e0e0e0/000000?text=Rolu'}
             alt={product.name}
-            className="object-cover w-full h-full"
+            className="object-cover w-full h-full max-h-full max-w-full"
+            style={{ aspectRatio: '1/1' }}
           />
         </div>
         <div className="flex-1 min-w-0">

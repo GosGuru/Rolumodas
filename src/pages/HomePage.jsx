@@ -131,13 +131,16 @@ const HomePage = () => {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5, delay: index * 0.1 }}
-                    className="relative w-full max-w-xs overflow-hidden transition-shadow duration-300 shadow-lg aspect-square hover:shadow-xl"
+                    className="relative w-full max-w-xs aspect-square overflow-hidden transition-shadow duration-300 shadow-lg hover:shadow-xl flex items-center justify-center"
                   >
-                    <img
-                      src={category.image || "https://placehold.co/400x400/e0e0e0/000000?text=Rolu"}
-                      alt={category.name}
-                      className="object-cover w-full h-full"
-                    />
+                    <div className="w-full h-full aspect-square overflow-hidden flex items-center justify-center">
+                      <img
+                        src={category.image || 'https://placehold.co/400x400/e0e0e0/000000?text=Rolu'}
+                        alt={category.name}
+                        className="object-cover w-full h-full max-h-full max-w-full"
+                        style={{ aspectRatio: '1/1' }}
+                      />
+                    </div>
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white bg-black/30">
                       <h3 className="font-poppins font-bold text-sm sm:text-base md:text-lg text-white shadow-[0_1px_4px_rgba(0,0,0,0.12)] tracking-wider uppercase">
                         {category.name}
@@ -160,8 +163,8 @@ const HomePage = () => {
           </h2>
 
           <section className="py-8 -mt-8 sm:py-12 bg-background">
-            <div className="container px-6 mx-auto sm:px-8">
-              <div className="grid max-w-4xl grid-cols-2 mx-auto gap-x-3 gap-y-6 justify-items-center">
+            <div className="w-full max-w-6xl px-6 mx-auto sm:px-8">
+              <div className="grid max-w-4xl grid-cols-2 mx-auto md:grid-cols-3 gap-x-3 gap-y-4 justify-items-center">
                 {trendingProducts.map((product, index) => (
                   <ProductCard
                     key={product.id}
