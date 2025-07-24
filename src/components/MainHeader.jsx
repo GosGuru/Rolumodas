@@ -63,7 +63,7 @@ const MainHeader = ({ openSearchModal, atTop }) => {
 
   return (
     <motion.header
-      className="fixed top-0 left-0 right-0 w-full z-50 bg-black/80 backdrop-blur-md"
+      className="fixed top-0 left-0 right-0 z-50 w-full bg-black/80 backdrop-blur-md"
       style={{
         background: 'rgba(0, 0, 0, 0.1)',
         WebkitBackdropFilter: 'blur(12px)',
@@ -90,18 +90,15 @@ const MainHeader = ({ openSearchModal, atTop }) => {
         </Link>
         
         {/* Iconos para móvil - entre logo y menú hamburguesa */}
-        <div className="flex md:hidden items-center gap-1">
-          <Button variant="ghost" size="icon" onClick={openSearchModal} className="header-button-hover header-anim-icon" aria-label="Buscar productos">
-            <Search className="w-4 h-4" />
-          </Button>
+        <div className="flex items-center gap-0 ml-[90px] md:hidden">
           <Link to="/favoritos" aria-label="Ver favoritos">
-            <Button variant="ghost" size="icon" className="relative header-button-hover header-anim-icon">
-              <Heart className="w-4 h-4" />
+            <Button variant="ghost" size="icon" className="relative p-0 header-button-hover header-anim-icon w-7 h-7">
+              <Heart className="w-5 h-5" />
               {totalWishlistItems > 0 && (
                 <motion.span
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  className="absolute -top-0.5 -right-0.5 bg-white text-black text-[9px] rounded-full h-3.5 w-3.5 flex items-center justify-center font-bold"
+                  className="absolute -top-1 -right-1 bg-white text-black text-[9px] rounded-full h-3.5 w-3.5 flex items-center justify-center font-bold"
                   aria-label={`${totalWishlistItems} productos en favoritos`}
                   transition={{ duration: ANIMATION_DURATION }}
                 >
@@ -110,13 +107,13 @@ const MainHeader = ({ openSearchModal, atTop }) => {
               )}
             </Button>
           </Link>
-          <Button variant="ghost" size="icon" onClick={toggleDrawer} className="relative header-button-hover header-anim-icon" aria-label="Abrir carrito de compras">
-            <ShoppingCart className="w-4 h-4" />
+          <Button variant="ghost" size="icon" onClick={toggleDrawer} className="relative p-0 header-button-hover header-anim-icon w-7 h-7" aria-label="Abrir carrito de compras">
+            <ShoppingCart className="w-5 h-5" />
             {totalCartItems > 0 && (
               <motion.span
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="absolute -top-0.5 -right-0.5 bg-white text-black text-[9px] rounded-full h-3.5 w-3.5 flex items-center justify-center font-bold border border-gray-200 shadow-sm"
+                className="absolute -top-1 -right-1 bg-white text-black text-[9px] rounded-full h-3.5 w-3.5 flex items-center justify-center font-bold border border-gray-200 shadow-sm"
                 aria-label={`${totalCartItems} productos en el carrito`}
                 transition={{ duration: ANIMATION_DURATION }}
               >
@@ -124,21 +121,24 @@ const MainHeader = ({ openSearchModal, atTop }) => {
               </motion.span>
             )}
           </Button>
+          <Button variant="ghost" size="icon" onClick={openSearchModal} className="p-0 header-button-hover header-anim-icon w-7 h-7" aria-label="Buscar productos">
+            <Search className="w-5 h-5" />
+          </Button>
         </div>
 
         {/* Enlaces y iconos para desktop */}
-        <div className="hidden md:flex flex-1 justify-end items-center">
+        <div className="items-center justify-end flex-1 hidden md:flex">
           <div className="flex gap-6 mr-8" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: '18px' }}>
             <NavLink to="/" className="header-nav-link">INICIO</NavLink>
             <NavLink to="/tienda" className="header-nav-link">TIENDA</NavLink>
             <NavLink to="/faq" className="header-nav-link">PREGUNTAS FRECUENTES</NavLink>
           </div>
           <div className="flex items-center gap-5">
-            <Button variant="ghost" size="icon" onClick={openSearchModal} className="header-button-hover header-anim-icon md:inline-flex mx-0" aria-label="Buscar productos">
+            <Button variant="ghost" size="icon" onClick={openSearchModal} className="mx-0 header-button-hover header-anim-icon md:inline-flex" aria-label="Buscar productos">
               <Search className="w-5 h-5" />
             </Button>
             <Link to="/favoritos" aria-label="Ver favoritos">
-              <Button variant="ghost" size="icon" className="relative header-button-hover header-anim-icon md:inline-flex mx-0">
+              <Button variant="ghost" size="icon" className="relative mx-0 header-button-hover header-anim-icon md:inline-flex">
                 <Heart className="w-5 h-5" />
                 {totalWishlistItems > 0 && (
                   <motion.span
@@ -154,7 +154,7 @@ const MainHeader = ({ openSearchModal, atTop }) => {
                 )}
               </Button>
             </Link>
-            <Button variant="ghost" size="icon" onClick={toggleDrawer} className="relative header-button-hover header-anim-icon md:inline-flex mx-0" aria-label="Abrir carrito de compras">
+            <Button variant="ghost" size="icon" onClick={toggleDrawer} className="relative mx-0 header-button-hover header-anim-icon md:inline-flex" aria-label="Abrir carrito de compras">
               <ShoppingCart className="w-5 h-5" />
               {totalCartItems > 0 && (
                 <motion.span
@@ -170,7 +170,7 @@ const MainHeader = ({ openSearchModal, atTop }) => {
               )}
             </Button>
             {/* Login/Logout y Herramientas solo en desktop */}
-            <div className="hidden md:inline-flex items-center gap-4 ml-2">
+            <div className="items-center hidden gap-4 ml-2 md:inline-flex">
               {!isAuthenticated && (
                 <Link to="/admin/login">
                   <Button variant="ghost" size="icon" className="header-button-hover header-anim-icon" aria-label="Iniciar sesión">
@@ -194,17 +194,17 @@ const MainHeader = ({ openSearchModal, atTop }) => {
           </div>
         </div>
         {/* Botón de menú móvil */}
-        <div className="flex md:hidden items-center ml-1">
+        <div className="flex items-center md:hidden">
           <Button
             id="mobile-menu-button"
             variant="ghost"
             size="icon"
-            className="header-button-hover header-anim-icon"
+            className="p-0 header-button-hover header-anim-icon w-7 h-7"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Abrir menú móvil"
             aria-expanded={isMobileMenuOpen}
           >
-            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6 " />}
+            {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5 " />}
           </Button>
         </div>
         {/* Menú mobile desplegable */}
@@ -218,27 +218,27 @@ const MainHeader = ({ openSearchModal, atTop }) => {
               transition={{ duration: ANIMATION_DURATION }}
               className="absolute top-[58px] left-0 w-full bg-black/90 backdrop-blur-md border-t border-white/10 flex flex-col md:hidden z-50"
             >
-              <nav className="flex flex-col p-4 gap-2 text-white bg-black/90" aria-label="Menú móvil" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: '16px' }}>
-                <NavLink to="/" onClick={() => setIsMobileMenuOpen(false)} className="py-2 px-2 rounded flex items-center gap-2 hover:bg-white hover:text-black transition-all">
+              <nav className="flex flex-col gap-2 p-4 text-white bg-[#140e10]" aria-label="Menú móvil" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: '16px' }}>
+                <NavLink to="/" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 px-2 py-2 transition-all rounded hover:bg-white hover:text-black">
                   <Home className="w-5 h-5" /> INICIO
                 </NavLink>
-                <NavLink to="/tienda" onClick={() => setIsMobileMenuOpen(false)} className="py-2 px-2 rounded flex items-center gap-2 hover:bg-white hover:text-black transition-all">
+                <NavLink to="/tienda" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 px-2 py-2 transition-all rounded hover:bg-white hover:text-black">
                   <ShoppingCart className="w-5 h-5" /> TIENDA
                 </NavLink>
-                <NavLink to="/faq" onClick={() => setIsMobileMenuOpen(false)} className="py-2 px-2 rounded flex items-center gap-2 hover:bg-white hover:text-black transition-all">
+                <NavLink to="/faq" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 px-2 py-2 transition-all rounded hover:bg-white hover:text-black">
                   <HelpCircle className="w-5 h-5" /> PREGUNTAS FRECUENTES
                 </NavLink>
                 {!isAuthenticated && (
-                  <NavLink to="/admin/login" onClick={() => setIsMobileMenuOpen(false)} className="py-2 px-2 rounded flex items-center gap-2 hover:bg-white hover:text-black transition-all">
+                  <NavLink to="/admin/login" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 px-2 py-2 transition-all rounded hover:bg-white hover:text-black">
                     <LogIn className="w-5 h-5" /> INICIAR SESIÓN
                   </NavLink>
                 )}
                 {isAuthenticated && user && (
                   <>
-                    <NavLink to="/admin/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="py-2 px-2 rounded flex items-center gap-2 hover:bg-white hover:text-black transition-all">
+                    <NavLink to="/admin/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 px-2 py-2 transition-all rounded hover:bg-white hover:text-black">
                       <Settings className="w-5 h-5" /> HERRAMIENTAS
                     </NavLink>
-                    <button onClick={async () => { setIsMobileMenuOpen(false); await logout(); window.location.href = '/'; }} className="py-2 px-2 rounded flex items-center gap-2 hover:bg-white hover:text-black transition-all text-left">
+                    <button onClick={async () => { setIsMobileMenuOpen(false); await logout(); window.location.href = '/'; }} className="flex items-center gap-2 px-2 py-2 text-left transition-all rounded hover:bg-white hover:text-black">
                       <LogOut className="w-5 h-5 " /> CERRAR SESIÓN
                     </button>
                   </>

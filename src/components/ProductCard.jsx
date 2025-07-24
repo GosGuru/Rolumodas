@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useWishlist } from '@/contexts/WishlistContext';
 import { toast } from '@/components/ui/use-toast';
-import { Heart, ShoppingCart, Share2 } from 'lucide-react';
+import { Heart, ShoppingCart, Share2, ShoppingBag } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import Lightbox from 'yet-another-react-lightbox';
 import 'yet-another-react-lightbox/styles.css';
@@ -265,7 +265,7 @@ const ProductCard = ({ product, index, listMode }) => {
           </div>
         </div>
         <div className="pt-1 text-left">
-          <h3 className="text-sm font-normal text-foreground pb-0">
+          <h3 className="pb-0 text-sm font-normal weigth- text-foreground">
             {product.name}
           </h3>
           {/* Descripción corta */}
@@ -278,8 +278,8 @@ const ProductCard = ({ product, index, listMode }) => {
               <ColorDisplay colors={product.colors} size="sm" />
             </div>
           )}
-          <div className="flex items-center justify-between gap-2 content-center place-content-center">
-            <span className="text-sm font-normal text-foreground flex items-left">
+          <div className="flex items-center content-center justify-between gap-2 place-content-center">
+            <span className="flex text-sm font-normal text-foreground items-left">
               $UYU {formatPrice(product.price)}
             </span>
             <Button
@@ -292,7 +292,7 @@ const ProductCard = ({ product, index, listMode }) => {
                 toast({ title: 'Agregado al carrito', description: `${product.name} se agregó a tu carrito.` });
                 toggleDrawer();
               }}
-              className="rounded-full shadow text-primary bg-white/80 hover:bg-primary hover:text-white w-8 h-8 flex-shrink-0 flex items-center justify-center"
+              className="flex items-center justify-center flex-shrink-0 w-8 h-8 rounded-full shadow text-primary bg-white/80 hover:bg-primary hover:text-white"
               aria-label="Agregar al carrito"
               title="Agregar al carrito"
             >
