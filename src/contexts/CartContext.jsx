@@ -2,6 +2,14 @@ import React, { createContext, useContext, useReducer, useEffect } from 'react';
 
 const CartContext = createContext();
 
+// Extraer valor hex del color en distintos formatos
+const getColorValue = (color) => {
+  if (!color) return null;
+  if (typeof color === 'string') return color;
+  if (typeof color === 'object') return color.value || color.hex || null;
+  return null;
+};
+
 const cartReducer = (state, action) => {
   switch (action.type) {
     case 'LOAD_CART':
@@ -18,9 +26,8 @@ const cartReducer = (state, action) => {
             .join('|')
         : 'no-variants';
       
-      const colorKey = action.payload.selectedColor 
-        ? `color:${action.payload.selectedColor.value}`
-        : 'no-color';
+      const colorVal = getColorValue(action.payload.selectedColor);
+      const colorKey = colorVal ? `color:${colorVal}` : 'no-color';
       
       const fullKey = `${variantKey}-${colorKey}`;
       
@@ -34,9 +41,8 @@ const cartReducer = (state, action) => {
               .join('|')
           : 'no-variants';
         
-        const itemColorKey = item.selectedColor 
-          ? `color:${item.selectedColor.value}`
-          : 'no-color';
+        const itemColorVal = getColorValue(item.selectedColor);
+        const itemColorKey = itemColorVal ? `color:${itemColorVal}` : 'no-color';
         
         const itemFullKey = `${itemVariantKey}-${itemColorKey}`;
         
@@ -54,9 +60,8 @@ const cartReducer = (state, action) => {
                   .join('|')
               : 'no-variants';
             
-            const itemColorKey = item.selectedColor 
-              ? `color:${item.selectedColor.value}`
-              : 'no-color';
+            const itemColorVal = getColorValue(item.selectedColor);
+            const itemColorKey = itemColorVal ? `color:${itemColorVal}` : 'no-color';
             
             const itemFullKey = `${itemVariantKey}-${itemColorKey}`;
             
@@ -139,9 +144,8 @@ export const CartProvider = ({ children }) => {
           .join('|')
       : 'no-variants';
     
-    const colorKey = product.selectedColor 
-      ? `color:${product.selectedColor.value}`
-      : 'no-color';
+    const colorVal = getColorValue(product.selectedColor);
+    const colorKey = colorVal ? `color:${colorVal}` : 'no-color';
     
     const fullKey = `${variantKey}-${colorKey}`;
     const cartId = `${product.id}-${fullKey}-${Date.now()}`;
