@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Trash2, Plus, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/contexts/CartContext';
-import ColorDisplay from './ColorDisplay';
 
 const CartDrawer = () => {
   const { isDrawerOpen, closeDrawer, items, removeFromCart, updateQuantity, getTotalPrice, getTotalItems } = useCart();
@@ -19,9 +18,14 @@ const CartDrawer = () => {
   };
 
   const renderVariants = (selectedVariants) => {
-    if (!selectedVariants || Object.keys(selectedVariants).length === 0) {
-      return null;
-    }
+    if (!selectedVariants || Object.keys(selectedVariants).length === 0) return null;
+
+    const getOptionLabel = (option) => {
+      if (typeof option === 'object') {
+        return option.label || option.value || option.size || '';
+      }
+      return option;
+    };
 
     return (
       <div className="flex flex-wrap gap-1 mt-1">
@@ -30,7 +34,7 @@ const CartDrawer = () => {
             key={variantName}
             className="inline-flex items-center px-2 py-1 text-xs font-medium bg-primary/10 text-primary rounded-md"
           >
-            {variantName}: {option}
+            {variantName}: {getOptionLabel(option)}
           </span>
         ))}
       </div>
