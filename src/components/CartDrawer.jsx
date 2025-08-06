@@ -39,16 +39,21 @@ const CartDrawer = () => {
 
   const renderSelectedColor = (selectedColor) => {
     if (!selectedColor) return null;
+    const value = selectedColor.value || selectedColor.hex || (typeof selectedColor === 'string' ? selectedColor : null);
+    const name = selectedColor.name || selectedColor.label || (typeof selectedColor === 'string' ? selectedColor : null);
+    if (!value && !name) return null;
 
     return (
       <div className="flex items-center gap-2 mt-1">
         <span className="text-xs text-muted-foreground">Color:</span>
         <div className="flex items-center gap-1">
-          <div
-            className="w-4 h-4 rounded-full border border-gray-300"
-            style={{ backgroundColor: selectedColor.value }}
-          />
-          <span className="text-xs font-medium">{selectedColor.name}</span>
+          {value && (
+            <div
+              className="w-4 h-4 rounded-full border border-gray-300"
+              style={{ backgroundColor: value }}
+            />
+          )}
+          {name && <span className="text-xs font-medium">{name}</span>}
         </div>
       </div>
     );
