@@ -25,7 +25,12 @@ export const AdminGestionPage = () => {
   }, []);
 
   const fetchProducts = useCallback(async () => {
-    const { data, error } = await supabase.from('products').select('*').order('name', { ascending: true });
+    // Modificado para hacer un JOIN y obtener el nombre de la categoría
+    const { data, error } = await supabase
+      .from('products')
+      .select('*, categories (id, name)')
+      .order('name', { ascending: true });
+
     if (error) {
       toast({ title: "Error al cargar productos", description: error.message, variant: "destructive" });
     } else {
@@ -34,29 +39,83 @@ export const AdminGestionPage = () => {
   }, []);
 
   useEffect(() => {
+    setLoading(true);
     fetchCategories();
     fetchProducts();
     setLoading(false);
   }, [fetchCategories, fetchProducts]);
 
-  const handleProductFormSubmit = async (e, productFormData, editingProduct, resetForm) => {
-    e.preventDefault();
-    try {
-      if (editingProduct) {
-        const { error } = await supabase.from('products').update(productFormData).eq('id', editingProduct.id);
-        if (error) throw error;
-        toast({ title: "Éxito", description: "Producto actualizado correctamente." });
-      } else {
-        const { error } = await supabase.from('products').insert([productFormData]);
-        if (error) throw error;
-        toast({ title: "Éxito", description: "Producto creado correctamente." });
-      }
-      fetchProducts();
-      resetForm();
-    } catch (error) {
-      toast({ title: "Error al guardar producto", description: error.message, variant: "destructive" });
+  const uploadFile = async (file, bucket, folder) => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${folder}-${Date.now()}.${fileExt}`;
+    const filePath = `public/${fileName}`;
+    
+    const { error: uploadError } = await supabase.storage.from(bucket).upload(filePath, file);
+    if (uploadError) {
+      throw uploadError;
     }
+    
+    const { data } = supabase.storage.from(bucket).getPublicUrl(filePath);
+    if (!data || !data.publicUrl) {
+      throw new Error('No se pudo obtener la URL pública del archivo subido.');
+    }
+    
+    return data.publicUrl;
   };
+
+  const handleProductFormSubmit = async (productData, editingProduct) => {
+    try {
+        setLoading(true);
+
+        const imageUrls = [];
+        if (productData.images && productData.images.length > 0) {
+            for (const image of productData.images) {
+                if (typeof image === 'string') {
+                    // Es una URL existente, la conservamos
+                    imageUrls.push(image);
+                } else if (image instanceof File) {
+                    // Es un archivo nuevo, lo subimos
+                    const newUrl = await uploadFile(image, 'product-images', 'prod');
+                    imageUrls.push(newUrl);
+                }
+            }
+        }
+        
+        // Preparamos los datos para la base de datos
+        const dbData = {
+            ...productData,
+            images: imageUrls,
+            // Aseguramos que los campos numéricos sean números
+            price: parseFloat(productData.price),
+            stock: parseInt(productData.stock, 10),
+            // Convertimos las opciones de variantes a un array de strings
+            variants: productData.variants.map(v => ({
+                ...v,
+                options: typeof v.options === 'string' 
+                    ? v.options.split(',').map(opt => opt.trim())
+                    : v.options
+            }))
+        };
+
+        if (editingProduct && editingProduct.id) {
+            const { error } = await supabase.from('products').update(dbData).eq('id', editingProduct.id);
+            if (error) throw error;
+            toast({ title: "Éxito", description: "Producto actualizado correctamente." });
+        } else {
+            const { error } = await supabase.from('products').insert([dbData]).select();
+            if (error) throw error;
+            toast({ title: "Éxito", description: "Producto creado correctamente." });
+        }
+
+        await fetchProducts();
+        return true; // Indica éxito para que el formulario se resetee
+    } catch (error) {
+        toast({ title: "Error al guardar producto", description: error.message, variant: "destructive" });
+        return false; // Indica fallo
+    } finally {
+        setLoading(false);
+    }
+};
 
   const handleDeleteProduct = async (id) => {
     const { error } = await supabase.from('products').delete().eq('id', id);
@@ -87,7 +146,7 @@ export const AdminGestionPage = () => {
     try {
       let imageUrl = null;
       if (imageFile) {
-        imageUrl = await uploadFile(imageFile, 'category-images');
+        imageUrl = await uploadFile(imageFile, 'category-images', 'cat');
       }
       const slug = trimmedName.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
       const { error } = await supabase.from('categories').insert([{ name: trimmedName, slug, image: imageUrl }]);
@@ -99,7 +158,7 @@ export const AdminGestionPage = () => {
     }
   };
 
-  const handleSaveCategory = async (id, name, imageFile) => {
+  const handleSaveCategory = async (id, name, imageFile, currentImage) => {
     const trimmedName = name.trim().toUpperCase();
     if (!trimmedName) {
       toast({ title: "Error", description: "El nombre no puede estar vacío.", variant: "destructive" });
@@ -108,7 +167,9 @@ export const AdminGestionPage = () => {
     try {
       const updateData = { name: trimmedName };
       if (imageFile) {
-        updateData.image = await uploadFile(imageFile, 'category-images');
+        updateData.image = await uploadFile(imageFile, 'category-images', 'cat');
+      } else {
+        updateData.image = currentImage;
       }
       const { error } = await supabase.from('categories').update(updateData).eq('id', id);
       if (error) throw error;
@@ -129,22 +190,12 @@ export const AdminGestionPage = () => {
     }
   };
 
-  const uploadFile = async (file, bucket) => {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `cat-${Date.now()}.${fileExt}`;
-    const filePath = `public/${fileName}`;
-    const { data, error } = await supabase.storage.from(bucket).upload(filePath, file);
-    if (error) throw error;
-    const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(filePath);
-    return urlData.publicUrl;
-  };
-
   if (!isAuthenticated && !user) {
     return <Navigate to="/admin/login" replace />;
   }
 
-  if (!user && isAuthenticated) {
-    return <div className="flex items-center justify-center min-h-screen text-white bg-black font-negro">Cargando datos de usuario...</div>;
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen text-white bg-black font-negro">Cargando datos...</div>;
   }
 
   return (
@@ -154,8 +205,8 @@ export const AdminGestionPage = () => {
           <ProductManagement
             products={products}
             categories={categories}
-            handleProductFormSubmit={handleProductFormSubmit}
-            handleDeleteProduct={handleDeleteProduct}
+            submitProduct={handleProductFormSubmit}
+            deleteProduct={handleDeleteProduct}
             toggleProductVisibility={toggleProductVisibility}
             formatPrice={price => new Intl.NumberFormat('es-UY', { style: 'currency', currency: 'UYU' }).format(price)}
           />
@@ -163,9 +214,9 @@ export const AdminGestionPage = () => {
         <div className="space-y-4 md:space-y-8">
           <CategoryManagement
             categories={categories}
-            handleCreateCategory={handleCreateCategory}
-            handleSaveCategory={handleSaveCategory}
-            handleDeleteCategory={handleDeleteCategory}
+            onCreate={handleCreateCategory}
+            onSave={handleSaveCategory}
+            onDelete={handleDeleteCategory}
           />
           <SiteManagement />
         </div>
