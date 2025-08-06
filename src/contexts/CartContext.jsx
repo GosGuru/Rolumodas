@@ -2,37 +2,52 @@ import React, { createContext, useContext, useReducer, useEffect } from 'react';
 
 const CartContext = createContext();
 
-// Extraer valor hex del color en distintos formatos
+// Función de utilidad para extraer el valor del color de manera consistente
 const getColorValue = (color) => {
   if (!color) return null;
-  if (typeof color === 'string') return color;
-  if (typeof color === 'object') return color.value || color.hex || null;
+  if (typeof color === 'string') return color; // Ya es un valor simple
+  if (typeof color === 'object' && color !== null) return color.value || color.hex || null; // Extraer de un objeto
   return null;
+};
+
+// Función de utilidad para normalizar el color en un item del carrito
+const normalizeCartItemColor = (item) => {
+  if (item.selectedColor) {
+    return {
+      ...item,
+      selectedColor: getColorValue(item.selectedColor),
+    };
+  }
+  return item;
 };
 
 const cartReducer = (state, action) => {
   switch (action.type) {
     case 'LOAD_CART':
+      // Normaliza el color de cada item al cargar desde localStorage
+      const sanitizedPayload = action.payload.map(normalizeCartItemColor);
       return {
         ...state,
-        items: action.payload,
+        items: sanitizedPayload,
       };
+
     case 'ADD_ITEM':
-      // Crear una clave única basada en el ID del producto, variantes y color seleccionados
-      const variantKey = action.payload.selectedVariants 
-        ? Object.entries(action.payload.selectedVariants)
+      // Normaliza el color del nuevo item antes de cualquier lógica
+      const newItem = normalizeCartItemColor(action.payload);
+
+      const variantKey = newItem.selectedVariants 
+        ? Object.entries(newItem.selectedVariants)
             .sort(([a], [b]) => a.localeCompare(b))
             .map(([key, value]) => `${key}:${value}`)
             .join('|')
         : 'no-variants';
       
-      const colorVal = getColorValue(action.payload.selectedColor);
-      const colorKey = colorVal ? `color:${colorVal}` : 'no-color';
+      const colorKey = newItem.selectedColor ? `color:${newItem.selectedColor}` : 'no-color';
       
       const fullKey = `${variantKey}-${colorKey}`;
       
       const existingItem = state.items.find(item => {
-        if (item.id !== action.payload.id) return false;
+        if (item.id !== newItem.id) return false;
         
         const itemVariantKey = item.selectedVariants 
           ? Object.entries(item.selectedVariants)
@@ -41,8 +56,7 @@ const cartReducer = (state, action) => {
               .join('|')
           : 'no-variants';
         
-        const itemColorVal = getColorValue(item.selectedColor);
-        const itemColorKey = itemColorVal ? `color:${itemColorVal}` : 'no-color';
+        const itemColorKey = item.selectedColor ? `color:${item.selectedColor}` : 'no-color';
         
         const itemFullKey = `${itemVariantKey}-${itemColorKey}`;
         
@@ -60,13 +74,12 @@ const cartReducer = (state, action) => {
                   .join('|')
               : 'no-variants';
             
-            const itemColorVal = getColorValue(item.selectedColor);
-            const itemColorKey = itemColorVal ? `color:${itemColorVal}` : 'no-color';
+            const itemColorKey = item.selectedColor ? `color:${item.selectedColor}` : 'no-color';
             
             const itemFullKey = `${itemVariantKey}-${itemColorKey}`;
             
-            if (item.id === action.payload.id && itemFullKey === fullKey) {
-              return { ...item, quantity: item.quantity + action.payload.quantity };
+            if (item.id === newItem.id && itemFullKey === fullKey) {
+              return { ...item, quantity: item.quantity + newItem.quantity };
             }
             return item;
           }),
@@ -75,8 +88,9 @@ const cartReducer = (state, action) => {
       
       return {
         ...state,
-        items: [...state.items, action.payload],
+        items: [...state.items, newItem], // Añade el nuevo item ya normalizado
       };
+
     case 'REMOVE_ITEM':
       return {
         ...state,
@@ -136,7 +150,6 @@ export const CartProvider = ({ children }) => {
   }, [state.items]);
 
   const addToCart = (product, quantity = 1) => {
-    // Crear una clave única para el carrito basada en el ID, variantes y color
     const variantKey = product.selectedVariants 
       ? Object.entries(product.selectedVariants)
           .sort(([a], [b]) => a.localeCompare(b))
@@ -144,6 +157,7 @@ export const CartProvider = ({ children }) => {
           .join('|')
       : 'no-variants';
     
+    // Aquí usamos la función de utilidad antes de despachar la acción
     const colorVal = getColorValue(product.selectedColor);
     const colorKey = colorVal ? `color:${colorVal}` : 'no-color';
     
