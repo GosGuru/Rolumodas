@@ -2,6 +2,20 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Check } from 'lucide-react';
 
+const COLOR_MAP = {
+  rojo: '#ff0000',
+  violeta: '#8f00ff',
+  azul: '#0000ff',
+  verde: '#008000',
+  negro: '#000000',
+  blanco: '#ffffff',
+  amarillo: '#ffff00',
+  naranja: '#ffa500',
+  rosa: '#ffc0cb',
+  marron: '#8b4513',
+  gris: '#808080'
+};
+
 const ProductVariants = ({ variants, onVariantChange, selectedVariants = {} }) => {
   const [localSelectedVariants, setLocalSelectedVariants] = useState(selectedVariants);
 
@@ -10,9 +24,28 @@ const ProductVariants = ({ variants, onVariantChange, selectedVariants = {} }) =
   }
 
   const getOptionLabel = (option) => {
-    return typeof option === 'object'
-      ? option.label || option.value || option.size || ''
-      : option;
+    if (typeof option === 'object') {
+      if (typeof option.label === 'string') return option.label;
+      if (typeof option.value === 'string') return option.value;
+      if (typeof option.size === 'string') return option.size;
+      return '';
+    }
+    return option;
+  };
+
+  const resolveColor = (option) => {
+    if (typeof option === 'string') {
+      const lower = option.toLowerCase();
+      return COLOR_MAP[lower] || (lower.startsWith('#') ? option : null);
+    }
+    if (typeof option === 'object') {
+      if (typeof option.hex === 'string') return option.hex;
+      if (typeof option.value === 'string') {
+        const val = option.value.toLowerCase();
+        return COLOR_MAP[val] || (val.startsWith('#') ? option.value : null);
+      }
+    }
+    return null;
   };
 
   const handleVariantSelect = (variantName, option) => {
@@ -37,23 +70,32 @@ const ProductVariants = ({ variants, onVariantChange, selectedVariants = {} }) =
           <div className="flex flex-wrap gap-2">
             {(Array.isArray(variant.options)
               ? variant.options
-              : (variant.options ? variant.options.split(',').map(opt => opt.trim()).filter(Boolean) : [])
-            ).map((option, optionIndex) => {
-              const isSelected = localSelectedVariants[variant.name] === option;
+              : (variant.options ? variant.options.split(',').map(opt => opt.trim()).filter(Boolean) : []))
+            .map((option, optionIndex) => {
+              const colorValue = resolveColor(option);
+              const selectedValue = resolveColor(localSelectedVariants[variant.name]) || localSelectedVariants[variant.name];
+              const isSelected = colorValue
+                ? selectedValue === colorValue
+                : selectedValue === option;
               return (
                 <motion.button
                   key={optionIndex}
                   type="button"
                   onClick={() => handleVariantSelect(variant.name, option)}
-                  className={`relative px-4 py-2 text-sm font-medium rounded-lg border-2 transition-all duration-200 ${
-                    isSelected
-                      ? 'border-primary bg-primary text-primary-foreground shadow-md'
-                      : 'border-gray-300 bg-white text-gray-700 hover:border-primary hover:bg-primary/5 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-primary dark:hover:bg-primary/10'
+                  className={`relative text-sm font-medium rounded-lg border-2 transition-all duration-200 ${
+                    colorValue
+                      ? `w-7 h-7 p-0 rounded-full ${isSelected ? 'border-primary shadow-md' : 'border-gray-300 bg-white'}`
+                      : `px-4 py-2 ${
+                          isSelected
+                            ? 'border-primary bg-primary text-primary-foreground shadow-md'
+                            : 'border-gray-300 bg-white text-gray-700 hover:border-primary hover:bg-primary/5 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-primary dark:hover:bg-primary/10'
+                        }`
                   }`}
+                  style={colorValue ? { backgroundColor: colorValue } : {}}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  {getOptionLabel(option)}
+                  {!colorValue && getOptionLabel(option)}
                   {isSelected && (
                     <motion.div
                       initial={{ scale: 0 }}
@@ -69,7 +111,7 @@ const ProductVariants = ({ variants, onVariantChange, selectedVariants = {} }) =
           </div>
         </div>
       ))}
-      
+
       {/* Mostrar selección actual */}
       {Object.keys(localSelectedVariants).length > 0 && (
         <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
@@ -90,4 +132,5 @@ const ProductVariants = ({ variants, onVariantChange, selectedVariants = {} }) =
   );
 };
 
-export default ProductVariants; 
+export default ProductVariants;
+
