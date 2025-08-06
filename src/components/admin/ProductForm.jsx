@@ -75,11 +75,14 @@ const ProductForm = ({ formData, setFormData, handleSubmit, resetForm, editingPr
     }
   };
 
-  const removeImage = (indexToRemove) => {
+  const removeImage = useCallback((indexToRemove) => {
     setFormData(prev => ({
       ...prev,
-      images: prev.images.filter((_, index) => index !== indexToRemove)
+      images: (prev.images || []).filter((_, index) => index !== indexToRemove)
     }));
+  }, [setFormData]);
+
+  useEffect(() => {
   };
 
   const handleVariantChange = (variantIndex, field, value) => {
