@@ -9,6 +9,12 @@ const ProductVariants = ({ variants, onVariantChange, selectedVariants = {} }) =
     return null;
   }
 
+  const getOptionLabel = (option) => {
+    return typeof option === 'object'
+      ? option.label || option.value || option.size || ''
+      : option;
+  };
+
   const handleVariantSelect = (variantName, option) => {
     const newSelectedVariants = {
       ...localSelectedVariants,
@@ -47,7 +53,7 @@ const ProductVariants = ({ variants, onVariantChange, selectedVariants = {} }) =
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  {option}
+                  {getOptionLabel(option)}
                   {isSelected && (
                     <motion.div
                       initial={{ scale: 0 }}
@@ -74,7 +80,7 @@ const ProductVariants = ({ variants, onVariantChange, selectedVariants = {} }) =
                 key={variantName}
                 className="inline-flex items-center px-2 py-1 text-xs font-medium bg-primary/10 text-primary rounded-md"
               >
-                {variantName}: {option}
+                {variantName}: {getOptionLabel(option)}
               </span>
             ))}
           </div>
