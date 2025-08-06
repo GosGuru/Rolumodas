@@ -25,6 +25,34 @@ const statusLabels = {
   cancelled: 'Cancelado',
 };
 
+// Componente para renderizar las selecciones de un item
+const ItemSelections = ({ item }) => {
+  const { selectedVariants, selectedColor } = item;
+  const hasVariants = selectedVariants && Object.keys(selectedVariants).length > 0;
+  const hasColor = selectedColor && typeof selectedColor === 'object' && selectedColor.name && selectedColor.value;
+
+  if (!hasVariants && !hasColor) return null;
+
+  return (
+    <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-gray-300">
+      {hasVariants && Object.entries(selectedVariants).map(([variant, value]) => (
+        <span key={variant} className="bg-gray-800 px-2 py-0.5 rounded">
+          {variant}: {value}
+        </span>
+      ))}
+      {hasColor && (
+        <span className="inline-flex items-center bg-gray-800 px-2 py-0.5 rounded">
+          Color: {selectedColor.name}
+          <span
+            className="w-3 h-3 ml-1.5 border border-gray-500 rounded-full"
+            style={{ backgroundColor: selectedColor.value }}
+          ></span>
+        </span>
+      )}
+    </div>
+  );
+};
+
 const OrderDetailsTab = ({ order: orderProp, onBack, onDelete, onStatusChange }) => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -38,6 +66,7 @@ const OrderDetailsTab = ({ order: orderProp, onBack, onDelete, onStatusChange })
       <Button onClick={() => navigate('/admin/pedidos')} className="mt-2 px-6 py-2 rounded-lg bg-yellow-500 text-black font-bold hover:bg-yellow-400">Ir a Pedidos</Button>
     </div>
   );
+  
   const items = order.items || [];
 
   return (
@@ -121,39 +150,21 @@ const OrderDetailsTab = ({ order: orderProp, onBack, onDelete, onStatusChange })
         <ul className="divide-y divide-gray-800">
           {items.length > 0 ? (
             items.map((item, idx) => (
-              <li key={item.cartId || item.id || idx} className="flex flex-col md:flex-row md:justify-between py-2 gap-2 md:gap-0">
-                <div className="flex flex-col md:flex-row md:items-center gap-2">
-                  {item && item.id ? (
+              <li key={item.cartId || item.id || idx} className="py-3">
+                <div className="flex flex-col md:flex-row md:justify-between gap-2">
+                  <div className="flex-1">
                     <Link
-                      to={`/producto/${item.id}`}
-                      className="text-blue-400 hover:underline truncate max-w-[180px] block"
-                      title={item && item.name ? item.name : ''}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {item && item.name
-                        ? (item.name.length > 28 ? item.name.slice(0, 25) + '...' : item.name)
-                        : 'Producto sin nombre'} x {item && item.quantity ? item.quantity : '?'}
+                        to={`/producto/${item.id}`}
+                        className="text-blue-400 hover:underline font-medium"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {item.name || 'Producto sin nombre'} x {item.quantity || '?'}
                     </Link>
-                  ) : (
-                    <span className="text-gray-400 truncate max-w-[180px] block">
-                      {item && item.name
-                        ? (item.name.length > 28 ? item.name.slice(0, 25) + '...' : item.name)
-                        : 'Producto sin nombre'} x {item && item.quantity ? item.quantity : '?'}
-                    </span>
-                  )}
-                  {/* Mostrar variantes si existen */}
-                  {item.selectedVariants && Object.keys(item.selectedVariants).length > 0 && (
-                    <div className="flex flex-wrap gap-1 text-xs text-gray-300">
-                      {Object.entries(item.selectedVariants).map(([variant, value]) => (
-                        <span key={variant} className="bg-gray-800 px-2 py-0.5 rounded">
-                          {variant}: {value}
-                        </span>
-                      ))}
-                    </div>
-                  )}
+                    <ItemSelections item={item} />
+                  </div>
+                  <span className="text-white font-medium self-start md:self-center">{formatPrice((item.price || 0) * (item.quantity || 0))}</span>
                 </div>
-                <span className="text-white font-medium">{formatPrice(item.price * item.quantity)}</span>
               </li>
             ))
           ) : (
@@ -165,4 +176,4 @@ const OrderDetailsTab = ({ order: orderProp, onBack, onDelete, onStatusChange })
   );
 };
 
-export default OrderDetailsTab; 
+export default OrderDetailsTab;

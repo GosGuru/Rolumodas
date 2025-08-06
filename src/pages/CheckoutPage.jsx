@@ -47,9 +47,8 @@ const CheckoutPage = () => {
         .from("site_content")
         .select("content_value")
         .eq("content_key", "mp_max_installments")
-        .maybeSingle(); // <-- la diferencia está acá
+        .maybeSingle(); 
 
-      // Si no hay, no rompe nada, usa el default (5)
       if (data && data.content_value && data.content_value.value) {
         const val = parseInt(data.content_value.value, 10);
         if (!isNaN(val)) setMpInstallments(val);
@@ -134,15 +133,19 @@ const CheckoutPage = () => {
     }).format(price);
   };
 
-  // Función para renderizar variantes
-  const renderVariants = (selectedVariants) => {
-    if (!selectedVariants || Object.keys(selectedVariants).length === 0) {
+  // Función para renderizar variantes y color
+  const renderItemSelections = (item) => {
+    const { selectedVariants, selectedColor } = item;
+    const hasVariants = selectedVariants && Object.keys(selectedVariants).length > 0;
+    const hasColor = selectedColor && typeof selectedColor === 'object';
+
+    if (!hasVariants && !hasColor) {
       return null;
     }
 
     return (
-      <div className="flex flex-wrap gap-1 mt-1">
-        {Object.entries(selectedVariants).map(([variantName, option]) => (
+      <div className="flex flex-wrap items-center gap-2 mt-1">
+        {hasVariants && Object.entries(selectedVariants).map(([variantName, option]) => (
           <span
             key={variantName}
             className="inline-flex items-center px-1.5 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded"
@@ -150,10 +153,19 @@ const CheckoutPage = () => {
             {variantName}: {option}
           </span>
         ))}
+        {hasColor && (
+          <span className="inline-flex items-center px-1.5 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded">
+            Color: {selectedColor.name}
+            <span
+              className="w-3 h-3 ml-1.5 border border-gray-400 rounded-full"
+              style={{ backgroundColor: selectedColor.value }}
+            ></span>
+          </span>
+        )}
       </div>
     );
   };
-
+  
   // Función para generar un UUID si crypto.randomUUID no está disponible
   function generateOrderNumber() {
     if (window.crypto && window.crypto.randomUUID) {
@@ -187,6 +199,7 @@ const CheckoutPage = () => {
     }
     setIsProcessing(true);
     const orderNumber = generateOrderNumber();
+    
     // Guardar pedido en Supabase (ajusta según tu lógica)
     const { data, error } = await supabase.from('orders').insert([
       {
@@ -200,12 +213,13 @@ const CheckoutPage = () => {
         agency_city: shippingMethod === 'agency' ? agencyCity : null,
         agency_extra: shippingMethod === 'agency' ? agencyExtra : null,
         items,
-        total_amount: getTotalPrice(), // <-- CAMBIO AQUÍ
+        total_amount: getTotalPrice(), 
         payment_method: paymentMethod,
-        // order_number: generado por trigger o función en Supabase
       }
     ]);
+
     setIsProcessing(false);
+
     if (error) {
       toast({
         title: "Error al guardar el pedido",
@@ -214,8 +228,8 @@ const CheckoutPage = () => {
       });
       return;
     }
+
     clearCart();
-    // Scroll hacia arriba antes de redirigir
     window.scrollTo({ top: 0, behavior: 'smooth' });
     navigate("/orden-confirmada", {
       state: {
@@ -258,7 +272,7 @@ const CheckoutPage = () => {
             animate={{ opacity: 1, x: 0 }}
             className="space-y-8"
           >
-            {/* NUEVO: Datos personales */}
+            {/* Datos personales */}
             <div className="p-6 mb-4 space-y-4 bg-gray-100 rounded-lg dark:bg-gray-900/40">
               <h2 className="mb-2 text-xl font-semibold">Datos personales</h2>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -311,6 +325,7 @@ const CheckoutPage = () => {
                 </div>
               </div>
             </div>
+            {/* Método de Envío */}
             <div className="space-y-4">
               <h2 className="flex items-center text-2xl font-semibold">
                 <Truck className="w-6 h-6 mr-3" />
@@ -330,7 +345,6 @@ const CheckoutPage = () => {
                     <RadioGroupItem value="pickup" id="pickup" />
                     <span>Retiro en persona (Durazno)</span>
                   </div>
-               
                 </Label>
                 <Label
                   htmlFor="agency"
@@ -340,11 +354,10 @@ const CheckoutPage = () => {
                     <RadioGroupItem value="agency" id="agency" />
                     <span>Agencia (con costo a cuenta del cliente)</span>
                   </div>
-               
                 </Label>
               </RadioGroup>
             </div>
-
+            {/* Método de Pago */}
             <div className="space-y-4">
               <h2 className="flex items-center text-2xl font-semibold">
                 <CreditCard className="w-6 h-6 mr-3" />
@@ -364,7 +377,6 @@ const CheckoutPage = () => {
                     <RadioGroupItem value="manual" id="manual" />
                     <span>Pago Manual</span>
                   </div>
-                
                 </Label>
                 <Label
                   htmlFor="mp"
@@ -374,10 +386,8 @@ const CheckoutPage = () => {
                     <RadioGroupItem value="mp" id="mp" />
                     <span>Mercado Pago</span>
                   </div>
-              
                 </Label>
               </RadioGroup>
-
               <AnimatePresence>
                 {paymentMethod === "manual" && (
                   <motion.div
@@ -398,74 +408,26 @@ const CheckoutPage = () => {
                 )}
               </AnimatePresence>
             </div>
-
-            {/* NUEVO: Inputs de agencia si corresponde */}
+            {/* Inputs de agencia */}
             {shippingMethod === "agency" && (
               <div className="p-6 mb-4 space-y-4 bg-gray-100 rounded-lg dark:bg-gray-900/40">
                 <h2 className="mb-2 text-xl font-semibold">Datos de la Agencia</h2>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <div>
-                    <label
-                      htmlFor="agencyName"
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-200"
-                    >
-                      Agencia *
-                    </label>
-                    <input
-                      id="agencyName"
-                      type="text"
-                      required={shippingMethod === "agency"}
-                      value={agencyName}
-                      onChange={(e) => setAgencyName(e.target.value)}
-                      className="w-full px-3 py-2 text-gray-900 bg-white border border-gray-300 rounded-md dark:border-gray-700 dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
+                   <div>
+                    <label htmlFor="agencyName" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Agencia *</label>
+                    <input id="agencyName" type="text" required={shippingMethod === "agency"} value={agencyName} onChange={(e) => setAgencyName(e.target.value)} className="w-full px-3 py-2 text-gray-900 bg-white border border-gray-300 rounded-md dark:border-gray-700 dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary" />
                   </div>
                   <div>
-                    <label
-                      htmlFor="agencyAddress"
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-200"
-                    >
-                      Dirección *
-                    </label>
-                    <input
-                      id="agencyAddress"
-                      type="text"
-                      required={shippingMethod === "agency"}
-                      value={agencyAddress}
-                      onChange={(e) => setAgencyAddress(e.target.value)}
-                      className="w-full px-3 py-2 text-gray-900 bg-white border border-gray-300 rounded-md dark:border-gray-700 dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
+                    <label htmlFor="agencyAddress" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Dirección *</label>
+                    <input id="agencyAddress" type="text" required={shippingMethod === "agency"} value={agencyAddress} onChange={(e) => setAgencyAddress(e.target.value)} className="w-full px-3 py-2 text-gray-900 bg-white border border-gray-300 rounded-md dark:border-gray-700 dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary" />
                   </div>
                   <div>
-                    <label
-                      htmlFor="agencyCity"
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-200"
-                    >
-                      Ciudad *
-                    </label>
-                    <input
-                      id="agencyCity"
-                      type="text"
-                      required={shippingMethod === "agency"}
-                      value={agencyCity}
-                      onChange={(e) => setAgencyCity(e.target.value)}
-                      className="w-full px-3 py-2 text-gray-900 bg-white border border-gray-300 rounded-md dark:border-gray-700 dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
+                    <label htmlFor="agencyCity" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Ciudad *</label>
+                    <input id="agencyCity" type="text" required={shippingMethod === "agency"} value={agencyCity} onChange={(e) => setAgencyCity(e.target.value)} className="w-full px-3 py-2 text-gray-900 bg-white border border-gray-300 rounded-md dark:border-gray-700 dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary" />
                   </div>
                   <div>
-                    <label
-                      htmlFor="agencyExtra"
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-200"
-                    >
-                      Detalles adicionales
-                    </label>
-                    <input
-                      id="agencyExtra"
-                      type="text"
-                      value={agencyExtra}
-                      onChange={(e) => setAgencyExtra(e.target.value)}
-                      className="w-full px-3 py-2 text-gray-900 bg-white border border-gray-300 rounded-md dark:border-gray-700 dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
+                    <label htmlFor="agencyExtra" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Detalles adicionales</label>
+                    <input id="agencyExtra" type="text" value={agencyExtra} onChange={(e) => setAgencyExtra(e.target.value)} className="w-full px-3 py-2 text-gray-900 bg-white border border-gray-300 rounded-md dark:border-gray-700 dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary" />
                   </div>
                 </div>
               </div>
@@ -480,45 +442,28 @@ const CheckoutPage = () => {
             <h2 className="mb-6 text-2xl font-semibold">Resumen del Pedido</h2>
             <div className="pb-4 space-y-3 border-b">
               {items.map((item) => (
-                <div
-                  key={item.cartId}
-                  className="flex items-center justify-between text-sm"
-                >
+                <div key={item.cartId} className="flex items-center justify-between text-sm">
                   <div className="flex items-center space-x-3">
-                    <img
-                      src={item.images?.[0]}
-                      alt={item.name}
-                      className="object-cover w-12 h-12 rounded-md"
-                    />
+                    <img src={item.images?.[0]} alt={item.name} className="object-cover w-12 h-12 rounded-md" />
                     <div>
-                      <p className="font-medium">
-                        {item.name} x {item.quantity}
-                      </p>
-                      <p className="text-muted-foreground">
-                        {formatPrice(item.price)} c/u
-                      </p>
-                      {/* Mostrar variantes seleccionadas */}
-                      {renderVariants(item.selectedVariants)}
+                      <p className="font-medium">{item.name} x {item.quantity}</p>
+                      <p className="text-muted-foreground">{formatPrice(item.price)} c/u</p>
+                      {/* Mostrar variantes y color */}
+                      {renderItemSelections(item)}
                     </div>
                   </div>
-                  <p className="font-medium">
-                    {formatPrice(item.price * item.quantity)}
-                  </p>
+                  <p className="font-medium">{formatPrice(item.price * item.quantity)}</p>
                 </div>
               ))}
             </div>
             <div className="py-4 space-y-3">
               <div className="flex justify-between text-base">
                 <span className="text-muted-foreground">Subtotal</span>
-                <span className="font-medium">
-                  {formatPrice(getTotalPrice())}
-                </span>
+                <span className="font-medium">{formatPrice(getTotalPrice())}</span>
               </div>
               <div className="flex justify-between text-base">
                 <span className="text-muted-foreground">Envío</span>
-                <span className="font-medium">
-                  {shippingMethod === "pickup" ? "Gratis" : "A coordinar"}
-                </span>
+                <span className="font-medium">{shippingMethod === "pickup" ? "Gratis" : "A coordinar"}</span>
               </div>
               <div className="flex justify-between pt-4 mt-2 text-xl font-bold border-t">
                 <span>Total</span>
@@ -526,11 +471,8 @@ const CheckoutPage = () => {
               </div>
             </div>
             {paymentMethod === "manual" && (
-              <Button
-                onClick={handlePlaceOrder}
-                className="w-full py-3 mt-4 text-base font-semibold bg-primary text-primary-foreground hover:bg-primary/90"
-              >
-                Realizar Pedido
+              <Button onClick={handlePlaceOrder} className="w-full py-3 mt-4 text-base font-semibold bg-primary text-primary-foreground hover:bg-primary/90">
+                {isProcessing ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : 'Realizar Pedido'}
               </Button>
             )}
             {paymentMethod === "mp" && (
@@ -541,20 +483,13 @@ const CheckoutPage = () => {
                     <span>Generando link de pago...</span>
                   </div>
                 )}
-
                 {preferenceId && !isProcessing && (
-                  <MPButton
-                    preferenceId={preferenceId}
-                    onSuccess={() => clearCart()}
-                  />
+                  <MPButton preferenceId={preferenceId} onSuccess={() => clearCart()} />
                 )}
-
                 {!preferenceId && !isProcessing && (
                   <Alert variant="destructive">
                     <AlertTitle>Error</AlertTitle>
-                    <AlertDescription>
-                      No se pudo generar el link de Mercado Pago.
-                    </AlertDescription>
+                    <AlertDescription>No se pudo generar el link de Mercado Pago.</AlertDescription>
                   </Alert>
                 )}
               </div>
