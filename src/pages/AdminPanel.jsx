@@ -6,6 +6,7 @@ import ProductManagement from '@/components/admin/ProductManagement';
 import CategoryManagement from '@/components/admin/CategoryManagement';
 import SiteManagement from '@/components/admin/SiteManagement';
 import { supabase } from '@/lib/supabaseClient';
+import { uploadFile } from '@/lib/fetchProducts';
 import { toast } from '@/components/ui/use-toast';
 import Sidebar from '@/components/admin/Sidebar';
 
@@ -82,68 +83,7 @@ export const AdminGestionPage = () => {
     } catch (error) {
       toast({ title: "Error al guardar producto", description: error.message, variant: "destructive" });
     }
-    
-    const { data } = supabase.storage.from(bucket).getPublicUrl(filePath);
-    if (!data || !data.publicUrl) {
-      throw new Error('No se pudo obtener la URL pública del archivo subido.');
-    }
-    
-    return data.publicUrl;
   };
-
-  const handleProductFormSubmit = async (productData, editingProduct) => {
-    try {
-        setLoading(true);
-
-        const imageUrls = [];
-        if (productData.images && productData.images.length > 0) {
-            for (const image of productData.images) {
-                if (typeof image === 'string') {
-                    // Es una URL existente, la conservamos
-                    imageUrls.push(image);
-                } else if (image instanceof File) {
-                    // Es un archivo nuevo, lo subimos
-                    const newUrl = await uploadFile(image, 'product-images', 'prod');
-                    imageUrls.push(newUrl);
-                }
-            }
-        }
-        
-        // Preparamos los datos para la base de datos
-        const dbData = {
-            ...productData,
-            images: imageUrls,
-            // Aseguramos que los campos numéricos sean números
-            price: parseFloat(productData.price),
-            stock: parseInt(productData.stock, 10),
-            // Convertimos las opciones de variantes a un array de strings
-            variants: productData.variants.map(v => ({
-                ...v,
-                options: typeof v.options === 'string' 
-                    ? v.options.split(',').map(opt => opt.trim())
-                    : v.options
-            }))
-        };
-
-        if (editingProduct && editingProduct.id) {
-            const { error } = await supabase.from('products').update(dbData).eq('id', editingProduct.id);
-            if (error) throw error;
-            toast({ title: "Éxito", description: "Producto actualizado correctamente." });
-        } else {
-            const { error } = await supabase.from('products').insert([dbData]).select();
-            if (error) throw error;
-            toast({ title: "Éxito", description: "Producto creado correctamente." });
-        }
-
-        await fetchProducts();
-        return true; // Indica éxito para que el formulario se resetee
-    } catch (error) {
-        toast({ title: "Error al guardar producto", description: error.message, variant: "destructive" });
-        return false; // Indica fallo
-    } finally {
-        setLoading(false);
-    }
-};
 
   const handleDeleteProduct = async (id) => {
     const { error } = await supabase.from('products').delete().eq('id', id);
@@ -233,8 +173,8 @@ export const AdminGestionPage = () => {
           <ProductManagement
             products={products}
             categories={categories}
-            submitProduct={handleProductFormSubmit}
-            deleteProduct={handleDeleteProduct}
+            handleProductFormSubmit={handleProductFormSubmit}
+            handleDeleteProduct={handleDeleteProduct}
             toggleProductVisibility={toggleProductVisibility}
             formatPrice={price => new Intl.NumberFormat('es-UY', { style: 'currency', currency: 'UYU' }).format(price)}
           />
