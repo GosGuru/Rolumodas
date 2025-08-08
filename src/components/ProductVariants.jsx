@@ -2,6 +2,20 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Tooltip from '@/components/ui/tooltip';
 
+const COLOR_MAP = {
+  rojo: '#ff0000',
+  violeta: '#8f00ff',
+  azul: '#0000ff',
+  verde: '#008000',
+  negro: '#000000',
+  blanco: '#ffffff',
+  amarillo: '#ffff00',
+  naranja: '#ffa500',
+  rosa: '#ffc0cb',
+  marron: '#8b4513',
+  gris: '#808080'
+};
+
 const ProductVariants = ({ variants, onVariantChange, selectedVariants = {} }) => {
   const [localSelectedVariants, setLocalSelectedVariants] = useState(selectedVariants);
 
@@ -13,6 +27,31 @@ const ProductVariants = ({ variants, onVariantChange, selectedVariants = {} }) =
   if (!variants || variants.length === 0) {
     return null;
   }
+
+  const getOptionLabel = (option) => {
+    if (typeof option === 'object') {
+      if (typeof option.label === 'string') return option.label;
+      if (typeof option.value === 'string') return option.value;
+      if (typeof option.size === 'string') return option.size;
+      return '';
+    }
+    return option;
+  };
+
+  const resolveColor = (option) => {
+    if (typeof option === 'string') {
+      const lower = option.toLowerCase();
+      return COLOR_MAP[lower] || (lower.startsWith('#') ? option : null);
+    }
+    if (typeof option === 'object') {
+      if (typeof option.hex === 'string') return option.hex;
+      if (typeof option.value === 'string') {
+        const val = option.value.toLowerCase();
+        return COLOR_MAP[val] || (val.startsWith('#') ? option.value : null);
+      }
+    }
+    return null;
+  };
 
   const handleVariantSelect = (variantName, option) => {
     const newSelectedVariants = {
