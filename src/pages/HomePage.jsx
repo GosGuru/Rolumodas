@@ -2,11 +2,11 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Helmet } from "react-helmet";
-import { Loader2, ArrowRight } from "lucide-react";
-import { supabase } from "@/lib/supabaseClient";
-import { toast } from "@/components/ui/use-toast";
+import { Loader2 } from "lucide-react";
+import { fetchProducts } from "@/lib/fetchProducts";
+import { fetchCategories } from "@/lib/categoryUtils";
+import { fetchHeroImage } from "@/lib/siteUtils";
 import ProductCard from "@/components/ProductCard";
-import { Button } from "@/components/ui/button";
 import HeroImage from '../assets/Heroimage.png';
 
 const HomePage = () => {
@@ -19,59 +19,30 @@ const HomePage = () => {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-
-      const fetchCategories = supabase
-        .from("categories")
-        .select("*")
-        .order("name")
-        .limit(6);
-      const fetchTrendingProducts = supabase
-        .from("products")
-        .select("*, categories(name)")
-        .eq("is_trending", true)
-        .eq("visible", true)
-        .limit(4);
-      const fetchHeroImage = supabase
-        .from("site_content")
-        .select("content_value")
-        .eq("content_key", "hero_image")
-        .single();
-
-      const [categoriesRes, productsRes, heroImageRes] = await Promise.all([
-        fetchCategories,
-        fetchTrendingProducts,
-        fetchHeroImage,
-      ]);
-
-      if (categoriesRes.error) {
-        toast({
-          title: "Error",
-          description: "No se pudieron cargar las categorías.",
-          variant: "destructive",
-        });
-      } else {
-        setCategories(categoriesRes.data);
+      try {
+        // Usar funciones centralizadas con manejo de errores incorporado
+        const [categoriesData, productsData, heroImageUrl] = await Promise.all([
+          fetchCategories({ limit: 6 }),
+          fetchProducts({ 
+            includeTrending: true, 
+            onlyVisible: true, 
+            limit: 4 
+          }),
+          fetchHeroImage()
+        ]);
+        
+        setCategories(categoriesData);
+        setTrendingProducts(productsData);
+        setHeroImage(heroImageUrl);
+      } catch (error) {
+        if (typeof window !== 'undefined' && window?.__DEV__) {
+          // eslint-disable-next-line no-console
+          console.warn('Error al cargar datos de la página principal:', error);
+        }
+        // El manejo de errores ya está en las funciones individuales
+      } finally {
+        setLoading(false);
       }
-
-      if (productsRes.error) {
-        toast({
-          title: "Error",
-          description: "No se pudieron cargar los productos.",
-          variant: "destructive",
-        });
-      } else {
-        setTrendingProducts(productsRes.data);
-      }
-
-      if (heroImageRes.error || !heroImageRes.data) {
-        setHeroImage(
-          "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=1999&auto=format&fit=crop"
-        );
-      } else {
-        setHeroImage(heroImageRes.data.content_value.url);
-      }
-
-      setLoading(false);
     };
 
     fetchData();
@@ -142,7 +113,7 @@ const HomePage = () => {
                       />
                     </div>
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white bg-black/30">
-                      <h3 className="font-poppins font-bold text-sm sm:text-base md:text-lg text-white shadow-[0_1px_4px_rgba(0,0,0,0.12)] tracking-wider uppercase">
+                      <h3 className="font-poppins font-bold text-sm sm:text-base md:text-lg text-white tracking-wider uppercase">
                         {category.name}
                       </h3>
                     </div>

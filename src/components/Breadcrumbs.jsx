@@ -31,7 +31,7 @@ const Breadcrumbs = ({ product, category }) => {
 
   return (
     <div className="bg-secondary/50">
-      <nav className="container flex flex-col items-start px-4 pt-2 pb-1 mx-auto">
+      <nav className="container flex flex-col items-start px-4 py-2 mx-auto">
         <ol className="flex items-center space-x-1 text-sm text-muted-foreground">
           {breadcrumbs.map((crumb, index) => {
             const isLast = index === breadcrumbs.length - 1;

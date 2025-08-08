@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet";
@@ -10,6 +12,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Info, Truck, CreditCard, Loader2 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import MPButton from "../components/MPButton";
+import { fetchMpMaxInstallments } from "@/lib/siteUtils";
+import { toVariantLabel } from "@/lib/utils";
 import { supabase } from "@/lib/supabaseClient";
 
 const CheckoutPage = () => {
@@ -43,15 +47,16 @@ const CheckoutPage = () => {
     if (savedPay) setPaymentMethod(savedPay);
 
     const fetchInstallments = async () => {
-      const { data, error } = await supabase
-        .from("site_content")
-        .select("content_value")
-        .eq("content_key", "mp_max_installments")
-        .maybeSingle(); 
-
-      if (data && data.content_value && data.content_value.value) {
-        const val = parseInt(data.content_value.value, 10);
-        if (!isNaN(val)) setMpInstallments(val);
+      try {
+        // Usar la función centralizada para obtener las cuotas máximas
+        const installments = await fetchMpMaxInstallments();
+        // Si hay un valor válido, actualizamos el estado
+        if (installments) {
+          setMpInstallments(installments);
+        }
+      } catch (error) {
+        console.error('Error al obtener cuotas máximas:', error);
+        // Si hay error, se mantiene el valor por defecto (5)
       }
     };
     fetchInstallments();
@@ -150,7 +155,7 @@ const CheckoutPage = () => {
             key={variantName}
             className="inline-flex items-center px-1.5 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded"
           >
-            {variantName}: {option}
+            {variantName}: {toVariantLabel(option)}
           </span>
         ))}
         {hasColor && (
@@ -201,7 +206,7 @@ const CheckoutPage = () => {
     const orderNumber = generateOrderNumber();
     
     // Guardar pedido en Supabase (ajusta según tu lógica)
-    const { data, error } = await supabase.from('orders').insert([
+  const { error } = await supabase.from('orders').insert([
       {
         order_number: orderNumber,
         customer_name: customerName,
@@ -444,7 +449,16 @@ const CheckoutPage = () => {
               {items.map((item) => (
                 <div key={item.cartId} className="flex items-center justify-between text-sm">
                   <div className="flex items-center space-x-3">
-                    <img src={item.images?.[0]} alt={item.name} className="object-cover w-12 h-12 rounded-md" />
+                    <img
+                      src={item.images?.[0] || 'https://placehold.co/100x100/e0e0e0/000000?text=Rolu'}
+                      alt={item.name}
+                      className="object-cover w-12 h-12 rounded-md"
+                      onError={(e) => {
+                        console.error('Error cargando imagen en checkout:', e.target.src);
+                        e.target.src = 'https://placehold.co/100x100/e0e0e0/000000?text=Rolu';
+                        e.target.onerror = null; // Prevenir bucle infinito
+                      }}
+                    />
                     <div>
                       <p className="font-medium">{item.name} x {item.quantity}</p>
                       <p className="text-muted-foreground">{formatPrice(item.price)} c/u</p>

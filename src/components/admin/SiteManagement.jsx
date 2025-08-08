@@ -1,62 +1,37 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/lib/supabaseClient";
 import { toast } from "@/components/ui/use-toast";
 import { UploadCloud, Loader2 } from "lucide-react";
+import { useSiteContent } from "@/hooks/useSiteContent";
 
 const SiteManagement = () => {
-  const [heroImage, setHeroImage] = useState("");
+  const { 
+    heroImage, 
+    mpInstallments, 
+    loading, 
+    updateHeroImage, 
+    updateMpInstallments, 
+    fetchSiteContent 
+  } = useSiteContent();
+  
   const [newHeroImageFile, setNewHeroImageFile] = useState(null);
   const [preview, setPreview] = useState("");
-  const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
-  const [mpInstallments, setMpInstallments] = useState(5);
   const [savingInstallments, setSavingInstallments] = useState(false);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      const heroPromise = supabase
-        .from("site_content")
-        .select("content_value")
-        .eq("content_key", "hero_image")
-        .single();
-
-      const installmentsPromise = supabase
-        .from("site_content")
-        .select("content_value")
-        .eq("content_key", "mp_max_installments")
-        .single();
-
-      const [heroRes, instRes] = await Promise.all([
-        heroPromise,
-        installmentsPromise,
-      ]);
-
-      if (!heroRes.error && heroRes.data) {
-        setHeroImage(heroRes.data.content_value.url);
-        setPreview(heroRes.data.content_value.url);
-      }
-
-      if (!instRes.error && instRes.data) {
-        const value = parseInt(instRes.data.content_value.value, 10);
-        if (!isNaN(value)) setMpInstallments(value);
-      }
-
-      if (heroRes.error || !heroRes.data) {
-        toast({
-          title: "Error",
-          description: "No se pudo cargar la imagen de fondo.",
-          variant: "destructive",
-        });
-      }
-
-      setLoading(false);
-    };
-    fetchData();
-  }, []);
+    // Cargar datos del sitio al montar el componente
+    fetchSiteContent();
+  }, [fetchSiteContent]);
+  
+  // Actualizar la vista previa cuando cambia heroImage
+  useEffect(() => {
+    if (heroImage) {
+      setPreview(heroImage);
+    }
+  }, [heroImage]);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -76,36 +51,12 @@ const SiteManagement = () => {
     }
     setUploading(true);
     try {
-      const fileExt = newHeroImageFile.name.split(".").pop();
-      const fileName = `hero-${Date.now()}.${fileExt}`;
-      const filePath = `public/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("site-assets")
-        .upload(filePath, newHeroImageFile);
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage
-        .from("site-assets")
-        .getPublicUrl(filePath);
-      const newUrl = urlData.publicUrl;
-
-      const { error: dbError } = await supabase
-        .from("site_content")
-        .update({ content_value: { url: newUrl } })
-        .eq("content_key", "hero_image");
-
-      if (dbError) throw dbError;
-
-      setHeroImage(newUrl);
+      // Usar la función centralizada para actualizar la imagen de héroe
+      await updateHeroImage(newHeroImageFile);
       setNewHeroImageFile(null);
-      toast({ title: "Éxito", description: "Imagen de fondo actualizada." });
     } catch (error) {
-      toast({
-        title: "Error",
-        description: `No se pudo guardar la imagen: ${error.message}`,
-        variant: "destructive",
-      });
+      // El manejo de errores ya está en la función updateHeroImage
+      console.error('Error en handleSaveHero:', error);
     } finally {
       setUploading(false);
     }
@@ -114,23 +65,11 @@ const SiteManagement = () => {
   const handleSaveInstallments = async () => {
     setSavingInstallments(true);
     try {
-      const { error } = await supabase
-        .from("site_content")
-        .upsert(
-          {
-            content_key: "mp_max_installments",
-            content_value: { value: mpInstallments },
-          },
-          { onConflict: "content_key" }
-        );
-      if (error) throw error;
-      toast({ title: "Éxito", description: "Configuración actualizada." });
+      // Usar la función centralizada para actualizar el número máximo de cuotas
+      await updateMpInstallments(mpInstallments);
     } catch (error) {
-      toast({
-        title: "Error",
-        description: `No se pudo guardar: ${error.message}`,
-        variant: "destructive",
-      });
+      // El manejo de errores ya está en la función updateMpInstallments
+      console.error('Error en handleSaveInstallments:', error);
     } finally {
       setSavingInstallments(false);
     }

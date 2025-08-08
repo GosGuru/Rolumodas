@@ -1,4 +1,6 @@
+/* eslint-disable no-console */
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import { normalizeSelectedVariants } from '@/lib/utils';
 
 const CartContext = createContext();
 
@@ -12,15 +14,27 @@ const getColorValue = (color) => {
 
 const cartReducer = (state, action) => {
   switch (action.type) {
-    case 'LOAD_CART':
+    case 'LOAD_CART': {
+      const normalizedItems = Array.isArray(action.payload)
+        ? action.payload.map((it) => ({
+            ...it,
+            selectedVariants: it && it.selectedVariants
+              ? normalizeSelectedVariants(it.selectedVariants)
+              : undefined,
+          }))
+        : [];
       return {
         ...state,
-        items: action.payload,
+        items: normalizedItems,
       };
+    }
     case 'ADD_ITEM':
       // Crear una clave única basada en el ID del producto, variantes y color seleccionados
-      const variantKey = action.payload.selectedVariants 
-        ? Object.entries(action.payload.selectedVariants)
+      const safeSelected = action.payload.selectedVariants
+        ? normalizeSelectedVariants(action.payload.selectedVariants)
+        : null;
+      const variantKey = safeSelected 
+        ? Object.entries(safeSelected)
             .sort(([a], [b]) => a.localeCompare(b))
             .map(([key, value]) => `${key}:${value}`)
             .join('|')
@@ -34,8 +48,9 @@ const cartReducer = (state, action) => {
       const existingItem = state.items.find(item => {
         if (item.id !== action.payload.id) return false;
         
-        const itemVariantKey = item.selectedVariants 
-          ? Object.entries(item.selectedVariants)
+        const itemSafe = item.selectedVariants ? normalizeSelectedVariants(item.selectedVariants) : null;
+        const itemVariantKey = itemSafe 
+          ? Object.entries(itemSafe)
               .sort(([a], [b]) => a.localeCompare(b))
               .map(([key, value]) => `${key}:${value}`)
               .join('|')
@@ -53,8 +68,9 @@ const cartReducer = (state, action) => {
         return {
           ...state,
           items: state.items.map(item => {
-            const itemVariantKey = item.selectedVariants 
-              ? Object.entries(item.selectedVariants)
+            const itemSafe = item.selectedVariants ? normalizeSelectedVariants(item.selectedVariants) : null;
+            const itemVariantKey = itemSafe 
+              ? Object.entries(itemSafe)
                   .sort(([a], [b]) => a.localeCompare(b))
                   .map(([key, value]) => `${key}:${value}`)
                   .join('|')
@@ -137,8 +153,9 @@ export const CartProvider = ({ children }) => {
 
   const addToCart = (product, quantity = 1) => {
     // Crear una clave única para el carrito basada en el ID, variantes y color
-    const variantKey = product.selectedVariants 
-      ? Object.entries(product.selectedVariants)
+    const normalizedSV = product.selectedVariants ? normalizeSelectedVariants(product.selectedVariants) : null;
+    const variantKey = normalizedSV 
+      ? Object.entries(normalizedSV)
           .sort(([a], [b]) => a.localeCompare(b))
           .map(([key, value]) => `${key}:${value}`)
           .join('|')
@@ -150,10 +167,12 @@ export const CartProvider = ({ children }) => {
     const fullKey = `${variantKey}-${colorKey}`;
     const cartId = `${product.id}-${fullKey}-${Date.now()}`;
     
-    dispatch({
+  dispatch({
       type: 'ADD_ITEM',
       payload: {
-        ...product,
+    ...product,
+    // Guardar variantes seleccionadas ya normalizadas para evitar objetos en render
+    selectedVariants: normalizedSV || undefined,
         cartId,
         quantity,
       },
