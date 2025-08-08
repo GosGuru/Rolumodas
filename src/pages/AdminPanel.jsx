@@ -42,15 +42,35 @@ export const AdminGestionPage = () => {
   const handleProductFormSubmit = async (e, productFormData, editingProduct, resetForm) => {
     e.preventDefault();
     try {
+      // 1. Manejar la subida de imágenes
+      const uploadedImageUrls = await Promise.all(
+        productFormData.images.map(async (image) => {
+          if (typeof image === 'string') {
+            return image; // Ya es una URL
+          }
+          if (image instanceof File) {
+            return await uploadFile(image, 'product-images');
+          }
+          return null;
+        })
+      );
+
+      const finalProductData = {
+        ...productFormData,
+        images: uploadedImageUrls.filter(Boolean), // Filtrar nulos
+      };
+
+      // 2. Enviar datos a Supabase
       if (editingProduct) {
-        const { error } = await supabase.from('products').update(productFormData).eq('id', editingProduct.id);
+        const { error } = await supabase.from('products').update(finalProductData).eq('id', editingProduct.id);
         if (error) throw error;
         toast({ title: "Éxito", description: "Producto actualizado correctamente." });
       } else {
-        const { error } = await supabase.from('products').insert([productFormData]);
+        const { error } = await supabase.from('products').insert([finalProductData]);
         if (error) throw error;
         toast({ title: "Éxito", description: "Producto creado correctamente." });
       }
+      
       fetchProducts();
       resetForm();
     } catch (error) {
@@ -148,7 +168,7 @@ export const AdminGestionPage = () => {
   }
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-2 py-4 sm:px-4 sm:py-8">
+    <div className="w-full px-2 py-4 mx-auto max-w-7xl sm:px-4 sm:py-8">
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3 md:gap-8">
         <div className="space-y-4 xl:col-span-2 md:space-y-8">
           <ProductManagement
@@ -180,7 +200,7 @@ const AdminPanel = () => {
   return (
     <div className="relative min-h-screen bg-gradient-to-b from-gray-900 via-gray-950 to-black">
       <Sidebar />
-      <div className="md:pl-56 pt-16">
+      <div className="pt-16 md:pl-56">
         <Outlet />
       </div>
       {isAuthenticated && user && <DashboardMobileNav />}

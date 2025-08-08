@@ -8,8 +8,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import LogoHeader from '@/assets/LogoHeader.png';
 
-const LOGO_HEIGHT = 64; // px
-const HEADER_HEIGHT = 72; // px
 const HEADER_MARGIN_TOP = 0; // Sin separación de TopNav
 const ANIMATION_DURATION = 0.2;
 
@@ -54,7 +52,7 @@ const MainHeader = ({ openSearchModal, atTop }) => {
   };
 
   const logoStyle = {
-    height: '76px',
+    // Mantener proporción sin forzar altura mayor que el header
     objectFit: 'contain',
     display: 'block',
     marginLeft: '9px',
@@ -70,6 +68,9 @@ const MainHeader = ({ openSearchModal, atTop }) => {
         zIndex: 50,
         borderBottom: 'none',
         boxShadow: 'none',
+        // Exponer altura del header para el layout (AppLayout usa esta variable)
+        // 58px coincide con headerStyle.height
+        ['--header-h']: '58px'
       }}
       animate={{ marginTop: atTop ? HEADER_MARGIN_TOP : 0 }}
       transition={{ duration: ANIMATION_DURATION, ease: "easeOut" }}
@@ -80,25 +81,25 @@ const MainHeader = ({ openSearchModal, atTop }) => {
         className="main-header-inner flex w-full items-center px-2 py-1 md:px-4 md:py-0 md:w-full ml-[-1px] md:ml-0"
       >
         {/* Layout flexible: logo | iconos mobile | enlaces desktop | iconos desktop | menu mobile */}
-        <Link to="/" aria-label="Ir al inicio" className="flex items-center h-full min-w-[45px] md:min-w-[44px]">
+    <Link to="/" aria-label="Ir al inicio" className="flex items-center h-full min-w-[45px] md:min-w-[44px]">
           <img
             src={LogoHeader}
             alt="Rolu Modas Logo"
             style={logoStyle}
-            className="block  md:h-[44px]"
+      className="block h-10 md:h-11"
           />
         </Link>
         
         {/* Iconos para móvil - entre logo y menú hamburguesa */}
-        <div className="flex items-center gap-0 ml-[90px] md:hidden">
+  <div className="flex items-center gap-0 ml-auto md:hidden">
           <Link to="/favoritos" aria-label="Ver favoritos">
-            <Button variant="ghost" size="icon" className="relative p-0 header-button-hover header-anim-icon w-7 h-7">
+    <Button variant="ghost" size="icon" className="relative p-0 header-button-hover header-anim-icon w-7 h-7">
               <Heart className="w-5 h-5" />
               {totalWishlistItems > 0 && (
                 <motion.span
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  className="absolute -top-1 -right-1 bg-white text-black text-[9px] rounded-full h-3.5 w-3.5 flex items-center justify-center font-bold"
+      className="absolute -top-0.5 -right-0.5 bg-white text-black text-[9px] rounded-full h-3.5 w-3.5 flex items-center justify-center font-bold"
                   aria-label={`${totalWishlistItems} productos en favoritos`}
                   transition={{ duration: ANIMATION_DURATION }}
                 >
@@ -109,11 +110,11 @@ const MainHeader = ({ openSearchModal, atTop }) => {
           </Link>
           <Button variant="ghost" size="icon" onClick={toggleDrawer} className="relative p-0 header-button-hover header-anim-icon w-7 h-7" aria-label="Abrir carrito de compras">
             <ShoppingCart className="w-5 h-5" />
-            {totalCartItems > 0 && (
+      {totalCartItems > 0 && (
               <motion.span
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="absolute -top-1 -right-1 bg-white text-black text-[9px] rounded-full h-3.5 w-3.5 flex items-center justify-center font-bold border border-gray-200 shadow-sm"
+        className="absolute -top-0.5 -right-0.5 bg-white text-black text-[9px] rounded-full h-3.5 w-3.5 flex items-center justify-center font-bold border border-gray-200 shadow-sm"
                 aria-label={`${totalCartItems} productos en el carrito`}
                 transition={{ duration: ANIMATION_DURATION }}
               >
@@ -140,12 +141,11 @@ const MainHeader = ({ openSearchModal, atTop }) => {
             <Link to="/favoritos" aria-label="Ver favoritos">
               <Button variant="ghost" size="icon" className="relative mx-0 header-button-hover header-anim-icon md:inline-flex">
                 <Heart className="w-5 h-5" />
-                {totalWishlistItems > 0 && (
+        {totalWishlistItems > 0 && (
                   <motion.span
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    className="absolute -top-1 right-0 bg-white text-black text-[10px] rounded-full h-4 w-4 flex items-center justify-center font-bold"
-                    style={{ transform: 'translate(40%, -40%)' }}
+          className="absolute -top-0.5 -right-0.5 bg-white text-black text-[10px] rounded-full h-4 w-4 flex items-center justify-center font-bold"
                     aria-label={`${totalWishlistItems} productos en favoritos`}
                     transition={{ duration: ANIMATION_DURATION }}
                   >
@@ -156,12 +156,11 @@ const MainHeader = ({ openSearchModal, atTop }) => {
             </Link>
             <Button variant="ghost" size="icon" onClick={toggleDrawer} className="relative mx-0 header-button-hover header-anim-icon md:inline-flex" aria-label="Abrir carrito de compras">
               <ShoppingCart className="w-5 h-5" />
-              {totalCartItems > 0 && (
+        {totalCartItems > 0 && (
                 <motion.span
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  className="absolute top-[1.2px] right-[-1px] bg-white text-black text-[10px] rounded-full h-4 w-4 flex items-center justify-center font-bold border border-gray-200 shadow-sm"
-                  style={{ transform: 'translate(30%, -30%)' }}
+          className="absolute -top-0.5 -right-0.5 bg-white text-black text-[10px] rounded-full h-4 w-4 flex items-center justify-center font-bold border border-gray-200 shadow-sm"
                   aria-label={`${totalCartItems} productos en el carrito`}
                   transition={{ duration: ANIMATION_DURATION }}
                 >

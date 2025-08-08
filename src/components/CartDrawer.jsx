@@ -1,10 +1,12 @@
+/* eslint-disable no-console */
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Trash2, Plus, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/contexts/CartContext';
-import ColorDisplay from './ColorDisplay';
+// import ColorDisplay from './ColorDisplay';
+import { toVariantLabel } from '@/lib/utils';
 
 const CartDrawer = () => {
   const { isDrawerOpen, closeDrawer, items, removeFromCart, updateQuantity, getTotalPrice, getTotalItems } = useCart();
@@ -25,12 +27,12 @@ const CartDrawer = () => {
 
     return (
       <div className="flex flex-wrap gap-1 mt-1">
-        {Object.entries(selectedVariants).map(([variantName, option]) => (
+    {Object.entries(selectedVariants).map(([variantName, option]) => (
           <span
             key={variantName}
             className="inline-flex items-center px-2 py-1 text-xs font-medium bg-primary/10 text-primary rounded-md"
           >
-            {variantName}: {option}
+      {variantName}: {toVariantLabel(option)}
           </span>
         ))}
       </div>
@@ -106,6 +108,11 @@ const CartDrawer = () => {
                           src={item.images?.[0] || 'https://placehold.co/100x100/e0e0e0/000000?text=Rolu'}
                           alt={item.name}
                           className="w-20 h-20 object-cover rounded-md"
+                          onError={(e) => {
+                            console.error('Error cargando imagen en carrito:', e.target.src);
+                            e.target.src = 'https://placehold.co/100x100/e0e0e0/000000?text=Rolu';
+                            e.target.onerror = null; // Prevenir bucle infinito
+                          }}
                         />
                       </Link>
                       <div className="flex-1 min-w-0">

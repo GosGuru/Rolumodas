@@ -6,7 +6,7 @@ import { Heart } from 'lucide-react';
 import { useWishlist } from '@/contexts/WishlistContext';
 import ProductCard from '@/components/ProductCard';
 import { Button } from '@/components/ui/button';
-import { toast } from '@/components/ui/use-toast';
+// import { toast } from '@/components/ui/use-toast';
 
 const WishlistPage = () => {
   const { wishlistItems } = useWishlist();
@@ -51,13 +51,13 @@ const WishlistPage = () => {
 
           {wishlistItems.length > 0 ? (
             viewMode === 'grid' ? (
-              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8 md:gap-x-6 md:gap-y-10">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-6 md:gap-x-6 md:gap-y-10">
                 {wishlistItems.map((product, index) => (
                   <ProductCard key={product.id} product={product} index={index} />
                 ))}
               </div>
             ) : (
-              <div className="flex flex-col gap-4 md:gap-6">
+              <div className="flex flex-col gap-3 md:gap-4">
                 {wishlistItems.map((product, index) => (
                   <ProductCard key={product.id} product={product} index={index} listMode />
                 ))}

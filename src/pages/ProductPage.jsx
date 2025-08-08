@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -37,6 +38,7 @@ const ProductPage = () => {
   const [selectedColor, setSelectedColor] = useState(null);
   const imgContainerRef = useRef(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
+  const [relatedTitle, setRelatedTitle] = useState('Productos relacionados');
 
   // Validación defensiva para las imágenes
   const safeImages = product?.images || [];
@@ -67,18 +69,42 @@ const ProductPage = () => {
           const initialVariants = {};
           data.variants.forEach(variant => {
             if (variant.options && variant.options.length > 0) {
-              initialVariants[variant.name] = variant.options[0];
+              // Asegurarse de que la opción sea un valor primitivo o un objeto válido
+              const firstOption = variant.options[0];
+              if (firstOption !== null && firstOption !== undefined) {
+                initialVariants[variant.name] = firstOption;
+              }
             }
           });
           setSelectedVariants(initialVariants);
         }
 
-        // Inicializar color seleccionado con el primer color disponible
+        // Inicializar el color seleccionado con el primer color disponible
         if (data.colors && data.colors.length > 0) {
-          setSelectedColor(data.colors[0]);
+          // Asegurarse de que el color sea un objeto válido
+          const firstColor = data.colors[0];
+          if (firstColor !== null && firstColor !== undefined) {
+            // Si es un string, convertirlo a objeto
+            if (typeof firstColor === 'string') {
+              setSelectedColor({ value: firstColor, name: firstColor });
+            } else {
+              setSelectedColor(firstColor);
+            }
+          }
         }
 
         // --- Productos relacionados ---
+        const normalizeList = (list = []) =>
+          (list || []).map(p => ({
+            ...p,
+            images: Array.isArray(p?.images) && p.images.length > 0
+              ? p.images.map(img => (typeof img === 'string' ? img : 'https://placehold.co/600x800/e0e0e0/000000?text=Rolu'))
+              : ['https://placehold.co/600x800/e0e0e0/000000?text=Rolu']
+          }));
+
+        let relatedList = [];
+        let title = 'Productos relacionados';
+
         if (data.category_id) {
           const { data: related, error: relatedError } = await supabase
             .from('products')
@@ -87,14 +113,43 @@ const ProductPage = () => {
             .eq('visible', true)
             .neq('id', data.id)
             .limit(4);
-          if (!relatedError && related) {
-            setRelatedProducts(related);
-          } else {
-            setRelatedProducts([]);
+          if (!relatedError && related && related.length > 0) {
+            relatedList = related;
           }
-        } else {
-          setRelatedProducts([]);
         }
+
+        // Fallback a destacados (is_trending)
+        if (!relatedList || relatedList.length === 0) {
+          const { data: trending, error: trendingError } = await supabase
+            .from('products')
+            .select('*, categories(name, slug)')
+            .eq('visible', true)
+            .eq('is_trending', true)
+            .neq('id', data.id)
+            .limit(4);
+          if (!trendingError && trending && trending.length > 0) {
+            relatedList = trending;
+            title = 'Destacados';
+          }
+        }
+
+        // Fallback final: últimos visibles
+        if (!relatedList || relatedList.length === 0) {
+          const { data: latest, error: latestError } = await supabase
+            .from('products')
+            .select('*, categories(name, slug)')
+            .eq('visible', true)
+            .neq('id', data.id)
+            .order('created_at', { ascending: false })
+            .limit(4);
+          if (!latestError && latest && latest.length > 0) {
+            relatedList = latest;
+            title = 'Te puede interesar';
+          }
+        }
+
+        setRelatedTitle(title);
+        setRelatedProducts(normalizeList(relatedList));
       }
       setLoading(false);
       setSelectedImage(0);
@@ -152,28 +207,25 @@ const ProductPage = () => {
   };
 
   const handleVariantChange = (newSelectedVariants) => {
-    setSelectedVariants(newSelectedVariants);
+    // Asegurarse de que las variantes sean válidas antes de actualizar el estado
+    if (newSelectedVariants && typeof newSelectedVariants === 'object') {
+      setSelectedVariants(newSelectedVariants);
+    }
   };
 
   const handleColorSelect = (color) => {
-    setSelectedColor(color);
+    // Asegurarse de que el color sea un objeto válido
+    if (color !== null && color !== undefined) {
+      // Si es un string, convertirlo a objeto
+      if (typeof color === 'string') {
+        setSelectedColor({ value: color, name: color });
+      } else {
+        setSelectedColor(color);
+      }
+    }
   };
   
-  const shareOn = (platform) => {
-    const shareUrl = window.location.href;
-    const shareText = `¡Mira este producto de Rolu Modas: ${product.name}!`;
-    let url = '';
-
-    if(platform === 'whatsapp') {
-      url = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`;
-    } else if (platform === 'facebook') {
-      url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
-    }
-    
-    if(url) {
-      window.open(url, '_blank', 'noopener,noreferrer');
-    }
-  };
+  // Compartir en redes (no usado actualmente)
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('es-UY', {
@@ -293,6 +345,7 @@ const ProductPage = () => {
                   onTouchEnd={() => setZoomed(false)}
                   onTouchMove={handleTouchMove}
                 >
+                  {/* Imagen principal del producto con manejo de errores */}
                   <img
                     src={currentImage}
                     alt={product.name}
@@ -304,7 +357,13 @@ const ProductPage = () => {
                       zIndex: 20,
                     } : {}}
                     draggable={false}
+                    onError={(e) => {
+                      console.error('Error cargando imagen principal:', e.target.src);
+                      e.target.src = 'https://placehold.co/600x800/e0e0e0/000000?text=Rolu';
+                      e.target.onerror = null; // Prevenir bucle infinito
+                    }}
                   />
+                  {/* No se muestra información de depuración de URL */}
                   {/* Flechas navegación */}
                   {safeImages.length > 1 && (
                     <>
@@ -338,7 +397,13 @@ const ProductPage = () => {
                           src={image}
                           alt={`${product.name} ${index + 1}`}
                           className="object-cover w-full h-full"
+                          onError={(e) => {
+                            console.error('Error cargando miniatura:', e.target.src);
+                            e.target.src = 'https://placehold.co/100x100/e0e0e0/000000?text=Rolu';
+                            e.target.onerror = null; // Prevenir bucle infinito
+                          }}
                         />
+                        {/* No se muestra número de imagen para depuración */}
                       </button>
                     ))}
                   </div>
@@ -349,7 +414,23 @@ const ProductPage = () => {
                     <Lightbox
                       open={lightboxOpen}
                       close={() => setLightboxOpen(false)}
-                      slides={safeImages.map((img) => ({ src: img }))}
+                      slides={Array.isArray(safeImages) && safeImages.length > 0 ? 
+                        safeImages.map((img) => ({
+                          src: img || 'https://placehold.co/800x1200/e0e0e0/000000?text=Rolu',
+                          alt: product?.name || 'Imagen del producto',
+                          // Agregar un manejador de errores para las imágenes del lightbox
+                          srcSet: '',
+                          loading: 'lazy',
+                          onError: (e) => {
+                            console.error('Error cargando imagen en lightbox:', e.target.src);
+                            e.target.src = 'https://placehold.co/800x1200/e0e0e0/000000?text=Rolu';
+                            e.target.onerror = null;
+                          }
+                        })) : 
+                        [{
+                          src: 'https://placehold.co/800x1200/e0e0e0/000000?text=Rolu',
+                          alt: product?.name || 'Imagen del producto'
+                        }]}
                       index={selectedImage}
                       on={{
                         view: ({ index }) => setSelectedImage(index),
@@ -357,6 +438,8 @@ const ProductPage = () => {
                       render={{
                         // Elimina overlay opaco por defecto
                         backdrop: () => null,
+                        iconPrev: () => <Button size="icon" variant="ghost" className="absolute left-4 top-1/2 -translate-y-1/2 z-50 bg-black/50 text-white hover:bg-black/70">←</Button>,
+                        iconNext: () => <Button size="icon" variant="ghost" className="absolute right-4 top-1/2 -translate-y-1/2 z-50 bg-black/50 text-white hover:bg-black/70">→</Button>,
                       }}
                     />
                   </div>
@@ -493,9 +576,9 @@ const ProductPage = () => {
         </div>
       </div>
       {/* Productos relacionados */}
-      {relatedProducts && relatedProducts.length > 0 && (
+    {relatedProducts && relatedProducts.length > 0 && (
         <div className="container mx-auto px-4 pb-12">
-          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-center uppercase text-foreground mb-6 mt-10">Productos relacionados</h2>
+      <h2 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-center uppercase text-foreground mb-6 mt-10">{relatedTitle}</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-8 md:gap-x-6 md:gap-y-10">
             {relatedProducts.map((prod, idx) => (
               <ProductCard key={prod.id} product={prod} index={idx} />

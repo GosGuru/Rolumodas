@@ -17,27 +17,47 @@ const ColorDisplay = ({ colors = [], size = 'md', showNames = false, className =
     xl: 'gap-3'
   };
 
+  // Normalizar los datos de colores para manejar diferentes formatos
+  const normalizedColors = colors.map(color => {
+    // Si es un string, convertirlo a objeto
+    if (typeof color === 'string') {
+      return { value: color, name: color };
+    }
+    // Si es un objeto con hex en lugar de value
+    if (color && typeof color === 'object') {
+      if (color.hex && !color.value) {
+        return { value: color.hex, name: color.name || color.label || 'Color' };
+      }
+    }
+    return color;
+  }).filter(color => color && (color.value || color.hex)); // Filtrar colores inválidos
+
   return (
     <div className={`flex items-center ${containerClasses[size]} ${className}`}>
-      {colors.map((color, index) => (
-        <div
-          key={`${color.value}-${color.name}-${index}`}
-          className="flex items-center gap-1"
-          title={showNames ? color.name : undefined}
-        >
+      {normalizedColors.map((color, index) => {
+        const colorValue = color.value || color.hex || '#CCCCCC';
+        const colorName = color.name || color.label || 'Color';
+        
+        return (
           <div
-            className={`${sizeClasses[size]} rounded-full border-2 border-gray-300 shadow-sm`}
-            style={{ backgroundColor: color.value }}
-          />
-          {showNames && (
-            <span className="text-xs text-gray-600 whitespace-nowrap">
-              {color.name}
-            </span>
-          )}
-        </div>
-      ))}
+            key={`${colorValue}-${colorName}-${index}`}
+            className="flex items-center gap-1"
+            title={colorName}
+          >
+            <div
+              className={`${sizeClasses[size]} rounded-full border-2 border-gray-300 shadow-sm`}
+              style={{ backgroundColor: colorValue }}
+            />
+            {showNames && (
+              <span className="text-xs text-gray-600 whitespace-nowrap">
+                {colorName}
+              </span>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 };
 
-export default ColorDisplay; 
+export default ColorDisplay;

@@ -22,7 +22,15 @@ const ProductCard = ({ product, index, listMode }) => {
   const [isMobile, setIsMobile] = useState(false);
   const [showMobileActions, setShowMobileActions] = useState(false);
   const thumbRef = useRef(null);
-  const lightboxImgRef = useRef(null);
+  // const lightboxImgRef = useRef(null);
+
+  // Función helper para obtener URL de imagen válida
+  const getValidImageUrl = (imageUrl, fallback = 'https://placehold.co/400x400/e0e0e0/000000?text=Rolu') => {
+    if (!imageUrl || imageUrl === 'undefined' || imageUrl === '{}' || imageUrl.includes('%7B%7D')) {
+      return fallback;
+    }
+    return imageUrl;
+  };
 
   // Detectar si estamos en móvil
   useEffect(() => {
@@ -50,9 +58,9 @@ const ProductCard = ({ product, index, listMode }) => {
     return price.toFixed(2);
   };
 
-  const formatInstallment = (price) => {
-    return Math.round(price).toString();
-  };
+  // const formatInstallment = (price) => {
+  //   return Math.round(price).toString();
+  // };
 
   const isProductInWishlist = isInWishlist(product.id);
 
@@ -98,31 +106,30 @@ const ProductCard = ({ product, index, listMode }) => {
   };
 
   if (listMode) {
-    // Vista lista: imagen a la izquierda, info a la derecha, compacto
+    // Vista lista: fila responsiva; móvil compacto, escritorio ancho
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.5, delay: (index % 4) * 0.05 }}
-        className="flex items-center w-full max-w-md gap-4 p-3 mx-auto bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-900 dark:border-gray-800"
+        className="flex items-center w-full gap-3 md:gap-5 p-2 md:p-3 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-900 dark:border-gray-800"
         tabIndex={0}
       >
         <div
           ref={thumbRef}
-          className="w-full aspect-square overflow-hidden rounded-md cursor-pointer bg-secondary flex items-center justify-center"
+          className="flex-shrink-0 overflow-hidden rounded-md cursor-pointer bg-secondary flex items-center justify-center w-20 h-20 md:w-28 md:h-28"
           onClick={() => { setLightboxOpen(true); setLightboxIndex(0); }}
         >
           <img
-            src={product.images?.[0] || 'https://placehold.co/400x400/e0e0e0/000000?text=Rolu'}
+            src={getValidImageUrl(product.images?.[0])}
             alt={product.name}
-            className="object-cover w-full h-full max-h-full max-w-full"
-            style={{ aspectRatio: '1/1' }}
+            className="object-cover w-full h-full"
           />
         </div>
-        <div className="flex-1 min-w-0">
+    <div className="flex-1 min-w-0">
           <Link to={`/producto/${product.id}`} className="block focus:outline-none">
-            <h3 className="text-base font-semibold truncate text-foreground">{product.name}</h3>
+      <h3 className="text-sm md:text-base font-semibold truncate text-foreground">{product.name}</h3>
             {/* Descripción corta */}
             {product.short_description && (
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">{product.short_description}</p>
@@ -133,15 +140,15 @@ const ProductCard = ({ product, index, listMode }) => {
                 <ColorDisplay colors={product.colors} size="sm" />
               </div>
             )}
-            <p className="text-sm text-gray-500 truncate dark:text-gray-300">UYU {formatPrice(product.price)}</p>
+      <p className="text-sm md:text-base text-gray-600 truncate dark:text-gray-300">UYU {formatPrice(product.price)}</p>
           </Link>
         </div>
-        <div className="flex flex-col items-end gap-2">
+    <div className="flex flex-col items-end gap-1 md:gap-2">
           <Button
             size="icon"
             variant="ghost"
             onClick={handleToggleWishlist}
-            className="w-8 h-8 rounded-full text-foreground bg-white/60 hover:bg-white backdrop-blur-sm"
+      className="w-8 h-8 md:w-9 md:h-9 rounded-full text-foreground bg-white/60 hover:bg-white backdrop-blur-sm"
             aria-label="Agregar a favoritos"
           >
             <Heart className={`h-4 w-4 transition-all ${isProductInWishlist ? 'text-red-500 fill-current' : ''}`} />
@@ -156,18 +163,37 @@ const ProductCard = ({ product, index, listMode }) => {
               toast({ title: 'Agregado al carrito', description: `${product.name} se agregó a tu carrito.` });
               toggleDrawer();
             }}
-            className="w-8 h-8 rounded-full shadow text-primary bg-white/80 hover:bg-primary hover:text-white"
+      className="w-8 h-8 md:w-9 md:h-9 rounded-full shadow text-primary bg-white/80 hover:bg-primary hover:text-white"
             aria-label="Agregar al carrito"
             title="Agregar al carrito"
           >
-            <ShoppingBag className="w-4 h-4" />
+      <ShoppingBag className="w-4 h-4" />
           </Button>
         </div>
         {lightboxOpen && (
           <Lightbox
             open={lightboxOpen}
             close={handleLightboxClose}
-            slides={(product.images || [product.image]).map((img) => ({ src: img }))}
+            slides={Array.isArray(product.images) && product.images.length > 0 ? 
+              product.images.map((img) => ({
+                src: getValidImageUrl(img, 'https://placehold.co/800x1200/e0e0e0/000000?text=Rolu'),
+                alt: product?.name || 'Imagen del producto',
+                // Agregar un manejador de errores para las imágenes del lightbox
+                srcSet: '',
+                loading: 'lazy',
+                onError: (e) => {
+                  if (typeof window !== 'undefined' && window?.__DEV__) {
+                    // eslint-disable-next-line no-console
+                    console.warn('Error cargando imagen en lightbox:', e.target?.src);
+                  }
+                  e.target.src = 'https://placehold.co/800x1200/e0e0e0/000000?text=Rolu';
+                  e.target.onerror = null;
+                }
+              })) : 
+              [{
+                src: getValidImageUrl(product.image, 'https://placehold.co/800x1200/e0e0e0/000000?text=Rolu'),
+                alt: product?.name || 'Imagen del producto'
+              }]}
             index={lightboxIndex}
             on={{
               view: ({ index }) => setLightboxIndex(index),
@@ -226,11 +252,21 @@ const ProductCard = ({ product, index, listMode }) => {
           ref={thumbRef}
           onClick={() => { setLightboxOpen(true); setLightboxIndex(0); }}
         >
+          {/* Imagen del producto con manejo de errores */}
           <img
-            src={hovered && product.images?.[1] ? product.images[1] : product.images?.[0] || 'https://placehold.co/400x400/e0e0e0/000000?text=Rolu'}
+            src={getValidImageUrl(hovered && product.images?.[1] ? product.images[1] : product.images?.[0])}
             alt={product.name}
             className={`w-full object-cover aspect-square transition-transform duration-300 group-hover:scale-105 ${hovered && product.images?.[1] ? 'scale-105 blur-[1px]' : ''}`}
+            onError={(e) => {
+              if (typeof window !== 'undefined' && window?.__DEV__) {
+                // eslint-disable-next-line no-console
+                console.warn('Error cargando imagen:', e.target?.src);
+              }
+              e.target.src = 'https://placehold.co/400x400/e0e0e0/000000?text=Rolu';
+              e.target.onerror = null; // Prevenir bucle infinito
+            }}
           />
+          {/* No se muestra información de depuración de URL */}
           <div className={`absolute flex flex-col items-end gap-2 transition-opacity duration-300 top-2 right-2 ${isMobile
               ? showMobileActions ? 'opacity-100' : 'opacity-0'
               : 'opacity-0 group-hover:opacity-100'
@@ -327,7 +363,7 @@ const ProductCard = ({ product, index, listMode }) => {
                   {/* Animación de cierre */}
                   {lightboxClosing && lightboxAnimProps && (
                     <motion.img
-                      src={product.images?.[lightboxIndex] || product.images?.[0] || product.image}
+                      src={getValidImageUrl(product.images?.[lightboxIndex] || product.images?.[0] || product.image, 'https://placehold.co/800x1200/e0e0e0/000000?text=Rolu')}
                       alt={product.name}
                       initial={{
                         scale: 1,
@@ -359,7 +395,26 @@ const ProductCard = ({ product, index, listMode }) => {
                 </div>
               )
             }}
-            slides={(product.images || [product.image]).map((img) => ({ src: img }))}
+            slides={Array.isArray(product.images) && product.images.length > 0 ? 
+              product.images.map((img) => ({
+                src: getValidImageUrl(img, 'https://placehold.co/800x1200/e0e0e0/000000?text=Rolu'),
+                alt: product?.name || 'Imagen del producto',
+                // Agregar un manejador de errores para las imágenes del lightbox
+                srcSet: '',
+                loading: 'lazy',
+                onError: (e) => {
+                  if (typeof window !== 'undefined' && window?.__DEV__) {
+                    // eslint-disable-next-line no-console
+                    console.warn('Error cargando imagen en lightbox:', e.target?.src);
+                  }
+                  e.target.src = 'https://placehold.co/800x1200/e0e0e0/000000?text=Rolu';
+                  e.target.onerror = null;
+                }
+              })) : 
+              [{
+                src: getValidImageUrl(product.image, 'https://placehold.co/800x1200/e0e0e0/000000?text=Rolu'),
+                alt: product?.name || 'Imagen del producto'
+              }]}
             index={lightboxIndex}
             on={{
               view: ({ index }) => setLightboxIndex(index),

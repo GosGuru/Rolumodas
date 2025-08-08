@@ -37,7 +37,10 @@ const AppLayout = ({ isSearchModalOpen, openSearchModal, closeSearchModal }) => 
         <meta name="description" content="Descubre las últimas tendencias en moda femenina. Ropa exclusiva, accesorios únicos y estilo incomparable en Rolu Modas." />
       </Helmet>
       <HeaderWrapper openSearchModal={openSearchModal} />
-      <main className="flex-1 pt-17">
+      <main
+        className="flex-1"
+        style={{ paddingTop: 'calc(var(--header-h, 58px) + 20px)' }}
+      >
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/tienda" element={<ShopPage />} />

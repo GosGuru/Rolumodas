@@ -3,7 +3,8 @@ import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Helmet } from "react-helmet";
 import { Loader2, Frown, ArrowLeft } from "lucide-react";
-import { supabase } from "@/lib/supabaseClient";
+import { fetchProducts } from "@/lib/fetchProducts";
+import { fetchCategories } from "@/lib/categoryUtils";
 import { toast } from "@/components/ui/use-toast";
 import ProductCard from "@/components/ProductCard";
 import Breadcrumbs from "@/components/Breadcrumbs";
@@ -18,44 +19,39 @@ const CategoryPage = () => {
   useEffect(() => {
     const fetchCategoryData = async () => {
       setLoading(true);
-
-      const { data: categoryData, error: categoryError } = await supabase
-        .from("categories")
-        .select("id, name, slug")
-        .eq("slug", slug)
-        .single();
-
-      if (categoryError || !categoryData) {
-        toast({
-          title: "Error",
-          description: "Categoría no encontrada.",
-          variant: "destructive",
+      try {
+        // Buscar la categoría por slug usando la función centralizada
+        const categories = await fetchCategories({ slug });
+        
+        // Si no hay categorías o está vacío, mostrar error
+        if (!categories || categories.length === 0) {
+          toast({
+            title: "Error",
+            description: "Categoría no encontrada.",
+            variant: "destructive",
+          });
+          setCategory(null);
+          return;
+        }
+        
+        const categoryData = categories[0];
+        setCategory(categoryData);
+        
+        // Buscar productos de esta categoría usando la función centralizada
+        const productsData = await fetchProducts({
+          categoryId: categoryData.id,
+          onlyVisible: true,
+          orderBy: 'created_at',
+          ascending: false
         });
-        setCategory(null);
-        setLoading(false);
-        return;
-      }
-
-      setCategory(categoryData);
-
-      const { data: productsData, error: productsError } = await supabase
-        .from("products")
-        .select("*, categories(name)")
-        .eq("category_id", categoryData.id)
-        .eq("visible", true)
-        .order("created_at", { ascending: false });
-
-      if (productsError) {
-        toast({
-          title: "Error",
-          description: "No se pudieron cargar los productos.",
-          variant: "destructive",
-        });
-      } else {
+        
         setProducts(productsData);
+      } catch (error) {
+        console.error('Error al cargar datos de categoría:', error);
+        // El manejo de errores ya está en las funciones individuales
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
     };
 
     fetchCategoryData();

@@ -1,90 +1,62 @@
 
 import { useState, useCallback } from 'react';
-import { supabase } from '@/lib/supabaseClient';
-import { toast } from '@/components/ui/use-toast';
+import { fetchProducts as fetchProductsApi } from '@/lib/fetchProducts';
+import { submitProduct, deleteProduct, toggleProductVisibility } from '@/lib/productUtils';
 
 export const useProducts = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const fetchProducts = useCallback(async () => {
+  const fetchProducts = useCallback(async (options = {}) => {
     setLoading(true);
-    const { data, error } = await supabase.from('products').select('*, categories(id, name)').order('created_at', { ascending: false });
-    if (error) {
-      toast({ title: "Error", description: "No se pudieron cargar los productos.", variant: "destructive" });
-    } else {
+    try {
+      // Usar la función centralizada con opciones por defecto
+      const data = await fetchProductsApi({
+        orderBy: 'created_at',
+        ascending: false,
+        ...options
+      });
       setProducts(data);
+    } catch (error) {
+      console.error('Error en fetchProducts:', error);
+      // El manejo de errores ya está en fetchProductsApi
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
-  const uploadFile = async (file) => {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}-${Math.random()}.${fileExt}`;
-    const filePath = `public/${fileName}`;
-    const { error: uploadError } = await supabase.storage.from('product-images').upload(filePath, file);
-    if (uploadError) {
-      throw uploadError;
-    }
-    const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(filePath);
-    return urlData.publicUrl;
-  };
+  // La función uploadFile ahora está centralizada en fetchProducts.js
 
-  const submitProduct = async (productFormData, editingProduct) => {
-    try {
-      const imageUrls = await Promise.all(
-        productFormData.images.map(image => 
-          image instanceof File ? uploadFile(image) : Promise.resolve(image)
-        )
-      );
-
-      const productData = {
-        name: productFormData.name,
-        price: parseFloat(productFormData.price) || 0,
-        description: productFormData.description,
-        category_id: parseInt(productFormData.category_id, 10),
-        stock: parseInt(productFormData.stock, 10) || 0,
-        visible: productFormData.visible,
-        is_trending: productFormData.is_trending,
-        images: imageUrls,
-      };
-
-      if (editingProduct) {
-        const { error } = await supabase.from('products').update(productData).eq('id', editingProduct.id);
-        if (error) throw error;
-        toast({ title: "Éxito", description: "Producto actualizado correctamente." });
-      } else {
-        const { error } = await supabase.from('products').insert([productData]);
-        if (error) throw error;
-        toast({ title: "Éxito", description: "Producto creado correctamente." });
-      }
-      await fetchProducts();
-      return true;
-    } catch (error) {
-      toast({ title: "Error", description: error.message || "No se pudo guardar el producto.", variant: "destructive" });
-      return false;
-    }
-  };
-
-  const deleteProduct = async (id) => {
-    const { error } = await supabase.from('products').delete().eq('id', id);
-    if (error) {
-      toast({ title: "Error", description: "No se pudo eliminar el producto.", variant: "destructive" });
-    } else {
-      toast({ title: "Éxito", description: "Producto eliminado correctamente." });
+  const handleSubmitProduct = async (productFormData, editingProduct) => {
+    const success = await submitProduct(productFormData, editingProduct);
+    if (success) {
       await fetchProducts();
     }
+    return success;
   };
 
-  const toggleProductVisibility = async (id, currentVisibility) => {
-    const { error } = await supabase.from('products').update({ visible: !currentVisibility }).eq('id', id);
-    if (error) {
-      toast({ title: "Error", description: `No se pudo cambiar la visibilidad: ${error.message}`, variant: "destructive" });
-    } else {
-      toast({ title: "Éxito", description: "Visibilidad del producto actualizada." });
+  const handleDeleteProduct = async (id) => {
+    const success = await deleteProduct(id);
+    if (success) {
       await fetchProducts();
     }
+    return success;
   };
 
-  return { products, loading, fetchProducts, submitProduct, deleteProduct, toggleProductVisibility };
+  const handleToggleProductVisibility = async (id, currentVisibility) => {
+    const success = await toggleProductVisibility(id, currentVisibility);
+    if (success) {
+      await fetchProducts();
+    }
+    return success;
+  };
+
+  return { 
+    products, 
+    loading, 
+    fetchProducts, 
+    submitProduct: handleSubmitProduct, 
+    deleteProduct: handleDeleteProduct, 
+    toggleProductVisibility: handleToggleProductVisibility 
+  };
 };

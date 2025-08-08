@@ -81,6 +81,11 @@ const WishlistDrawer = () => {
                         src={item.images?.[0] || 'https://placehold.co/100x100/000000/FFFFFF?text=Rolu'}
                         alt={item.name}
                         className="w-20 h-20 object-cover"
+                        onError={(e) => {
+                          console.error('Error cargando imagen en wishlist:', e.target.src);
+                          e.target.src = 'https://placehold.co/100x100/000000/FFFFFF?text=Rolu';
+                          e.target.onerror = null; // Prevenir bucle infinito
+                        }}
                       />
                     </Link>
                     <div className="flex-1 min-w-0">

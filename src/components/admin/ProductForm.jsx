@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { UploadCloud, X, Star, Plus, Trash2 } from 'lucide-react';
-import ColorPicker from './ColorPicker';
+// import ColorPicker from './ColorPicker';
 
 const ProductForm = ({ formData, setFormData, handleSubmit, resetForm, editingProduct, categories }) => {
   // Validación defensiva: asegurar que formData siempre tenga un valor por defecto
@@ -15,7 +16,6 @@ const ProductForm = ({ formData, setFormData, handleSubmit, resetForm, editingPr
     stock: '',
     visible: true,
     variants: [],
-    colors: [],
     short_description: '',
     long_description: '',
     is_trending: false
@@ -82,16 +82,41 @@ const ProductForm = ({ formData, setFormData, handleSubmit, resetForm, editingPr
     }));
   };
 
+
+  // Manejo de variantes avanzadas
   const handleVariantChange = (variantIndex, field, value) => {
-    const newVariants = [...(safeFormData.variants || [])];
+    const newVariants = [...(safeFormData.variants || [])].map(v => ({
+      ...v,
+      options: Array.isArray(v.options) ? v.options : Object.values(v.options || {}),
+    }));
+    if (!newVariants[variantIndex]) return;
     newVariants[variantIndex][field] = value;
+    setFormData(prev => ({ ...prev, variants: newVariants }));
+  };
+
+  const handleVariantOptionChange = (variantIndex, optionIndex, field, value) => {
+    const newVariants = [...(safeFormData.variants || [])];
+    if (!newVariants[variantIndex]) return;
+    // Asegurar que options sea un array
+    newVariants[variantIndex].options = Array.isArray(newVariants[variantIndex].options)
+      ? newVariants[variantIndex].options
+      : Object.values(newVariants[variantIndex].options || {});
+    // Asegurar que exista el objeto option
+    if (!newVariants[variantIndex].options[optionIndex]) {
+      newVariants[variantIndex].options[optionIndex] = { label: '', value: '' };
+    }
+    newVariants[variantIndex].options[optionIndex][field] = value;
     setFormData(prev => ({ ...prev, variants: newVariants }));
   };
 
   const addVariant = () => {
     setFormData(prev => ({
       ...prev,
-      variants: [...(prev.variants || []), { name: '', options: '' }]
+      variants: [...(prev.variants || []), {
+        name: '',
+        type: 'talle',
+        options: [],
+      }]
     }));
   };
 
@@ -100,9 +125,61 @@ const ProductForm = ({ formData, setFormData, handleSubmit, resetForm, editingPr
     setFormData(prev => ({ ...prev, variants: newVariants }));
   };
 
-  const handleColorsChange = (newColors) => {
-    setFormData(prev => ({ ...prev, colors: newColors }));
+  const addVariantOption = (variantIndex) => {
+    const newVariants = [...(safeFormData.variants || [])];
+    if (!newVariants[variantIndex]) return;
+    const type = newVariants[variantIndex].type;
+  const newOption = { label: '', value: '', shape: 'circle', size: 'md' };
+    if (type === 'color') newOption.hex = '#000000';
+    if (type === 'imagen') newOption.image = '';
+    // Asegurar que options sea un array
+    newVariants[variantIndex].options = Array.isArray(newVariants[variantIndex].options)
+      ? newVariants[variantIndex].options
+      : Object.values(newVariants[variantIndex].options || {});
+    newVariants[variantIndex].options.push(newOption);
+    setFormData(prev => ({ ...prev, variants: newVariants }));
   };
+
+  const removeVariantOption = (variantIndex, optionIndex) => {
+    const newVariants = [...(safeFormData.variants || [])];
+    if (!newVariants[variantIndex]) return;
+    newVariants[variantIndex].options = Array.isArray(newVariants[variantIndex].options)
+      ? newVariants[variantIndex].options
+      : Object.values(newVariants[variantIndex].options || {});
+    newVariants[variantIndex].options = newVariants[variantIndex].options.filter((_, i) => i !== optionIndex);
+    setFormData(prev => ({ ...prev, variants: newVariants }));
+  };
+
+  // Normalizar variantes para renderizar de forma segura
+  const normalizedVariants = useMemo(() => (
+    (safeFormData.variants || []).map(v => ({
+      ...v,
+      options: Array.isArray(v.options) ? v.options : Object.values(v.options || {}),
+    }))
+  ), [safeFormData.variants]);
+
+  // Manejo de subida de imagen para opciones de variante tipo imagen
+  const handleVariantOptionImage = async (variantIndex, optionIndex, file) => {
+    if (!file) return;
+    // Nombre único: variante-producto-timestamp-nombre
+    const fileExt = file.name.split('.').pop();
+    const fileName = `variant_${Date.now()}_${Math.random().toString(36).substr(2, 8)}.${fileExt}`;
+  const { error } = await supabase.storage.from('product-variants').upload(fileName, file, {
+      cacheControl: '3600',
+      upsert: false
+    });
+    if (error) {
+      window.alert('Error al subir la imagen de la variante');
+      return;
+    }
+    // Obtener URL pública
+    const { data: publicUrlData } = supabase.storage.from('product-variants').getPublicUrl(fileName);
+    if (publicUrlData && publicUrlData.publicUrl) {
+      handleVariantOptionChange(variantIndex, optionIndex, 'image', publicUrlData.publicUrl);
+    }
+  };
+
+  
 
   return (
     <motion.div
@@ -217,14 +294,7 @@ const ProductForm = ({ formData, setFormData, handleSubmit, resetForm, editingPr
           />
         </div>
 
-        {/* NUEVO: Selector de Colores */}
-        <div className="pt-4 border-t border-gray-700">
-          <h3 className="mb-4 text-gray-200 text-md font-negro">Colores Disponibles</h3>
-          <ColorPicker
-            selectedColors={safeFormData.colors || []}
-            onColorsChange={handleColorsChange}
-          />
-        </div>
+        
 
         <div>
           <label className="block mb-1 text-sm text-gray-300 font-negro">
@@ -255,7 +325,7 @@ const ProductForm = ({ formData, setFormData, handleSubmit, resetForm, editingPr
               htmlFor="images"
               className="flex flex-col items-center justify-center w-full px-6 pt-5 pb-6 transition-colors bg-gray-800 border-2 border-gray-600 border-dashed cursor-pointer hover:border-black hover:bg-black group"
             >
-              <UploadCloud className="w-12 h-12 mb-2 text-black group-hover:text-white transition-colors" />
+              <UploadCloud className="w-12 h-12 mb-2 text-black transition-colors group-hover:text-white" />
               <p className="text-sm text-gray-400">
                 <span className="text-gray-300 font-negro">Haz clic para subir</span> o arrastra y suelta
               </p>
@@ -273,36 +343,110 @@ const ProductForm = ({ formData, setFormData, handleSubmit, resetForm, editingPr
           </div>
         </div>
 
+
         <div className="pt-4 space-y-4 border-t border-gray-700">
-          <h3 className="text-gray-200 text-md font-negro">Variantes del Producto (Talla, Color, etc.)</h3>
-          {safeFormData.variants && safeFormData.variants.map((variant, index) => (
-            <div key={index} className="flex items-end gap-4 p-3 border border-gray-700 bg-gray-800/50">
-              <div className="flex-grow">
-                <label className="block mb-1 text-xs text-gray-400 font-negro">Nombre de la Variante (ej. Talla)</label>
-                <input
-                  type="text"
-                  value={variant.name}
-                  onChange={(e) => handleVariantChange(index, 'name', e.target.value)}
-                  placeholder="Talla"
-                  className="bg-[#23272f] text-white border border-gray-700 focus:border-blue-500 focus:ring-blue-500 placeholder-gray-400 rounded-lg px-3 py-2 w-full"
-                />
+          <h3 className="text-gray-200 text-md font-negro">Variantes del Producto (Color, Talle, Imagen, etc.)</h3>
+          {normalizedVariants && normalizedVariants.map((variant, vIdx) => (
+            <div key={vIdx} className="p-3 mb-2 border border-gray-700 bg-gray-800/50">
+              <div className="flex flex-wrap items-end gap-4">
+                <div>
+                  <label className="block mb-1 text-xs text-gray-400 font-negro">Nombre de la Variante</label>
+                  <input
+                    type="text"
+                    value={variant.name}
+                    onChange={e => handleVariantChange(vIdx, 'name', e.target.value)}
+                    placeholder="Ej: Color, Talle, Estampado"
+                    className="bg-[#23272f] text-white border border-gray-700 focus:border-blue-500 focus:ring-blue-500 placeholder-gray-400 rounded-lg px-3 py-2 w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block mb-1 text-xs text-gray-400 font-negro">Tipo</label>
+                  <select
+                    value={variant.type || 'talle'}
+                    onChange={e => handleVariantChange(vIdx, 'type', e.target.value)}
+                    className="bg-[#23272f] text-white border border-gray-700 rounded-lg px-3 py-2"
+                  >
+                    <option value="talle">Talle</option>
+                    <option value="color">Color</option>
+                    <option value="imagen">Imagen</option>
+                  </select>
+                </div>
+                <Button type="button" variant="destructive" size="icon" onClick={() => removeVariant(vIdx)}>
+                  <Trash2 className="w-4 h-4" />
+                </Button>
               </div>
-              <div className="flex-grow">
-                <label className="block mb-1 text-xs text-gray-400 font-negro">Opciones (separadas por comas)</label>
-                <input
-                  type="text"
-                  value={variant.options}
-                  onChange={(e) => handleVariantChange(index, 'options', e.target.value)}
-                  placeholder="S, M, L, XL"
-                  className="bg-[#23272f] text-white border border-gray-700 focus:border-blue-500 focus:ring-blue-500 placeholder-gray-400 rounded-lg px-3 py-2 w-full"
-                />
+              {/* Opciones de la variante */}
+              <div className="mt-4 space-y-2">
+                {Array.isArray(variant.options) && variant.options.map((option, oIdx) => (
+                  <div key={oIdx} className="flex flex-wrap items-center gap-2 p-2 border border-gray-700 rounded-lg bg-gray-900/60">
+                    <input
+                      type="text"
+                      value={option.label}
+                      onChange={e => handleVariantOptionChange(vIdx, oIdx, 'label', e.target.value)}
+                      placeholder="Etiqueta (ej: Rojo, S, Estampado)"
+                      className="bg-[#23272f] text-white border border-gray-700 rounded-lg px-2 py-1 w-28"
+                    />
+                    <input
+                      type="text"
+                      value={option.value}
+                      onChange={e => handleVariantOptionChange(vIdx, oIdx, 'value', e.target.value)}
+                      placeholder="Valor (ej: rojo, s, estampado)"
+                      className="bg-[#23272f] text-white border border-gray-700 rounded-lg px-2 py-1 w-24"
+                    />
+                    {/* Si es color, mostrar color picker */}
+                    {variant.type === 'color' && (
+                      <input
+                        type="color"
+                        value={option.hex || '#000000'}
+                        onChange={e => handleVariantOptionChange(vIdx, oIdx, 'hex', e.target.value)}
+                        className="w-8 h-8 border-none"
+                      />
+                    )}
+                    {/* Si es imagen, input para subir imagen */}
+                    {variant.type === 'imagen' && (
+                      <>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={e => handleVariantOptionImage(vIdx, oIdx, e.target.files[0])}
+                          className="text-xs"
+                        />
+                        {option.image && (
+                          <img src={option.image} alt="preview" className="object-cover w-10 h-10 rounded" />
+                        )}
+                      </>
+                    )}
+                    {/* Forma y tamaño */}
+                    <select
+                      value={option.shape || 'circle'}
+                      onChange={e => handleVariantOptionChange(vIdx, oIdx, 'shape', e.target.value)}
+                      className="bg-[#23272f] text-white border border-gray-700 rounded-lg px-2 py-1"
+                    >
+                      <option value="circle">Circular</option>
+                      <option value="square">Cuadrada</option>
+                    </select>
+                    <select
+                      value={option.size || 'md'}
+                      onChange={e => handleVariantOptionChange(vIdx, oIdx, 'size', e.target.value)}
+                      className="bg-[#23272f] text-white border border-gray-700 rounded-lg px-2 py-1"
+                    >
+                      <option value="sm">Chica</option>
+                      <option value="md">Mediana</option>
+                      <option value="lg">Grande</option>
+                    </select>
+                    <Button type="button" variant="destructive" size="icon" onClick={() => removeVariantOption(vIdx, oIdx)}>
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+                <Button type="button" onClick={() => addVariantOption(vIdx)} className="flex items-center gap-2 px-2 py-1 mt-2 text-xs text-white transition-colors bg-black border border-gray-700 hover:bg-white hover:text-black hover:border-black">
+                  <Plus className="w-4 h-4 mr-1" />
+                  Añadir Opción
+                </Button>
               </div>
-              <Button type="button" variant="destructive" size="icon" onClick={() => removeVariant(index)}>
-                <Trash2 className="w-4 h-4" />
-              </Button>
             </div>
           ))}
-          <Button type="button" onClick={addVariant} className="text-sm bg-black text-white border border-gray-700 hover:bg-white hover:text-black hover:border-black flex items-center gap-2 px-4 py-2 mt-2 transition-colors">
+          <Button type="button" onClick={addVariant} className="flex items-center gap-2 px-4 py-2 mt-2 text-sm text-white transition-colors bg-black border border-gray-700 hover:bg-white hover:text-black hover:border-black">
             <Plus className="w-4 h-4 mr-2" />
             Añadir Variante
           </Button>
@@ -338,10 +482,10 @@ const ProductForm = ({ formData, setFormData, handleSubmit, resetForm, editingPr
           </div>
         </div>
         <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-4">
-          <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+          <Button type="submit" className="w-full text-white bg-blue-600 hover:bg-blue-700">
             {safeEditingProduct.id ? 'Actualizar' : 'Crear'} Producto
           </Button>
-          <Button type="button" variant="outline" onClick={resetForm} className="w-full bg-black text-white border-gray-500 font-negro hover:bg-gray-700 sm:w-auto">
+          <Button type="button" variant="outline" onClick={resetForm} className="w-full text-white bg-black border-gray-500 font-negro hover:bg-gray-700 sm:w-auto">
             Cancelar
           </Button>
         </div>
