@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Instagram, Facebook, Linkedin, Mail } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa';
 import LogoHeader from '@/assets/LogoHeader.png';
+import { getWhatsAppLink } from '@/config/contact';
 
 const Footer = () => {
   const socialLinks = [
@@ -10,7 +11,7 @@ const Footer = () => {
     { name: 'Facebook', icon: Facebook, url: 'https://www.facebook.com/LuMakeupUruguay' },
   ];
 
-  const whatsappLink = 'https://wa.me/59896303934';
+  const whatsappLink = getWhatsAppLink();
   const email = 'rolumodas.uy@gmail.com';
 
   const footerLinks = [
