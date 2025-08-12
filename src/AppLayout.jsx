@@ -16,6 +16,7 @@ import CartDrawer from '@/components/CartDrawer';
 import SearchModal from '@/components/SearchModal';
 import NewsletterButton from '@/components/NewsletterButton';
 import AuthAwareWhatsAppButton from '@/components/AuthAwareWhatsAppButton';
+import { WHATSAPP_NUMBER } from '@/config/contact';
 import TermsPage from '@/pages/TermsPage';
 import PrivacyPage from '@/pages/PrivacyPage';
 import OrderConfirmationPage from '@/pages/OrderConfirmationPage';
@@ -67,7 +68,7 @@ const AppLayout = ({ isSearchModalOpen, openSearchModal, closeSearchModal }) => 
       <CartDrawer />
       <SearchModal isOpen={isSearchModalOpen} onClose={closeSearchModal} />
       <NewsletterButton />
-      <AuthAwareWhatsAppButton phoneNumber="59896303934" />
+  <AuthAwareWhatsAppButton phoneNumber={WHATSAPP_NUMBER} />
       <Toaster />
     </div>
   );

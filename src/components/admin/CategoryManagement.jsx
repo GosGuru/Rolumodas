@@ -11,10 +11,19 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Edit, Trash2, Tag, Check, X as IconX, Image as ImageIcon, UploadCloud } from 'lucide-react';
+import { Plus, Edit, Trash2, Tag, Check, X as IconX, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 
-const CategoryManagement = ({ categories, handleCreateCategory, handleSaveCategory, handleDeleteCategory }) => {
+// Acepta tanto los props nuevos como los antiguos (retrocompatibilidad)
+const CategoryManagement = ({
+  categories = [],
+  handleCreateCategory,
+  handleSaveCategory,
+  handleDeleteCategory,
+  onCreate, // alias
+  onSave,   // alias
+  onDelete  // alias
+}) => {
   const [editingCategory, setEditingCategory] = useState(null);
   const [categoryName, setCategoryName] = useState('');
   const [categoryImageFile, setCategoryImageFile] = useState(null);
@@ -28,6 +37,14 @@ const CategoryManagement = ({ categories, handleCreateCategory, handleSaveCatego
   const newImageInputRef = useRef(null);
   const editImageInputRef = useRef(null);
 
+  const [creating, setCreating] = useState(false);
+  const [savingId, setSavingId] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
+
+  const createFn = handleCreateCategory || onCreate;
+  const saveFn = handleSaveCategory || onSave;
+  const deleteFn = handleDeleteCategory || onDelete;
+
   const onEdit = (category) => {
     setEditingCategory(category);
     setCategoryName(category.name);
@@ -35,9 +52,24 @@ const CategoryManagement = ({ categories, handleCreateCategory, handleSaveCatego
     setCategoryImageFile(null);
   };
 
-  const onSave = (id) => {
-    handleSaveCategory(id, categoryName, categoryImageFile);
-    onCancelEdit();
+  const handleSaveInternal = async (id) => {
+    if (!saveFn) {
+      toast({ title: 'Error', description: 'No se definió función para guardar.', variant: 'destructive' });
+      return;
+    }
+    if (!categoryName.trim()) {
+      toast({ title: 'Error', description: 'El nombre no puede estar vacío.', variant: 'destructive' });
+      return;
+    }
+    try {
+      setSavingId(id);
+      const ok = await saveFn(id, categoryName, categoryImageFile, editingCategory?.image);
+      if (ok !== false) { // treat undefined as success
+        onCancelEdit();
+      }
+    } finally {
+      setSavingId(null);
+    }
   };
 
   const onCancelEdit = () => {
@@ -47,23 +79,41 @@ const CategoryManagement = ({ categories, handleCreateCategory, handleSaveCatego
     setImagePreview('');
   };
 
-  const onCreate = (e) => {
+  const onCreateSubmit = async (e) => {
     e.preventDefault();
-    if (!newCategoryName.trim()) {
-      toast({ title: "Error", description: "El nombre no puede estar vacío.", variant: "destructive" });
+    if (!createFn) {
+      toast({ title: 'Error', description: 'No se definió función para crear.', variant: 'destructive' });
       return;
     }
-    handleCreateCategory(newCategoryName, newCategoryImageFile);
-    setNewCategoryName('');
-    setNewCategoryImageFile(null);
-    setNewImagePreview('');
-    if(newImageInputRef.current) newImageInputRef.current.value = '';
+    const name = newCategoryName.trim();
+    if (!name) {
+      toast({ title: 'Error', description: 'El nombre no puede estar vacío.', variant: 'destructive' });
+      return;
+    }
+    try {
+      setCreating(true);
+      const ok = await createFn(name, newCategoryImageFile);
+      if (ok !== false) {
+        setNewCategoryName('');
+        setNewCategoryImageFile(null);
+        setNewImagePreview('');
+        if (newImageInputRef.current) newImageInputRef.current.value = '';
+      }
+    } finally {
+      setCreating(false);
+    }
   };
 
-  const confirmDelete = () => {
-    if (categoryToDelete) {
-      handleDeleteCategory(categoryToDelete.id);
-      setCategoryToDelete(null);
+  const confirmDelete = async () => {
+    if (!deleteFn || !categoryToDelete) return;
+    try {
+      setDeletingId(categoryToDelete.id);
+      const ok = await deleteFn(categoryToDelete.id);
+      if (ok !== false) {
+        setCategoryToDelete(null);
+      }
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -91,7 +141,7 @@ const CategoryManagement = ({ categories, handleCreateCategory, handleSaveCatego
         <h2 className="text-lg font-bold text-white mb-4">Gestión de Categorías</h2>
       </div>
       <div className="p-6 space-y-4">
-        <form onSubmit={onCreate} className="p-4 space-y-3 border border-gray-700 bg-gray-800/50">
+        <form onSubmit={onCreateSubmit} className="p-4 space-y-3 border border-gray-700 bg-gray-800/50">
           <h3 className="text-white font-negro">Nueva Categoría</h3>
           <input
             type="text"
@@ -108,9 +158,9 @@ const CategoryManagement = ({ categories, handleCreateCategory, handleSaveCatego
             {newImagePreview && <img src={newImagePreview} alt="preview" className="object-cover w-10 h-10" />}
             <span className="text-xs text-gray-400">{newCategoryImageFile ? newCategoryImageFile.name : 'Subir imagen...'}</span>
           </div>
-          <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm">
-            <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">Crear</span>
+          <Button type="submit" disabled={creating} className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm">
+            {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+            <span className="hidden sm:inline">{creating ? 'Creando...' : 'Crear'}</span>
           </Button>
         </form>
         <div className="space-y-2">
@@ -135,10 +185,10 @@ const CategoryManagement = ({ categories, handleCreateCategory, handleSaveCatego
                     <span className="text-xs text-gray-400 truncate">{categoryImageFile ? categoryImageFile.name : 'Cambiar imagen...'}</span>
                   </div>
                   <div className="flex justify-end space-x-2">
-                    <Button variant="ghost" size="icon" onClick={() => onSave(cat.id)} className="text-green-400 hover:text-green-300">
-                      <Check className="w-4 h-4" />
+                    <Button variant="ghost" size="icon" disabled={savingId === cat.id} onClick={() => handleSaveInternal(cat.id)} className="text-green-400 hover:text-green-300 disabled:opacity-50 disabled:cursor-not-allowed">
+                      {savingId === cat.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={onCancelEdit} className="text-red-400 hover:text-red-300">
+                    <Button variant="ghost" size="icon" disabled={savingId === cat.id} onClick={onCancelEdit} className="text-red-400 hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed">
                       <IconX className="w-4 h-4" />
                     </Button>
                   </div>
@@ -150,11 +200,11 @@ const CategoryManagement = ({ categories, handleCreateCategory, handleSaveCatego
                     <span className="text-sm text-white truncate">{cat.name}</span>
                   </div>
                   <div className="flex flex-shrink-0">
-                    <Button variant="ghost" size="icon" onClick={() => onEdit(cat)} className="text-blue-400 hover:text-blue-300">
+                    <Button variant="ghost" size="icon" disabled={deletingId === cat.id} onClick={() => onEdit(cat)} className="text-blue-400 hover:text-blue-300 disabled:opacity-50">
                       <Edit className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => setCategoryToDelete(cat)} className="text-red-400 hover:text-red-300">
-                      <Trash2 className="w-4 h-4" />
+                    <Button variant="ghost" size="icon" disabled={deletingId === cat.id} onClick={() => setCategoryToDelete(cat)} className="text-red-400 hover:text-red-300 disabled:opacity-50">
+                      {deletingId === cat.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                     </Button>
                   </div>
                 </div>

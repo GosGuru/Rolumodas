@@ -1,5 +1,4 @@
-/* eslint-disable no-console */
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Heart, Minus, Plus, Loader2, ShoppingCart } from 'lucide-react';
@@ -11,8 +10,6 @@ import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabaseClient';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import ProductVariants from '@/components/ProductVariants';
-import Lightbox from 'yet-another-react-lightbox';
-import 'yet-another-react-lightbox/styles.css';
 import ProductCard from '@/components/ProductCard';
 import MainHeader from '@/components/MainHeader';
 import DashboardMobileNav from '@/components/admin/DashboardMobileNav';
@@ -31,17 +28,13 @@ const ProductPage = () => {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [zoomed, setZoomed] = useState(false);
-  const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
   const [selectedVariants, setSelectedVariants] = useState({});
   const [selectedColor, setSelectedColor] = useState(null);
-  const imgContainerRef = useRef(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [relatedTitle, setRelatedTitle] = useState('Productos relacionados');
 
   // Validación defensiva para las imágenes
-  const safeImages = product?.images || [];
+  const safeImages = Array.isArray(product?.images) ? product.images : [];
   const currentImage = safeImages[selectedImage] || safeImages[0] || 'https://placehold.co/400x500/e0e0e0/000000?text=Rolu';
 
   useEffect(() => {
@@ -57,9 +50,18 @@ const ProductPage = () => {
         toast({ title: "Error", description: "No se pudo encontrar el producto.", variant: "destructive" });
         setProduct(null);
       } else {
+        // Validación defensiva para las imágenes
+        let validImages = [];
+        if (Array.isArray(data.images) && data.images.length > 0) {
+          validImages = data.images.filter(img => img && typeof img === 'string' && img.trim() !== '');
+        }
+        if (validImages.length === 0) {
+          validImages = ["https://placehold.co/600x800/e0e0e0/000000?text=Rolu"];
+        }
+
         const productData = {
           ...data,
-          images: data.images && data.images.length > 0 ? data.images : ["https://placehold.co/600x800/e0e0e0/000000?text=Rolu"],
+          images: validImages,
           inStock: data.stock > 0,
         };
         setProduct(productData);
@@ -235,6 +237,7 @@ const ProductPage = () => {
   };
 
   // Navegación con flechas de teclado
+  // Navegación de imágenes con teclado
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'ArrowRight') setSelectedImage((prev) => (prev + 1) % (product?.images?.length || 1));
@@ -243,47 +246,6 @@ const ProductPage = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [product]);
-
-  // Swipe para móvil
-  useEffect(() => {
-    const container = imgContainerRef.current;
-    if (!container) return;
-    let startX = null;
-    const onTouchStart = (e) => {
-      startX = e.touches[0].clientX;
-    };
-    const onTouchEnd = (e) => {
-      if (startX === null) return;
-      const endX = e.changedTouches[0].clientX;
-      if (endX - startX > 50) setSelectedImage((prev) => (prev - 1 + (product?.images?.length || 1)) % (product?.images?.length || 1));
-      if (startX - endX > 50) setSelectedImage((prev) => (prev + 1) % (product?.images?.length || 1));
-      startX = null;
-    };
-    container.addEventListener('touchstart', onTouchStart);
-    container.addEventListener('touchend', onTouchEnd);
-    return () => {
-      container.removeEventListener('touchstart', onTouchStart);
-      container.removeEventListener('touchend', onTouchEnd);
-    };
-  }, [product]);
-
-  // Zoom handlers
-  const handleMouseMove = (e) => {
-    if (!zoomed || !imgContainerRef.current) return;
-    const rect = imgContainerRef.current.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-    setZoomPos({ x, y });
-  };
-
-  const handleTouchMove = (e) => {
-    if (!zoomed || !imgContainerRef.current) return;
-    const rect = imgContainerRef.current.getBoundingClientRect();
-    const touch = e.touches[0];
-    const x = ((touch.clientX - rect.left) / rect.width) * 100;
-    const y = ((touch.clientY - rect.top) / rect.height) * 100;
-    setZoomPos({ x, y });
-  };
 
   if (loading) {
     return (
@@ -332,51 +294,35 @@ const ProductPage = () => {
                 transition={{ duration: 0.12, delay: 0 }}
                 className="space-y-4"
               >
-                <div
-                  ref={imgContainerRef}
-                  className="relative w-full overflow-hidden aspect-square bg-secondary group"
-                  tabIndex={0}
-                  style={{ cursor: zoomed ? 'zoom-out' : 'zoom-in' }}
-                  onClick={() => setLightboxOpen(true)}
-                  onMouseEnter={() => setZoomed(true)}
-                  onMouseLeave={() => setZoomed(false)}
-                  onMouseMove={handleMouseMove}
-                  onTouchStart={() => setZoomed(true)}
-                  onTouchEnd={() => setZoomed(false)}
-                  onTouchMove={handleTouchMove}
-                >
+                <div className="relative w-full overflow-hidden aspect-square bg-secondary">
                   {/* Imagen principal del producto con manejo de errores */}
                   <img
                     src={currentImage}
                     alt={product.name}
-                    className={`w-full h-full object-cover transition duration-300 ${zoomed ? 'pointer-events-none' : ''}`}
-                    style={zoomed ? {
-                      transform: `scale(2)`,
-                      transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
-                      transition: 'transform 0.2s cubic-bezier(.4,2,.6,1)',
-                      zIndex: 20,
-                    } : {}}
+                    className="w-full h-full object-cover"
                     draggable={false}
                     onError={(e) => {
-                      console.error('Error cargando imagen principal:', e.target.src);
+                      if (typeof window !== 'undefined' && window.__DEV__) {
+                        // eslint-disable-next-line no-console
+                        console.warn('Error cargando imagen principal:', e.target.src);
+                      }
                       e.target.src = 'https://placehold.co/600x800/e0e0e0/000000?text=Rolu';
                       e.target.onerror = null; // Prevenir bucle infinito
                     }}
                   />
-                  {/* No se muestra información de depuración de URL */}
                   {/* Flechas navegación */}
                   {safeImages.length > 1 && (
                     <>
                       <button
                         className="absolute z-30 p-2 -translate-y-1/2 rounded-full shadow left-2 top-1/2 bg-white/70 hover:bg-white"
-                        onClick={e => { e.stopPropagation(); setSelectedImage((prev) => (prev - 1 + safeImages.length) % safeImages.length); }}
+                        onClick={() => setSelectedImage((prev) => (prev - 1 + safeImages.length) % safeImages.length)}
                         aria-label="Imagen anterior"
                       >
                         <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
                       </button>
                       <button
                         className="absolute z-30 p-2 -translate-y-1/2 rounded-full shadow right-2 top-1/2 bg-white/70 hover:bg-white"
-                        onClick={e => { e.stopPropagation(); setSelectedImage((prev) => (prev + 1) % safeImages.length); }}
+                        onClick={() => setSelectedImage((prev) => (prev + 1) % safeImages.length)}
                         aria-label="Imagen siguiente"
                       >
                         <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
@@ -398,50 +344,16 @@ const ProductPage = () => {
                           alt={`${product.name} ${index + 1}`}
                           className="object-cover w-full h-full"
                           onError={(e) => {
-                            console.error('Error cargando miniatura:', e.target.src);
+                            if (typeof window !== 'undefined' && window.__DEV__) {
+                              // eslint-disable-next-line no-console
+                              console.warn('Error cargando miniatura:', e.target.src);
+                            }
                             e.target.src = 'https://placehold.co/100x100/e0e0e0/000000?text=Rolu';
                             e.target.onerror = null; // Prevenir bucle infinito
                           }}
                         />
-                        {/* No se muestra número de imagen para depuración */}
                       </button>
                     ))}
-                  </div>
-                )}
-                {/* Lightbox con fondo blur discreto */}
-                {lightboxOpen && (
-                  <div className="fixed inset-0 z-50 flex items-center justify-center" style={{backdropFilter: 'blur(8px)', background: 'rgba(255,255,255,0.15)'}}>
-                    <Lightbox
-                      open={lightboxOpen}
-                      close={() => setLightboxOpen(false)}
-                      slides={Array.isArray(safeImages) && safeImages.length > 0 ? 
-                        safeImages.map((img) => ({
-                          src: img || 'https://placehold.co/800x1200/e0e0e0/000000?text=Rolu',
-                          alt: product?.name || 'Imagen del producto',
-                          // Agregar un manejador de errores para las imágenes del lightbox
-                          srcSet: '',
-                          loading: 'lazy',
-                          onError: (e) => {
-                            console.error('Error cargando imagen en lightbox:', e.target.src);
-                            e.target.src = 'https://placehold.co/800x1200/e0e0e0/000000?text=Rolu';
-                            e.target.onerror = null;
-                          }
-                        })) : 
-                        [{
-                          src: 'https://placehold.co/800x1200/e0e0e0/000000?text=Rolu',
-                          alt: product?.name || 'Imagen del producto'
-                        }]}
-                      index={selectedImage}
-                      on={{
-                        view: ({ index }) => setSelectedImage(index),
-                      }}
-                      render={{
-                        // Elimina overlay opaco por defecto
-                        backdrop: () => null,
-                        iconPrev: () => <Button size="icon" variant="ghost" className="absolute left-4 top-1/2 -translate-y-1/2 z-50 bg-black/50 text-white hover:bg-black/70">←</Button>,
-                        iconNext: () => <Button size="icon" variant="ghost" className="absolute right-4 top-1/2 -translate-y-1/2 z-50 bg-black/50 text-white hover:bg-black/70">→</Button>,
-                      }}
-                    />
                   </div>
                 )}
               </motion.div>

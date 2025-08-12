@@ -14,7 +14,16 @@ const ShopPage = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       setLoading(true);
-      const { data, error } = await supabase.from('categories').select('*').order('name');
+      let data, error;
+      try {
+        ({ data, error } = await supabase
+          .from('categories')
+          .select('*')
+          .order('sort_order', { ascending: true })
+          .order('name', { ascending: true }));
+      } catch {
+        ({ data, error } = await supabase.from('categories').select('*').order('name'));
+      }
       if (error) {
         toast({ title: "Error", description: "No se pudieron cargar las categorías.", variant: "destructive" });
       } else {

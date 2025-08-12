@@ -58,7 +58,7 @@ const HomePage = () => {
         />
       </Helmet>
 
-      <section className="relative h-screen mt-[-80px] min-h-[600px] flex items-center justify-center text-center text-white bg-gray-400">
+            <section className="relative h-[100vh] mt-[-80px] min-h-[600px] flex items-center justify-center text-center text-white bg-gray-400">
         {!isHeroLoaded && (
           <div className="absolute inset-0 z-0 w-full h-full bg-gray-400 animate-pulse" />
         )}
@@ -102,18 +102,18 @@ const HomePage = () => {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5, delay: index * 0.1 }}
-                    className="relative w-full max-w-xs aspect-square overflow-hidden transition-shadow duration-300 shadow-lg hover:shadow-xl flex items-center justify-center"
+                    className="relative flex items-center justify-center w-full max-w-xs overflow-hidden transition-shadow duration-300 shadow-lg aspect-square hover:shadow-xl"
                   >
-                    <div className="w-full h-full aspect-square overflow-hidden flex items-center justify-center">
+                    <div className="flex items-center justify-center w-full h-full overflow-hidden aspect-square">
                       <img
                         src={category.image || 'https://placehold.co/400x400/e0e0e0/000000?text=Rolu'}
                         alt={category.name}
-                        className="object-cover w-full h-full max-h-full max-w-full"
+                        className="object-cover w-full h-full max-w-full max-h-full"
                         style={{ aspectRatio: '1/1' }}
                       />
                     </div>
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white bg-black/30">
-                      <h3 className="font-poppins font-bold text-sm sm:text-base md:text-lg text-white tracking-wider uppercase">
+                      <h3 className="text-sm font-bold tracking-wider text-white uppercase font-poppins sm:text-base md:text-lg">
                         {category.name}
                       </h3>
                     </div>

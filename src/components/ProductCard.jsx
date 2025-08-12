@@ -1,433 +1,196 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { useWishlist } from '@/contexts/WishlistContext';
-import { toast } from '@/components/ui/use-toast';
-import { Heart, ShoppingCart, Share2, ShoppingBag } from 'lucide-react';
-import { useCart } from '@/contexts/CartContext';
-import Lightbox from 'yet-another-react-lightbox';
-import 'yet-another-react-lightbox/styles.css';
-import './product-lightbox.css';
-import ColorDisplay from './ColorDisplay';
+import React, { useCallback } from "react";
+import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
+import { ShoppingCart, Heart } from "lucide-react";
+import { useCart } from "@/contexts/CartContext";
+import { useWishlist } from "@/contexts/WishlistContext";
+import { toast } from "@/components/ui/use-toast";
 
-const ProductCard = ({ product, index, listMode }) => {
+// Formato específico solicitado: "UYU 200" (sin símbolo $) o ajustable según necesidad
+const formatPrice = (price) => {
+  if (price == null) return "";
+  const base = new Intl.NumberFormat("es-UY", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(price);
+  return `UYU $${base}`; // Cambiar aquí si quieres incluir decimales o símbolo
+};
+
+/**
+ * ProductCard
+ * - Modo grid por defecto.
+ * - listMode: variante horizontal (wishlist)
+ * - Sin bordes redondeados en la imagen (requisito actual)
+ */
+export default function ProductCard({ product, index = 0, listMode = false }) {
+  const { addToCart } = useCart();
   const { addToWishlist, isInWishlist } = useWishlist();
-  const { addToCart, toggleDrawer } = useCart();
-  const [hovered, setHovered] = useState(false);
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [lightboxIndex, setLightboxIndex] = useState(0);
-  const [lightboxClosing, setLightboxClosing] = useState(false);
-  const [lightboxAnimProps, setLightboxAnimProps] = useState(null);
-  const [isMobile, setIsMobile] = useState(false);
-  const [showMobileActions, setShowMobileActions] = useState(false);
-  const thumbRef = useRef(null);
-  // const lightboxImgRef = useRef(null);
 
-  // Función helper para obtener URL de imagen válida
-  const getValidImageUrl = (imageUrl, fallback = 'https://placehold.co/400x400/e0e0e0/000000?text=Rolu') => {
-    if (!imageUrl || imageUrl === 'undefined' || imageUrl === '{}' || imageUrl.includes('%7B%7D')) {
-      return fallback;
-    }
-    return imageUrl;
-  };
+  const inStock =
+    product?.inStock != null
+      ? Boolean(product.inStock)
+      : typeof product?.stock === "number"
+      ? product.stock > 0
+      : true;
+  const inWishlist = isInWishlist(product.id);
+  const image =
+    product.images?.[0] ||
+    "https://placehold.co/600x600/000000/FFFFFF?text=Rolu";
 
-  // Detectar si estamos en móvil
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
+  const handleAddToCart = useCallback(
+    (e) => {
+      e.preventDefault();
+      addToCart(product, 1);
+      toast({
+        title: "Producto agregado",
+        description: `${product.name} se agregó a tu carrito.`,
+        className: "bg-black text-white border-gray-700 font-negro",
+      });
+    },
+    [addToCart, product]
+  );
 
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  const handleToggleWishlist = useCallback(
+    (e) => {
+      e.preventDefault();
+      addToWishlist(product);
+      toast({
+        title: inWishlist ? "Removido de Favoritos" : "Añadido a Favoritos",
+        description: `${product.name} se ${
+          inWishlist ? "eliminó de" : "agregó a"
+        } tus favoritos.`,
+        className: "bg-black text-white border-gray-700 font-negro",
+      });
+    },
+    [addToWishlist, inWishlist, product]
+  );
 
-  const handleToggleWishlist = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const isCurrentlyInWishlist = isInWishlist(product.id);
-    addToWishlist(product);
-    toast({
-      title: isCurrentlyInWishlist ? "Eliminado de Favoritos" : "Agregado a Favoritos",
-      description: `${product.name} se ${isCurrentlyInWishlist ? 'eliminó de' : 'agregó a'} tus favoritos.`,
-    });
-  };
+  if (!product) return null;
 
-  const formatPrice = (price) => {
-    return price.toFixed(2);
-  };
-
-  // const formatInstallment = (price) => {
-  //   return Math.round(price).toString();
-  // };
-
-  const isProductInWishlist = isInWishlist(product.id);
-
-  // Función para manejar cambio de imagen con teclado y swipe
-  React.useEffect(() => {
-    if (!lightboxOpen) return;
-    const handleKeyDown = (e) => {
-      if (e.key === 'ArrowRight') setLightboxIndex((prev) => (prev + 1) % (product.images?.length || 1));
-      if (e.key === 'ArrowLeft') setLightboxIndex((prev) => (prev - 1 + (product.images?.length || 1)) % (product.images?.length || 1));
-      if (e.key === 'Escape') setLightboxOpen(false);
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [lightboxOpen, product.images]);
-
-  // Animación de cierre del lightbox
-  const handleLightboxClose = () => {
-    if (!lightboxOpen || lightboxClosing) return;
-    setLightboxClosing(true);
-    // Obtener posición y tamaño de la miniatura
-    const thumb = thumbRef.current;
-    const lightboxImg = document.querySelector('.ylb__slide_current img');
-    if (thumb && lightboxImg) {
-      const thumbRect = thumb.getBoundingClientRect();
-      const imgRect = lightboxImg.getBoundingClientRect();
-      // Calcular transformaciones
-      const scaleX = thumbRect.width / imgRect.width;
-      const scaleY = thumbRect.height / imgRect.height;
-      const translateX = thumbRect.left + thumbRect.width / 2 - (imgRect.left + imgRect.width / 2);
-      const translateY = thumbRect.top + thumbRect.height / 2 - (imgRect.top + imgRect.height / 2);
-      setLightboxAnimProps({ scaleX, scaleY, translateX, translateY });
-      // Lanzar animación
-      setTimeout(() => {
-        setLightboxOpen(false);
-        setLightboxClosing(false);
-        setLightboxAnimProps(null);
-      }, 400); // Duración de la animación
-    } else {
-      setLightboxOpen(false);
-      setLightboxClosing(false);
-      setLightboxAnimProps(null);
-    }
-  };
-
+  // Variante lista (horizontal)
   if (listMode) {
-    // Vista lista: fila responsiva; móvil compacto, escritorio ancho
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.5, delay: (index % 4) * 0.05 }}
-        className="flex items-center w-full gap-3 md:gap-5 p-2 md:p-3 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-900 dark:border-gray-800"
-        tabIndex={0}
-      >
-        <div
-          ref={thumbRef}
-          className="flex-shrink-0 overflow-hidden rounded-md cursor-pointer bg-secondary flex items-center justify-center w-20 h-20 md:w-28 md:h-28"
-          onClick={() => { setLightboxOpen(true); setLightboxIndex(0); }}
+      <Link to={`/producto/${product.id}`} className="group">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: index * 0.04 }}
+          className="flex items-center gap-4 p-3 transition-shadow border border-border bg-background hover:shadow-sm"
         >
-          <img
-            src={getValidImageUrl(product.images?.[0])}
-            alt={product.name}
-            className="object-cover w-full h-full"
-          />
-        </div>
-    <div className="flex-1 min-w-0">
-          <Link to={`/producto/${product.id}`} className="block focus:outline-none">
-      <h3 className="text-sm md:text-base font-semibold truncate text-foreground">{product.name}</h3>
-            {/* Descripción corta */}
-            {product.short_description && (
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">{product.short_description}</p>
+          <div className="relative flex-shrink-0 w-24 h-24 overflow-hidden bg-muted">
+            <img
+              src={image}
+              alt={product.name}
+              className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
+              loading="lazy"
+              onError={(e) => {
+                e.target.src =
+                  "https://placehold.co/600x600/000000/FFFFFF?text=Rolu";
+                e.target.onerror = null;
+              }}
+            />
+            {!inStock && (
+              <span className="absolute inset-0 grid text-[10px] font-semibold tracking-wide text-white uppercase bg-black/70 place-items-center">
+                Agotado
+              </span>
             )}
-            {/* Colores */}
-            {product.colors && product.colors.length > 0 && (
-              <div className="mt-1">
-                <ColorDisplay colors={product.colors} size="sm" />
-              </div>
-            )}
-      <p className="text-sm md:text-base text-gray-600 truncate dark:text-gray-300">UYU {formatPrice(product.price)}</p>
-          </Link>
-        </div>
-    <div className="flex flex-col items-end gap-1 md:gap-2">
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={handleToggleWishlist}
-      className="w-8 h-8 md:w-9 md:h-9 rounded-full text-foreground bg-white/60 hover:bg-white backdrop-blur-sm"
-            aria-label="Agregar a favoritos"
-          >
-            <Heart className={`h-4 w-4 transition-all ${isProductInWishlist ? 'text-red-500 fill-current' : ''}`} />
-          </Button>
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={e => {
-              e.preventDefault();
-              e.stopPropagation();
-              addToCart(product, 1);
-              toast({ title: 'Agregado al carrito', description: `${product.name} se agregó a tu carrito.` });
-              toggleDrawer();
-            }}
-      className="w-8 h-8 md:w-9 md:h-9 rounded-full shadow text-primary bg-white/80 hover:bg-primary hover:text-white"
-            aria-label="Agregar al carrito"
-            title="Agregar al carrito"
-          >
-      <ShoppingBag className="w-4 h-4" />
-          </Button>
-        </div>
-        {lightboxOpen && (
-          <Lightbox
-            open={lightboxOpen}
-            close={handleLightboxClose}
-            slides={Array.isArray(product.images) && product.images.length > 0 ? 
-              product.images.map((img) => ({
-                src: getValidImageUrl(img, 'https://placehold.co/800x1200/e0e0e0/000000?text=Rolu'),
-                alt: product?.name || 'Imagen del producto',
-                // Agregar un manejador de errores para las imágenes del lightbox
-                srcSet: '',
-                loading: 'lazy',
-                onError: (e) => {
-                  if (typeof window !== 'undefined' && window?.__DEV__) {
-                    // eslint-disable-next-line no-console
-                    console.warn('Error cargando imagen en lightbox:', e.target?.src);
-                  }
-                  e.target.src = 'https://placehold.co/800x1200/e0e0e0/000000?text=Rolu';
-                  e.target.onerror = null;
+          </div>
+          <div className="flex flex-col flex-1 min-w-0">
+            <h3 className="text-sm font-medium leading-tight truncate text-foreground">
+              {product.name}
+            </h3>
+            <p className="mt-1 text-[13px] font-semibold text-foreground">
+              {formatPrice(product.price)}
+            </p>
+            <div className="flex items-center gap-2 mt-2">
+              <button
+                onClick={handleAddToCart}
+                className="flex items-center justify-center h-8 px-3 text-xs font-medium transition-colors border rounded-full bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+                disabled={!inStock}
+              >
+                <ShoppingCart className="w-4 h-4" />
+              </button>
+              <button
+                onClick={handleToggleWishlist}
+                className={`h-8 w-8 flex items-center justify-center rounded-full border border-border transition-colors ${
+                  inWishlist
+                    ? "text-red-500"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+                aria-label={
+                  inWishlist ? "Quitar de favoritos" : "Añadir a favoritos"
                 }
-              })) : 
-              [{
-                src: getValidImageUrl(product.image, 'https://placehold.co/800x1200/e0e0e0/000000?text=Rolu'),
-                alt: product?.name || 'Imagen del producto'
-              }]}
-            index={lightboxIndex}
-            on={{
-              view: ({ index }) => setLightboxIndex(index),
-              swipe: ({ direction }) => {
-                if (direction === 'left') setLightboxIndex((prev) => (prev + 1) % (product.images?.length || 1));
-                if (direction === 'right') setLightboxIndex((prev) => (prev - 1 + (product.images?.length || 1)) % (product.images?.length || 1));
-              },
-            }}
-          />
-        )}
-      </motion.div>
+              >
+                <Heart
+                  className={`w-4 h-4 ${inWishlist ? "fill-current" : ""}`}
+                />
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      </Link>
     );
   }
 
+  // Variante grid
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5, delay: (index % 4) * 0.05 }}
-      className="group"
-      onMouseEnter={() => !isMobile && setHovered(true)}
-      onMouseLeave={() => !isMobile && setHovered(false)}
-      onTouchStart={() => {
-        if (isMobile) {
-          // En móvil, mostrar acciones después de un delay corto
-          const timer = setTimeout(() => {
-            setShowMobileActions(true);
-          }, 200);
-          return () => clearTimeout(timer);
-        } else {
-          setHovered(true);
-        }
-      }}
-      onTouchEnd={() => {
-        if (isMobile) {
-          // En móvil, ocultar acciones después de un delay
-          setTimeout(() => {
-            setShowMobileActions(false);
-          }, 1000);
-        } else {
-          setHovered(false);
-        }
-      }}
-      tabIndex={0}
-      onKeyDown={e => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          setLightboxOpen(true);
-          setLightboxIndex(0);
-        }
-      }}
-    >
-      <Link to={`/producto/${product.id}`} className="block" tabIndex={-1}>
-        <div
-          className="relative overflow-hidden cursor-pointer bg-secondary"
-          ref={thumbRef}
-          onClick={() => { setLightboxOpen(true); setLightboxIndex(0); }}
-        >
-          {/* Imagen del producto con manejo de errores */}
+    <Link to={`/producto/${product.id}`} className="w-full select-none group">
+      <motion.div
+        initial={{ opacity: 0, y: 18 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.04 }}
+        className="flex flex-col w-full bg-background"
+      >
+        <div className="relative w-full overflow-hidden aspect-square bg-muted">
           <img
-            src={getValidImageUrl(hovered && product.images?.[1] ? product.images[1] : product.images?.[0])}
+            src={image}
             alt={product.name}
-            className={`w-full object-cover aspect-square transition-transform duration-300 group-hover:scale-105 ${hovered && product.images?.[1] ? 'scale-105 blur-[1px]' : ''}`}
+            className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
+            loading="lazy"
             onError={(e) => {
-              if (typeof window !== 'undefined' && window?.__DEV__) {
-                // eslint-disable-next-line no-console
-                console.warn('Error cargando imagen:', e.target?.src);
-              }
-              e.target.src = 'https://placehold.co/400x400/e0e0e0/000000?text=Rolu';
-              e.target.onerror = null; // Prevenir bucle infinito
+              e.target.src =
+                "https://placehold.co/600x600/000000/FFFFFF?text=Rolu";
+              e.target.onerror = null;
             }}
           />
-          {/* No se muestra información de depuración de URL */}
-          <div className={`absolute flex flex-col items-end gap-2 transition-opacity duration-300 top-2 right-2 ${isMobile
-              ? showMobileActions ? 'opacity-100' : 'opacity-0'
-              : 'opacity-0 group-hover:opacity-100'
-            }`}>
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={handleToggleWishlist}
-              className="rounded-full text-foreground bg-white/60 hover:bg-white w-9 h-9 backdrop-blur-sm"
-              aria-label="Agregar a favoritos"
-            >
-              <Heart className={`h-4 w-4 transition-all ${isProductInWishlist ? 'text-red-500 fill-current' : ''}`} />
-            </Button>
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={async (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                try {
-                  await navigator.clipboard.writeText(`${window.location.origin}/producto/${product.id}`);
-                  toast({ title: '¡Enlace copiado!', description: 'El enlace del producto ha sido copiado al portapapeles.' });
-                } catch {
-                  toast({ title: 'Error', description: 'No se pudo copiar el enlace.' });
-                }
-              }}
-              className="rounded-full text-foreground bg-white/60 hover:bg-white w-9 h-9 backdrop-blur-sm"
-              aria-label="Compartir producto"
-              title="Compartir"
-            >
-              <Share2 className="w-4 h-4" />
-            </Button>
-          </div>
+          {!inStock && (
+            <span className="absolute inset-0 grid text-[10px] font-semibold tracking-wide text-white uppercase bg-black/70 place-items-center">
+              Agotado
+            </span>
+          )}
+          <button
+            onClick={handleToggleWishlist}
+            className={`absolute top-2 right-2 z-10 flex items-center justify-center w-8 h-8 rounded-full bg-background/70 backdrop-blur border border-border transition-colors ${
+              inWishlist
+                ? "text-red-500"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+            aria-label={
+              inWishlist ? "Quitar de favoritos" : "Añadir a favoritos"
+            }
+          >
+            <Heart className={`w-4 h-4 ${inWishlist ? "fill-current" : ""}`} />
+          </button>
         </div>
-        <div className="pt-1 text-left">
-          <h3 className="pb-0 text-sm font-normal weigth- text-foreground">
+        <div className="flex flex-col flex-1 mt-2">
+          <h3 className="text-[17.5px] eading-tight truncate ">
             {product.name}
           </h3>
-          {/* Descripción corta */}
-          {product.short_description && (
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">{product.short_description}</p>
-          )}
-          {/* Colores */}
-          {product.colors && product.colors.length > 0 && (
-            <div className="mt-1">
-              <ColorDisplay colors={product.colors} size="sm" />
-            </div>
-          )}
-          <div className="flex items-center content-center justify-between gap-2 place-content-center">
-            <span className="flex text-sm font-normal text-foreground items-left">
-              $UYU {formatPrice(product.price)}
-            </span>
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={e => {
-                e.preventDefault();
-                e.stopPropagation();
-                addToCart(product, 1);
-                toast({ title: 'Agregado al carrito', description: `${product.name} se agregó a tu carrito.` });
-                toggleDrawer();
-              }}
-              className="flex items-center justify-center flex-shrink-0 w-8 h-8 rounded-full shadow text-primary bg-white/80 hover:bg-primary hover:text-white"
-              aria-label="Agregar al carrito"
-              title="Agregar al carrito"
+          <div className="flex items-center justify-between mt-1">
+            <p className="text-[17.5px] ">{formatPrice(product.price)}</p>
+            <button
+              onClick={handleAddToCart}
+              className="flex items-center justify-center text-black transition-colors duration-300 border rounded-full w-9 h-9 border-border hover:text-opacity-60 hover:bg-accent disabled:opacity-60"
+              aria-label="Añadir al carrito"
+              disabled={!inStock}
             >
               <ShoppingCart className="w-5 h-5" />
-            </Button>
+            </button>
           </div>
         </div>
-      </Link>
-      {lightboxOpen && (
-        <div style={{ zIndex: 50 }}>
-          <Lightbox
-            open={lightboxOpen}
-            close={handleLightboxClose}
-            render={{
-              backdrop: ({ children, ...props }) => (
-                <div
-                  {...props}
-                  style={{
-                    background: 'rgba(30,30,30,0.25)',
-                    backdropFilter: 'blur(8px)',
-                    cursor: 'pointer',
-                    position: 'fixed',
-                    inset: 0,
-                    zIndex: 50,
-                  }}
-                  onClick={e => {
-                    if (e.target === e.currentTarget) handleLightboxClose();
-                  }}
-                >
-                  {children}
-                  {/* Animación de cierre */}
-                  {lightboxClosing && lightboxAnimProps && (
-                    <motion.img
-                      src={getValidImageUrl(product.images?.[lightboxIndex] || product.images?.[0] || product.image, 'https://placehold.co/800x1200/e0e0e0/000000?text=Rolu')}
-                      alt={product.name}
-                      initial={{
-                        scale: 1,
-                        opacity: 1,
-                        x: 0,
-                        y: 0,
-                      }}
-                      animate={{
-                        scaleX: lightboxAnimProps.scaleX,
-                        scaleY: lightboxAnimProps.scaleY,
-                        x: lightboxAnimProps.translateX,
-                        y: lightboxAnimProps.translateY,
-                        opacity: 0,
-                      }}
-                      transition={{ duration: 0.4, ease: 'easeInOut' }}
-                      style={{
-                        position: 'fixed',
-                        left: '50%',
-                        top: '50%',
-                        width: 'auto',
-                        height: '80vh',
-                        maxWidth: '90vw',
-                        zIndex: 100,
-                        pointerEvents: 'none',
-                        transform: 'translate(-50%, -50%)',
-                      }}
-                    />
-                  )}
-                </div>
-              )
-            }}
-            slides={Array.isArray(product.images) && product.images.length > 0 ? 
-              product.images.map((img) => ({
-                src: getValidImageUrl(img, 'https://placehold.co/800x1200/e0e0e0/000000?text=Rolu'),
-                alt: product?.name || 'Imagen del producto',
-                // Agregar un manejador de errores para las imágenes del lightbox
-                srcSet: '',
-                loading: 'lazy',
-                onError: (e) => {
-                  if (typeof window !== 'undefined' && window?.__DEV__) {
-                    // eslint-disable-next-line no-console
-                    console.warn('Error cargando imagen en lightbox:', e.target?.src);
-                  }
-                  e.target.src = 'https://placehold.co/800x1200/e0e0e0/000000?text=Rolu';
-                  e.target.onerror = null;
-                }
-              })) : 
-              [{
-                src: getValidImageUrl(product.image, 'https://placehold.co/800x1200/e0e0e0/000000?text=Rolu'),
-                alt: product?.name || 'Imagen del producto'
-              }]}
-            index={lightboxIndex}
-            on={{
-              view: ({ index }) => setLightboxIndex(index),
-              swipe: ({ direction }) => {
-                if (direction === 'left') setLightboxIndex((prev) => (prev + 1) % (product.images?.length || 1));
-                if (direction === 'right') setLightboxIndex((prev) => (prev - 1 + (product.images?.length || 1)) % (product.images?.length || 1));
-              },
-            }}
-          />
-        </div>
-      )}
-    </motion.div>
+      </motion.div>
+    </Link>
   );
-};
+}
 
-export default ProductCard;
+export const ProductCardCompact = ProductCard;

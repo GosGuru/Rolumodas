@@ -35,7 +35,7 @@ const CartDrawer = () => {
     {Object.entries(selectedVariants).map(([variantName, option]) => (
           <span
             key={variantName}
-            className="inline-flex items-center px-2 py-1 text-xs font-medium bg-primary/10 text-primary rounded-md"
+            className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-md bg-primary/10 text-primary"
           >
       {variantName}: {toVariantLabel(option)}
           </span>
@@ -56,7 +56,7 @@ const CartDrawer = () => {
         <div className="flex items-center gap-1">
           {value && (
             <div
-              className="w-4 h-4 rounded-full border border-gray-300"
+              className="w-4 h-4 border border-gray-300 rounded-full"
               style={{ backgroundColor: value }}
             />
           )}
@@ -88,13 +88,13 @@ const CartDrawer = () => {
             <header className="flex items-center justify-between p-4 border-b border-border">
               <h2 className="text-lg font-semibold">Tu Carrito ({getTotalItems()})</h2>
               <Button variant="ghost" size="icon" onClick={closeDrawer} className="text-muted-foreground hover:text-foreground">
-                <X className="h-6 w-6" />
+                <X className="w-6 h-6" />
               </Button>
             </header>
 
             {items.length === 0 ? (
-              <div className="flex-1 flex flex-col items-center justify-center text-center p-4">
-                <p className="text-muted-foreground font-medium">Tu carrito está vacío.</p>
+              <div className="flex flex-col items-center justify-center flex-1 p-4 text-center">
+                <p className="font-medium text-muted-foreground">Tu carrito está vacío.</p>
                 <Link to="/tienda" onClick={closeDrawer}>
                   <Button className="mt-6" variant="outline">
                     Ir a la Tienda
@@ -103,7 +103,7 @@ const CartDrawer = () => {
               </div>
             ) : (
               <>
-                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                <div className="flex-1 p-4 space-y-4 overflow-y-auto">
                   {items.map(item => (
                     <motion.div
                       layout
@@ -111,13 +111,13 @@ const CartDrawer = () => {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, x: -50 }}
-                      className="flex items-start space-x-4 p-3 rounded-md border border-border"
+                      className="flex items-start p-3 space-x-4 border rounded-md border-border"
                     >
                       <Link to={`/producto/${item.id}`} onClick={closeDrawer} className="flex-shrink-0">
                         <img
                           src={item.images?.[0] || 'https://placehold.co/100x100/e0e0e0/000000?text=Rolu'}
                           alt={item.name}
-                          className="w-20 h-20 object-cover rounded-md"
+                          className="object-cover w-20 h-20 rounded-md"
                           onError={(e) => {
                             console.error('Error cargando imagen en carrito:', e.target.src);
                             e.target.src = 'https://placehold.co/100x100/e0e0e0/000000?text=Rolu';
@@ -127,9 +127,9 @@ const CartDrawer = () => {
                       </Link>
                       <div className="flex-1 min-w-0">
                         <Link to={`/producto/${item.id}`} onClick={closeDrawer}>
-                          <h3 className="font-medium text-sm truncate hover:underline">{item.name}</h3>
+                          <h3 className="text-sm font-medium truncate hover:underline">{item.name}</h3>
                         </Link>
-                        <p className="text-muted-foreground text-sm">{formatPrice(item.price)}</p>
+                        <p className="text-sm text-muted-foreground">{formatPrice(item.price)}</p>
                         
                         {/* Mostrar color seleccionado */}
                         {renderSelectedColor(item.selectedColor)}
@@ -138,31 +138,31 @@ const CartDrawer = () => {
                         {renderVariants(item.selectedVariants)}
                         
                         <div className="flex items-center justify-between mt-2">
-                          <div className="flex items-center border border-border rounded-md">
+                          <div className="flex items-center border rounded-md border-border">
                             <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => updateQuantity(item.cartId, item.quantity - 1)}>
-                              <Minus className="h-3 w-3" />
+                              <Minus className="w-3 h-3" />
                             </Button>
                             <span className="px-2 text-sm font-medium">{item.quantity}</span>
                             <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => updateQuantity(item.cartId, item.quantity + 1)}>
-                              <Plus className="h-3 w-3" />
+                              <Plus className="w-3 h-3" />
                             </Button>
                           </div>
-                          <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => removeFromCart(item.cartId)}>
-                            <Trash2 className="h-4 w-4" />
+                          <Button size="icon" variant="ghost" className="w-8 h-8 text-muted-foreground hover:text-destructive" onClick={() => removeFromCart(item.cartId)}>
+                            <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
                       </div>
                     </motion.div>
                   ))}
                 </div>
-                <footer className="p-4 border-t border-border space-y-3 bg-secondary">
-                  <div className="flex justify-between font-semibold text-lg">
+                <footer className="p-4 space-y-3 border-t border-border bg-secondary">
+                  <div className="flex justify-between text-lg font-semibold">
                     <span>Subtotal</span>
                     <span>{formatPrice(getTotalPrice())}</span>
                   </div>
                   <p className="text-xs text-muted-foreground">Los gastos de envío se calculan en la pantalla de pago.</p>
                   <Link to="/checkout" onClick={closeDrawer} className="block">
-                     <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-bold py-3">
+                     <Button className="w-full py-3 text-sm font-bold bg-primary text-primary-foreground hover:bg-primary/90">
                       FINALIZAR COMPRA
                     </Button>
                   </Link>

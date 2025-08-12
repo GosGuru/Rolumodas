@@ -1,17 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link, Navigate, useSearchParams } from 'react-router-dom';
-import { LogOut, Loader2, Package, BarChart2, Settings, ShoppingBag, Eye } from 'lucide-react';
+import { Navigate } from 'react-router-dom';
+import { Loader2, Package, Eye } from 'lucide-react';
 import { Helmet } from 'react-helmet';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/components/ui/use-toast';
-import AdminStats from '@/components/admin/AdminStats';
-import ProductManagement from '@/components/admin/ProductManagement';
-import CategoryManagement from '@/components/admin/CategoryManagement';
-import SiteManagement from '@/components/admin/SiteManagement';
-import OrderDetailsTab from '@/components/admin/OrderDetailsTab';
 import { supabase } from '@/lib/supabaseClient';
-import AdminReportsPage from '@/pages/AdminReportsPage';
 import DashboardMobileNav from '@/components/admin/DashboardMobileNav';
 import AdminErrorBoundary from '@/components/admin/AdminErrorBoundary';
 import {
@@ -26,52 +20,12 @@ import {
 // Comentarios agregados para facilitar mantenimiento y futuras mejoras
 
 const AdminDashboard = () => {
-  const { isAuthenticated, user, logout } = useAuth();
-  const [searchParams, setSearchParams] = useSearchParams();
-  
-  const [categories, setCategories] = useState([]);
-  const [products, setProducts] = useState([]);
+  const { isAuthenticated, user } = useAuth();
+  // useSearchParams removido (tabs no usados)
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedOrder, setSelectedOrder] = useState(null);
-  const [activeTab, setActiveTab] = useState('dashboard');
   const [searchTerm, setSearchTerm] = useState('');
-
-  // Manejar cambio de tab desde URL
-  useEffect(() => {
-    const tabFromUrl = searchParams.get('tab');
-    if (tabFromUrl && ['dashboard', 'pedidos', 'detalles-pedido', 'informes', 'gestion'].includes(tabFromUrl)) {
-      setActiveTab(tabFromUrl);
-    }
-  }, [searchParams]);
-
-  // Actualizar URL cuando cambia el tab
-  const handleTabChange = (newTab) => {
-    setActiveTab(newTab);
-    if (newTab === 'dashboard') {
-      setSearchParams({});
-    } else {
-      setSearchParams({ tab: newTab });
-    }
-  };
-
-  const fetchCategories = useCallback(async () => {
-    const { data, error } = await supabase.from('categories').select('*').order('name', { ascending: true });
-    if (error) {
-      toast({ title: "Error al cargar categorías", description: error.message, variant: "destructive" });
-    } else {
-      setCategories(data);
-    }
-  }, []);
-
-  const fetchProducts = useCallback(async () => {
-    const { data, error } = await supabase.from('products').select('*, categories(id, name)').order('created_at', { ascending: false });
-    if (error) {
-      toast({ title: "Error al cargar productos", description: error.message, variant: "destructive" });
-    } else {
-      setProducts(data);
-    }
-  }, []);
+  // Lógica de tabs removida; se deja sólo gestión de pedidos
 
   const fetchOrders = useCallback(async () => {
     const { data, error } = await supabase
@@ -89,13 +43,13 @@ const AdminDashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      await Promise.all([fetchCategories(), fetchProducts(), fetchOrders()]);
+    await fetchOrders();
       setLoading(false);
     };
     if (isAuthenticated) {
       fetchData();
     }
-  }, [isAuthenticated, fetchCategories, fetchProducts, fetchOrders]);
+  }, [isAuthenticated, fetchOrders]);
 
   // Suscripción a cambios en tiempo real de pedidos
   useEffect(() => {
@@ -125,10 +79,6 @@ const AdminDashboard = () => {
     } else {
       toast({ title: "Éxito", description: "Estado del pedido actualizado." });
       fetchOrders();
-      // Actualizar el pedido seleccionado si es el mismo
-      if (selectedOrder && selectedOrder.id === orderId) {
-        setSelectedOrder(prev => ({ ...prev, status: newStatus }));
-      }
     }
   };
 
@@ -139,9 +89,7 @@ const AdminDashboard = () => {
       toast({ title: 'Error', description: 'No se pudo eliminar el pedido.', variant: 'destructive' });
     } else {
       toast({ title: 'Pedido eliminado', description: 'El pedido fue eliminado correctamente.' });
-      fetchOrders();
-      setSelectedOrder(null);
-      handleTabChange('pedidos');
+  fetchOrders();
     }
   };
 
@@ -152,160 +100,19 @@ const AdminDashboard = () => {
       toast({ title: 'Error', description: 'No se pudieron eliminar los pedidos.', variant: 'destructive' });
     } else {
       toast({ title: 'Pedidos eliminados', description: 'Todos los pedidos fueron eliminados correctamente.' });
-      fetchOrders();
-      setSelectedOrder(null);
+  fetchOrders();
     }
   };
 
-  const handleSelectOrder = (order) => {
-    setSelectedOrder(order);
-    handleTabChange('detalles-pedido');
-  };
 
-  const handleBackToOrders = () => {
-    setSelectedOrder(null);
-    handleTabChange('pedidos');
-  };
-
-  const uploadFile = async (file, bucket) => {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}-${Math.random()}.${fileExt}`;
-    const filePath = `public/${fileName}`;
-    const { error: uploadError } = await supabase.storage.from(bucket).upload(filePath, file);
-    if (uploadError) throw uploadError;
-    const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(filePath);
-    return urlData.publicUrl;
-  };
-
-  const handleProductFormSubmit = async (e, productFormData, editingProduct, resetForm) => {
-    e.preventDefault();
-    try {
-      const imageUrls = await Promise.all(
-        productFormData.images.map(image => 
-          image instanceof File ? uploadFile(image, 'product-images') : Promise.resolve(image)
-        )
-      );
-
-      const variants = productFormData.variants
-        .filter(v => v.name && v.options)
-        .map(v => ({
-          name: v.name,
-          options: Array.isArray(v.options)
-            ? v.options
-            : v.options.split(',').map(opt => opt.trim()).filter(Boolean)
-        }));
-
-      const productData = {
-        name: productFormData.name,
-        price: parseFloat(productFormData.price) || 0,
-        description: productFormData.description,
-        category_id: parseInt(productFormData.category_id, 10),
-        stock: parseInt(productFormData.stock, 10) || 0,
-        visible: productFormData.visible,
-        is_trending: productFormData.is_trending,
-        images: imageUrls,
-        variants: variants.length > 0 ? variants : null,
-        colors: productFormData.colors && productFormData.colors.length > 0 ? productFormData.colors : null,
-        short_description: productFormData.short_description || null,
-        long_description: productFormData.long_description || null,
-      };
-
-      if (editingProduct) {
-        const { error } = await supabase.from('products').update(productData).eq('id', editingProduct.id);
-        if (error) throw error;
-        toast({ title: "Éxito", description: "Producto actualizado correctamente." });
-      } else {
-        const { error } = await supabase.from('products').insert([productData]);
-        if (error) throw error;
-        toast({ title: "Éxito", description: "Producto creado correctamente." });
-      }
-      fetchProducts();
-      resetForm();
-    } catch (error) {
-      toast({ title: "Error al guardar producto", description: error.message, variant: "destructive" });
-    }
-  };
-
-  const handleDeleteProduct = async (id) => {
-    const { error } = await supabase.from('products').delete().eq('id', id);
-    if (error) {
-      toast({ title: "Error al eliminar producto", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Éxito", description: "Producto eliminado correctamente." });
-      fetchProducts();
-    }
-  };
-
-  const toggleProductVisibility = async (id, currentVisibility) => {
-    const { error } = await supabase.from('products').update({ visible: !currentVisibility }).eq('id', id);
-    if (error) {
-      toast({ title: "Error al cambiar visibilidad", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Éxito", description: "Visibilidad actualizada." });
-      fetchProducts();
-    }
-  };
-
-  const handleCreateCategory = async (name, imageFile) => {
-    const trimmedName = name.trim().toUpperCase();
-    if (!trimmedName) {
-      toast({ title: "Error", description: "El nombre no puede estar vacío.", variant: "destructive" });
-      return;
-    }
-    try {
-      let imageUrl = null;
-      if (imageFile) {
-        imageUrl = await uploadFile(imageFile, 'category-images');
-      }
-      const slug = trimmedName.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
-      const { error } = await supabase.from('categories').insert([{ name: trimmedName, slug, image: imageUrl }]);
-      if (error) throw error;
-      toast({ title: "Éxito", description: "Categoría creada." });
-      fetchCategories();
-    } catch (error) {
-      toast({ title: "Error al crear categoría", description: error.message, variant: "destructive" });
-    }
-  };
-
-  const handleSaveCategory = async (id, name, imageFile) => {
-    const trimmedName = name.trim().toUpperCase();
-    if (!trimmedName) {
-      toast({ title: "Error", description: "El nombre no puede estar vacío.", variant: "destructive" });
-      return;
-    }
-    try {
-      const updateData = { name: trimmedName };
-      if (imageFile) {
-        updateData.image = await uploadFile(imageFile, 'category-images');
-      }
-      const { error } = await supabase.from('categories').update(updateData).eq('id', id);
-      if (error) throw error;
-      toast({ title: "Éxito", description: "Categoría actualizada." });
-      fetchCategories();
-    } catch (error) {
-      toast({ title: "Error al actualizar categoría", description: error.message, variant: "destructive" });
-    }
-  };
-
-  const handleDeleteCategory = async (id) => {
-    const { error } = await supabase.from('categories').delete().eq('id', id);
-    if (error) {
-      toast({ title: "Error al eliminar categoría", description: "Asegúrate de que no tenga productos asociados. " + error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Éxito", description: "Categoría eliminada." });
-      fetchCategories();
-    }
-  };
-
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat('es-UY', { style: 'currency', currency: 'UYU' }).format(price);
-  };
+  const formatPrice = (price) => new Intl.NumberFormat('es-UY', { style: 'currency', currency: 'UYU' }).format(price);
 
   // Filtrado de pedidos
+  const term = searchTerm.toLowerCase();
   const filteredOrders = orders.filter(order =>
-    (order.order_number && String(order.order_number).toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (order.customer_name && order.customer_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (order.customer_email && order.customer_email.toLowerCase().includes(searchTerm.toLowerCase()))
+    (order.order_number && String(order.order_number).toLowerCase().includes(term)) ||
+    (order.customer_name && order.customer_name.toLowerCase().includes(term)) ||
+    (order.customer_email && order.customer_email.toLowerCase().includes(term))
   );
 
   const getStatusClass = (status) => {
@@ -404,7 +211,7 @@ const AdminDashboard = () => {
                           <div className="flex flex-col items-center justify-center gap-2 mt-3 pt-2 border-t border-gray-700">
                             <span className="text-2xl font-extrabold text-green-400 whitespace-nowrap text-center">{formatPrice(order.total_amount)}</span>
                             <div className="flex flex-row items-center justify-center gap-2 w-full mt-1">
-                              <Button variant="outline" size="sm" className="flex-1 flex items-center justify-center gap-1 text-xs px-3 py-2 bg-gray-700 border-gray-600 hover:bg-gray-600 rounded-md max-w-[120px]" onClick={() => handleSelectOrder(order)}>
+                              <Button variant="outline" size="sm" className="flex-1 flex items-center justify-center gap-1 text-xs px-3 py-2 bg-gray-700 border-gray-600 hover:bg-gray-600 rounded-md max-w-[120px]" onClick={() => { /* detalle pedido futuro */ }}>
                                 <Eye className="w-4 h-4" />
                                 <span>Detalle</span>
                               </Button>

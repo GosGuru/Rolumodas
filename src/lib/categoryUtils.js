@@ -8,7 +8,10 @@ import { uploadFile } from './fetchProducts';
  * @param {string} defaultMessage - Mensaje por defecto si no hay mensaje de error
  */
 const handleApiError = (error, defaultMessage = 'Ocurrió un error.') => {
-  console.error('Error API:', error);
+  if (typeof window !== 'undefined' && window.__DEV__) {
+    // eslint-disable-next-line no-console
+    console.error('Error API:', error);
+  }
   toast({
     title: "Error",
     description: error?.message || defaultMessage,
@@ -25,20 +28,29 @@ const handleApiError = (error, defaultMessage = 'Ocurrió un error.') => {
  */
 export const fetchCategories = async (options = {}) => {
   const {
-    orderBy = 'name',
+    orderBy = 'sort_order',
     ascending = true,
     limit = null
   } = options;
 
   try {
-    console.log('Obteniendo categorías con opciones:', options);
+    if (typeof window !== 'undefined' && window.__DEV__) {
+      // eslint-disable-next-line no-console
+      console.log('Obteniendo categorías con opciones:', options);
+    }
     
-    let query = supabase
-      .from('categories')
-      .select('*');
-    
-    // Aplicar ordenamiento
-    query = query.order(orderBy, { ascending });
+    let query = supabase.from('categories').select('*');
+    // Intentar ordenar primero por sort_order si existe
+    if (orderBy === 'sort_order') {
+      try {
+        query = query.order('sort_order', { ascending }).order('name', { ascending: true });
+      } catch {
+        // fallback a name
+        query = query.order('name', { ascending: true });
+      }
+    } else {
+      query = query.order(orderBy, { ascending });
+    }
     
     // Aplicar límite si se especifica
     if (limit) {
@@ -48,35 +60,73 @@ export const fetchCategories = async (options = {}) => {
     const { data, error } = await query;
     
     if (error) {
-      console.error('Error al obtener categorías:', error);
+      if (typeof window !== 'undefined' && window.__DEV__) {
+        // eslint-disable-next-line no-console
+        console.error('Error al obtener categorías:', error);
+      }
       throw error;
     }
     
     if (!data || data.length === 0) {
-      console.warn('No se encontraron categorías');
+      if (typeof window !== 'undefined' && window.__DEV__) {
+        // eslint-disable-next-line no-console
+        console.warn('No se encontraron categorías');
+      }
       return [];
     }
     
     // Validar y corregir datos de cada categoría
+    // Normalizar sort_order si hay nulos para que el frontend tenga consistencia
+    let maxOrder = data.reduce((m, c) => c.sort_order != null && c.sort_order > m ? c.sort_order : m, -1);
+    const needsUpdate = [];
     const validatedCategories = data.map(category => {
       const validatedCategory = { ...category };
+      if (validatedCategory.sort_order == null) {
+        maxOrder += 1;
+        validatedCategory.sort_order = maxOrder;
+        needsUpdate.push({ id: validatedCategory.id, sort_order: validatedCategory.sort_order });
+      }
       
       // Validar imagen
       if (!validatedCategory.image) {
-        console.warn(`Categoría ${validatedCategory.id} (${validatedCategory.name}) no tiene imagen`);
+        if (typeof window !== 'undefined' && window.__DEV__) {
+          // eslint-disable-next-line no-console
+          console.warn(`Categoría ${validatedCategory.id} (${validatedCategory.name}) no tiene imagen`);
+        }
         validatedCategory.image = 'https://placehold.co/600x400/e0e0e0/000000?text=Categoría';
       } else if (typeof validatedCategory.image !== 'string') {
-        console.warn(`Categoría ${validatedCategory.id} (${validatedCategory.name}) tiene imagen en formato inválido:`, validatedCategory.image);
+        if (typeof window !== 'undefined' && window.__DEV__) {
+          // eslint-disable-next-line no-console
+          console.warn(`Categoría ${validatedCategory.id} (${validatedCategory.name}) tiene imagen en formato inválido:`, validatedCategory.image);
+        }
         validatedCategory.image = 'https://placehold.co/600x400/e0e0e0/000000?text=Categoría';
       }
       
       return validatedCategory;
     });
+    if (needsUpdate.length) {
+      // Upsert quiet para rellenar sort_order faltantes
+      await supabase.from('categories').upsert(needsUpdate, { onConflict: 'id' });
+    }
+    // Orden final en memoria
+    validatedCategories.sort((a,b) => {
+      if (a.sort_order == null && b.sort_order == null) return a.name.localeCompare(b.name);
+      if (a.sort_order == null) return 1;
+      if (b.sort_order == null) return -1;
+      if (a.sort_order === b.sort_order) return a.name.localeCompare(b.name);
+      return a.sort_order - b.sort_order;
+    });
     
-    console.log(`Se obtuvieron ${validatedCategories.length} categorías correctamente`);
+    if (typeof window !== 'undefined' && window.__DEV__) {
+      // eslint-disable-next-line no-console
+      console.log(`Se obtuvieron ${validatedCategories.length} categorías correctamente`);
+    }
     return validatedCategories;
   } catch (error) {
-    console.error('Error al obtener categorías:', error);
+    if (typeof window !== 'undefined' && window.__DEV__) {
+      // eslint-disable-next-line no-console
+      console.error('Error al obtener categorías:', error);
+    }
     handleApiError(error, 'No se pudieron cargar las categorías.');
     return [];
   }
@@ -96,7 +146,10 @@ export const createCategory = async (name, imageFile = null) => {
       return false;
     }
     
-    console.log(`Creando categoría: ${trimmedName}`);
+    if (typeof window !== 'undefined' && window.__DEV__) {
+      // eslint-disable-next-line no-console
+      console.log(`Creando categoría: ${trimmedName}`);
+    }
     
     // Generar slug a partir del nombre
     const slug = trimmedName.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
@@ -105,14 +158,23 @@ export const createCategory = async (name, imageFile = null) => {
     let imageUrl = null;
     if (imageFile) {
       try {
-        console.log(`Subiendo imagen para categoría: ${imageFile.name}`);
+        if (typeof window !== 'undefined' && window.__DEV__) {
+          // eslint-disable-next-line no-console
+          console.log(`Subiendo imagen para categoría: ${imageFile.name}`);
+        }
         imageUrl = await uploadFile(imageFile, 'category-images');
       } catch (uploadError) {
-        console.error('Error al subir imagen de categoría:', uploadError);
+        if (typeof window !== 'undefined' && window.__DEV__) {
+          // eslint-disable-next-line no-console
+          console.error('Error al subir imagen de categoría:', uploadError);
+        }
         imageUrl = 'https://placehold.co/600x400/e0e0e0/000000?text=Categoría';
       }
     } else {
-      console.warn('No se proporcionó imagen para la categoría');
+      if (typeof window !== 'undefined' && window.__DEV__) {
+        // eslint-disable-next-line no-console
+        console.warn('No se proporcionó imagen para la categoría');
+      }
       imageUrl = 'https://placehold.co/600x400/e0e0e0/000000?text=Categoría';
     }
     
@@ -126,10 +188,16 @@ export const createCategory = async (name, imageFile = null) => {
     if (error) throw error;
     
     toast({ title: "Éxito", description: "Categoría creada correctamente." });
-    console.log('Categoría creada exitosamente');
+    if (typeof window !== 'undefined' && window.__DEV__) {
+      // eslint-disable-next-line no-console
+      console.log('Categoría creada exitosamente');
+    }
     return true;
   } catch (error) {
-    console.error('Error en createCategory:', error);
+    if (typeof window !== 'undefined' && window.__DEV__) {
+      // eslint-disable-next-line no-console
+      console.error('Error en createCategory:', error);
+    }
     handleApiError(error, 'No se pudo crear la categoría.');
     return false;
   }
@@ -150,7 +218,10 @@ export const updateCategory = async (id, name, imageFile = null) => {
       return false;
     }
     
-    console.log(`Actualizando categoría ID: ${id}, Nombre: ${trimmedName}`);
+    if (typeof window !== 'undefined' && window.__DEV__) {
+      // eslint-disable-next-line no-console
+      console.log(`Actualizando categoría ID: ${id}, Nombre: ${trimmedName}`);
+    }
     
     // Preparar datos para actualizar
     const updateData = { name: trimmedName };
@@ -158,10 +229,16 @@ export const updateCategory = async (id, name, imageFile = null) => {
     // Procesar imagen si existe
     if (imageFile) {
       try {
-        console.log(`Subiendo nueva imagen para categoría: ${imageFile.name}`);
+        if (typeof window !== 'undefined' && window.__DEV__) {
+          // eslint-disable-next-line no-console
+          console.log(`Subiendo nueva imagen para categoría: ${imageFile.name}`);
+        }
         updateData.image = await uploadFile(imageFile, 'category-images');
       } catch (uploadError) {
-        console.error('Error al subir imagen de categoría:', uploadError);
+        if (typeof window !== 'undefined' && window.__DEV__) {
+          // eslint-disable-next-line no-console
+          console.error('Error al subir imagen de categoría:', uploadError);
+        }
         // No actualizamos la imagen si hay error, mantenemos la existente
       }
     }
@@ -172,10 +249,16 @@ export const updateCategory = async (id, name, imageFile = null) => {
     if (error) throw error;
     
     toast({ title: "Éxito", description: "Categoría actualizada correctamente." });
-    console.log('Categoría actualizada exitosamente');
+    if (typeof window !== 'undefined' && window.__DEV__) {
+      // eslint-disable-next-line no-console
+      console.log('Categoría actualizada exitosamente');
+    }
     return true;
   } catch (error) {
-    console.error('Error en updateCategory:', error);
+    if (typeof window !== 'undefined' && window.__DEV__) {
+      // eslint-disable-next-line no-console
+      console.error('Error en updateCategory:', error);
+    }
     handleApiError(error, 'No se pudo actualizar la categoría.');
     return false;
   }
@@ -188,13 +271,19 @@ export const updateCategory = async (id, name, imageFile = null) => {
  */
 export const deleteCategory = async (id) => {
   try {
-    console.log(`Eliminando categoría ID: ${id}`);
+    if (typeof window !== 'undefined' && window.__DEV__) {
+      // eslint-disable-next-line no-console
+      console.log(`Eliminando categoría ID: ${id}`);
+    }
     
     const { error } = await supabase.from('categories').delete().eq('id', id);
     
     if (error) {
       // Si hay error, probablemente sea porque hay productos asociados
-      console.error(`Error al eliminar categoría ID ${id}:`, error);
+      if (typeof window !== 'undefined' && window.__DEV__) {
+        // eslint-disable-next-line no-console
+        console.error(`Error al eliminar categoría ID ${id}:`, error);
+      }
       toast({ 
         title: "Error", 
         description: "No se pudo eliminar la categoría. Asegúrate de que no tenga productos asociados.", 
@@ -204,10 +293,16 @@ export const deleteCategory = async (id) => {
     }
     
     toast({ title: "Éxito", description: "Categoría eliminada correctamente." });
-    console.log('Categoría eliminada exitosamente');
+    if (typeof window !== 'undefined' && window.__DEV__) {
+      // eslint-disable-next-line no-console
+      console.log('Categoría eliminada exitosamente');
+    }
     return true;
   } catch (error) {
-    console.error(`Error al eliminar categoría ID ${id}:`, error);
+    if (typeof window !== 'undefined' && window.__DEV__) {
+      // eslint-disable-next-line no-console
+      console.error(`Error al eliminar categoría ID ${id}:`, error);
+    }
     handleApiError(error, 'No se pudo eliminar la categoría.');
     return false;
   }
