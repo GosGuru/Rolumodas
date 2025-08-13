@@ -14,6 +14,11 @@ import ProductCard from '@/components/ProductCard';
 import MainHeader from '@/components/MainHeader';
 import DashboardMobileNav from '@/components/admin/DashboardMobileNav';
 import { useAuth } from '@/contexts/AuthContext';
+import { 
+  calculateTotalVariantStock, 
+  isVariantCombinationAvailable, 
+  getVariantCombinationStock 
+} from '@/lib/variantUtils';
 
 const ProductPage = () => {
   const { id } = useParams();
@@ -32,6 +37,16 @@ const ProductPage = () => {
   const [selectedColor, setSelectedColor] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [relatedTitle, setRelatedTitle] = useState('Productos relacionados');
+
+  // Calcular disponibilidad considerando stock base y variantes
+  const hasVariants = product?.variants && product.variants.length > 0;
+  const isProductAvailable = hasVariants 
+    ? isVariantCombinationAvailable(product.variants, selectedVariants)
+    : product?.inStock;
+  
+  const availableStock = hasVariants 
+    ? getVariantCombinationStock(product.variants, selectedVariants)
+    : product?.stock || 0;
 
   // Validación defensiva para las imágenes
   const safeImages = Array.isArray(product?.images) ? product.images : [];
@@ -66,15 +81,19 @@ const ProductPage = () => {
         };
         setProduct(productData);
         
-        // Inicializar variantes seleccionadas con la primera opción de cada variante
+        // Inicializar variantes seleccionadas con la primera opción disponible (que tenga stock)
         if (data.variants && data.variants.length > 0) {
           const initialVariants = {};
           data.variants.forEach(variant => {
             if (variant.options && variant.options.length > 0) {
-              // Asegurarse de que la opción sea un valor primitivo o un objeto válido
-              const firstOption = variant.options[0];
-              if (firstOption !== null && firstOption !== undefined) {
-                initialVariants[variant.name] = firstOption;
+              // Buscar la primera opción con stock disponible
+              const availableOption = variant.options.find(option => 
+                option !== null && option !== undefined && (parseInt(option.stock) || 0) > 0
+              );
+              // Si hay una opción con stock, usarla; sino usar la primera
+              const selectedOption = availableOption || variant.options[0];
+              if (selectedOption !== null && selectedOption !== undefined) {
+                initialVariants[variant.name] = selectedOption;
               }
             }
           });
@@ -212,6 +231,15 @@ const ProductPage = () => {
     // Asegurarse de que las variantes sean válidas antes de actualizar el estado
     if (newSelectedVariants && typeof newSelectedVariants === 'object') {
       setSelectedVariants(newSelectedVariants);
+      
+      // Verificar el stock disponible con las nuevas variantes
+      if (hasVariants && product?.variants) {
+        const newAvailableStock = getVariantCombinationStock(product.variants, newSelectedVariants);
+        // Si la cantidad actual es mayor al stock disponible, ajustarla
+        if (quantity > newAvailableStock) {
+          setQuantity(Math.max(1, newAvailableStock));
+        }
+      }
     }
   };
 
@@ -422,6 +450,25 @@ const ProductPage = () => {
                   />
                 </div>
                 
+                {/* Información de stock disponible */}
+                {hasVariants && availableStock !== null && (
+                  <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border">
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      <strong>Stock disponible:</strong>
+                      <span className={`ml-2 font-semibold ${
+                        availableStock > 0 
+                          ? 'text-green-600 dark:text-green-400' 
+                          : 'text-red-600 dark:text-red-400'
+                      }`}>
+                        {availableStock > 0 
+                          ? `${availableStock} unidad${availableStock !== 1 ? 'es' : ''}`
+                          : 'Sin stock'
+                        }
+                      </span>
+                    </div>
+                  </div>
+                )}
+                
                 <div className="flex items-center space-x-2 mt-4 md:mt-6">
                   <h3 className="text-xs md:text-sm font-medium text-foreground">CANTIDAD:</h3>
                   <div className="flex items-center border rounded-md">
@@ -437,7 +484,8 @@ const ProductPage = () => {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => setQuantity(quantity + 1)}
+                      onClick={() => setQuantity(Math.min(availableStock, quantity + 1))}
+                      disabled={quantity >= availableStock}
                       className="w-8 h-8 md:w-10 md:h-10"
                     >
                       <Plus className="w-4 h-4"/>
@@ -451,16 +499,16 @@ const ProductPage = () => {
                       onClick={handleBuyNow}
                       size="lg"
                       className="w-full font-semibold bg-primary text-primary-foreground hover:bg-primary/90 py-2 md:py-3 text-sm md:text-base"
-                      disabled={!product.inStock}
+                      disabled={!isProductAvailable}
                     >
-                      {product.inStock ? 'COMPRAR AHORA' : 'AGOTADO'}
+                      {isProductAvailable ? 'COMPRAR AHORA' : 'AGOTADO'}
                     </Button>
                     <Button
                       variant="outline"
                       size="icon"
                       className="h-10 w-10 md:h-11 md:w-11"
                       onClick={handleAddToCart}
-                      disabled={!product.inStock}
+                      disabled={!isProductAvailable}
                     >
                       <ShoppingCart className="w-5 h-5" />
                     </Button>

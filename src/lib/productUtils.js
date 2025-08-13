@@ -2,6 +2,7 @@
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from '@/components/ui/use-toast';
 import { uploadFile } from './fetchProducts';
+import { validateProductData, LIMITS } from './validationUtils';
 
 /**
  * Maneja la creación o actualización de un producto con validación robusta de imágenes
@@ -13,6 +14,12 @@ export const submitProduct = async (productFormData, editingProduct = null) => {
   try {
     console.log(`${editingProduct ? 'Actualizando' : 'Creando'} producto:`, 
       editingProduct ? `ID: ${editingProduct.id}, Nombre: ${productFormData.name}` : productFormData.name);
+    
+    // Validaciones usando el nuevo sistema
+    const validation = validateProductData(productFormData);
+    if (!validation.isValid) {
+      throw new Error(validation.error);
+    }
     
     // Procesar imágenes: subir nuevas y mantener existentes
     console.log('Procesando imágenes del producto...');

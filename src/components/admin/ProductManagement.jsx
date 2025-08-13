@@ -3,8 +3,18 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Plus, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
 import ProductForm from '@/components/admin/ProductForm';
-import ProductTable from '@/components/admin/ProductTable';
 import ColorDisplay from '@/components/ColorDisplay';
+import { formatVariants } from '@/lib/variantUtils';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const ProductManagement = ({
   products,
@@ -33,6 +43,13 @@ const ProductManagement = ({
   });
   const [categoryFilter, setCategoryFilter] = useState('');
   const [stockFilter, setStockFilter] = useState('');
+  const [productToDelete, setProductToDelete] = useState(null);
+
+  const confirmDeleteProduct = () => {
+    if (!productToDelete) return;
+    handleDeleteProduct(productToDelete.id);
+    setProductToDelete(null);
+  };
 
   const resetProductForm = () => {
     setProductFormData({ 
@@ -92,14 +109,20 @@ const ProductManagement = ({
       return null;
     }
 
+    const formattedVariants = formatVariants(variants);
+    
+    if (formattedVariants.length === 0) {
+      return null;
+    }
+
     return (
       <div className="flex flex-wrap gap-1 mt-2">
-        {variants.map((variant, index) => (
+        {formattedVariants.map((variantText, index) => (
           <span
             key={index}
             className="inline-flex items-center px-1.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 rounded dark:bg-blue-900/20 dark:text-blue-400"
           >
-            {variant.name}: {Array.isArray(variant.options) ? variant.options.join(', ') : variant.options}
+            {variantText}
           </span>
         ))}
       </div>
@@ -239,7 +262,7 @@ const ProductManagement = ({
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => handleDeleteProduct(product.id)}
+                  onClick={() => setProductToDelete(product)}
                   className="text-red-600 hover:text-red-800"
                   title="Eliminar"
                 >
@@ -250,6 +273,22 @@ const ProductManagement = ({
           );
         })}
       </div>
+      
+      <AlertDialog open={!!productToDelete} onOpenChange={() => setProductToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás absolutamente seguro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Esto eliminará permanentemente el producto
+              "{productToDelete?.name}" y todos sus datos asociados.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setProductToDelete(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteProduct} className="bg-red-600 hover:bg-red-700">Eliminar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </motion.div>
   );
 };

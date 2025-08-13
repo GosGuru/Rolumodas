@@ -11,7 +11,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Edit, Trash2, Tag, Check, X as IconX, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Tag, Check, X as IconX, Image as ImageIcon, Loader2, Eye, EyeOff } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 
 // Acepta tanto los props nuevos como los antiguos (retrocompatibilidad)
@@ -20,9 +20,11 @@ const CategoryManagement = ({
   handleCreateCategory,
   handleSaveCategory,
   handleDeleteCategory,
+  toggleCategoryVisibility, // nuevo prop para toggle de visibilidad
   onCreate, // alias
   onSave,   // alias
-  onDelete  // alias
+  onDelete,  // alias
+  onToggleVisibility // alias
 }) => {
   const [editingCategory, setEditingCategory] = useState(null);
   const [categoryName, setCategoryName] = useState('');
@@ -202,6 +204,16 @@ const CategoryManagement = ({
                   <div className="flex flex-shrink-0">
                     <Button variant="ghost" size="icon" disabled={deletingId === cat.id} onClick={() => onEdit(cat)} className="text-blue-400 hover:text-blue-300 disabled:opacity-50">
                       <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      disabled={deletingId === cat.id} 
+                      onClick={() => (toggleCategoryVisibility || onToggleVisibility)?.(cat.id, cat.visible)} 
+                      className={`${cat.visible !== undefined ? (cat.visible ? 'text-green-400 hover:text-green-300' : 'text-gray-400 hover:text-gray-300') : 'text-yellow-400 hover:text-yellow-300'} disabled:opacity-50`}
+                      title={`${cat.visible !== undefined ? (cat.visible ? 'Ocultar categoría' : 'Mostrar categoría') : 'Campo visible no disponible'}`}
+                    >
+                      {cat.visible !== undefined ? (cat.visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />) : <Eye className="w-4 h-4" />}
                     </Button>
                     <Button variant="ghost" size="icon" disabled={deletingId === cat.id} onClick={() => setCategoryToDelete(cat)} className="text-red-400 hover:text-red-300 disabled:opacity-50">
                       {deletingId === cat.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}

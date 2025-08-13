@@ -3,12 +3,20 @@ import {
   fetchHeroImage, 
   updateHeroImage, 
   fetchMpMaxInstallments, 
-  updateMpMaxInstallments 
+  updateMpMaxInstallments,
+  fetchCategoryDisplaySettings,
+  updateCategoryDisplaySettings
 } from '@/lib/siteUtils';
 
 export const useSiteContent = () => {
   const [heroImage, setHeroImage] = useState(null);
   const [mpInstallments, setMpInstallments] = useState(3); // Valor por defecto
+  const [categorySettings, setCategorySettings] = useState({
+    homeLimit: 6,
+    shopLimit: null,
+    homeShowAll: false,
+    shopShowAll: true
+  });
   const [loading, setLoading] = useState(false);
 
   const fetchSiteContent = useCallback(async () => {
@@ -21,6 +29,10 @@ export const useSiteContent = () => {
       // Obtener número máximo de cuotas
       const installments = await fetchMpMaxInstallments();
       setMpInstallments(installments);
+      
+      // Obtener configuración de categorías
+      const catSettings = await fetchCategoryDisplaySettings();
+      setCategorySettings(catSettings);
     } catch (error) {
       console.error('Error en fetchSiteContent:', error);
       // El manejo de errores ya está en las funciones individuales
@@ -48,12 +60,23 @@ export const useSiteContent = () => {
     return success;
   };
 
+  const handleUpdateCategorySettings = async (settings) => {
+    const success = await updateCategoryDisplaySettings(settings);
+    if (success) {
+      // Actualizar estado local con la nueva configuración
+      setCategorySettings(prevSettings => ({ ...prevSettings, ...settings }));
+    }
+    return success;
+  };
+
   return { 
     heroImage, 
     mpInstallments, 
+    categorySettings,
     loading, 
     fetchSiteContent, 
     updateHeroImage: handleUpdateHeroImage, 
-    updateMpInstallments: handleUpdateMpInstallments 
+    updateMpInstallments: handleUpdateMpInstallments,
+    updateCategorySettings: handleUpdateCategorySettings
   };
 };

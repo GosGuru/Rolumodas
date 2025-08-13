@@ -37,12 +37,17 @@ export const useProduct = (productId) => {
         };
         setProduct(productData);
 
-        // Initialize selected variants
+        // Initialize selected variants (only those with stock)
         if (data.variants?.length > 0) {
           const initialVariants = {};
           data.variants.forEach(variant => {
             if (variant.options?.length > 0) {
-              initialVariants[variant.name] = variant.options[0];
+              // Buscar la primera opción con stock disponible
+              const availableOption = variant.options.find(option => 
+                (parseInt(option.stock) || 0) > 0
+              );
+              // Si hay una opción con stock, usarla; sino usar la primera
+              initialVariants[variant.name] = availableOption || variant.options[0];
             }
           });
           setSelectedVariants(initialVariants);

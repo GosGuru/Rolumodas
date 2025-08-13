@@ -24,13 +24,16 @@ const handleApiError = (error, defaultMessage = 'Ocurrió un error.') => {
  * @param {Object} options - Opciones de consulta
  * @param {string} options.orderBy - Campo por el cual ordenar
  * @param {boolean} options.ascending - Dirección del ordenamiento
+ * @param {string} options.slug - Slug específico para buscar una categoría
  * @returns {Promise<Array>} - Array de categorías validadas
  */
 export const fetchCategories = async (options = {}) => {
   const {
     orderBy = 'sort_order',
     ascending = true,
-    limit = null
+    limit = null,
+    onlyVisible = false, // nuevo parámetro para filtrar solo categorías visibles
+    slug = null // nuevo parámetro para buscar por slug específico
   } = options;
 
   try {
@@ -40,6 +43,17 @@ export const fetchCategories = async (options = {}) => {
     }
     
     let query = supabase.from('categories').select('*');
+    
+    // Filtrar por slug específico si se proporciona
+    if (slug) {
+      query = query.eq('slug', slug);
+    }
+    
+    // Filtrar solo categorías visibles si se especifica
+    if (onlyVisible) {
+      query = query.eq('visible', true);
+    }
+    
     // Intentar ordenar primero por sort_order si existe
     if (orderBy === 'sort_order') {
       try {

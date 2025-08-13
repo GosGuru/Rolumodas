@@ -123,6 +123,12 @@ export const uploadFile = async (file, bucket = 'product-images') => {
       throw new Error('No se proporcionó un archivo válido');
     }
     
+    // Validar tamaño del archivo (máximo 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      throw new Error(`El archivo "${file.name}" es muy grande. Tamaño máximo permitido: 5MB. Tamaño actual: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
+    }
+    
     // Validar tipo de archivo (opcional, puedes personalizar según tus necesidades)
     const validImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     if (!validImageTypes.includes(file.type)) {

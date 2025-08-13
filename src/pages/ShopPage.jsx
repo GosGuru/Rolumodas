@@ -3,35 +3,35 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet';
 import { Loader2 } from 'lucide-react';
-import { supabase } from '@/lib/supabaseClient';
 import { toast } from '@/components/ui/use-toast';
+import { fetchCategories } from '@/lib/categoryUtils';
+import { useCategoryDisplaySettings } from '@/hooks/useCategoryDisplaySettings';
 import Breadcrumbs from '@/components/Breadcrumbs';
 
 const ShopPage = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // Hook para configuración de categorías
+  const { getCategoriesToShow } = useCategoryDisplaySettings();
 
   useEffect(() => {
-    const fetchCategories = async () => {
+    const loadCategories = async () => {
       setLoading(true);
-      let data, error;
       try {
-        ({ data, error } = await supabase
-          .from('categories')
-          .select('*')
-          .order('sort_order', { ascending: true })
-          .order('name', { ascending: true }));
-      } catch {
-        ({ data, error } = await supabase.from('categories').select('*').order('name'));
-      }
-      if (error) {
+        const categories = await fetchCategories({ 
+          orderBy: 'sort_order', 
+          ascending: true,
+          onlyVisible: true // Activado: solo categorías visibles
+        });
+        setCategories(categories);
+      } catch (error) {
         toast({ title: "Error", description: "No se pudieron cargar las categorías.", variant: "destructive" });
-      } else {
-        setCategories(data);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
-    fetchCategories();
+    loadCategories();
   }, []);
 
   return (
@@ -49,9 +49,9 @@ const ShopPage = () => {
             <div className="flex items-center justify-center min-h-[300px]">
               <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
             </div>
-          ) : (
+          ) : getCategoriesToShow(categories, 'shop').length > 0 ? (
             <div className="grid justify-center grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 md:gap-6">
-              {categories.map((category, index) => (
+              {getCategoriesToShow(categories, 'shop').map((category, index) => (
                 <motion.div
                   key={category.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -75,6 +75,23 @@ const ShopPage = () => {
                   </Link>
                 </motion.div>
               ))}
+            </div>
+          ) : (
+            // Estado cuando no hay categorías visibles
+            <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
+              <div className="max-w-md px-6">
+                <div className="w-16 h-16 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
+                  <svg className="w-8 h-8 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-foreground mb-2">
+                  Próximamente nuevas categorías
+                </h3>
+                <p className="text-muted-foreground text-sm">
+                  Estamos preparando una increíble selección de productos para ti. ¡Vuelve pronto!
+                </p>
+              </div>
             </div>
           )}
         </div>

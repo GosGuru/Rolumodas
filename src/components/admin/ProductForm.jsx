@@ -2,7 +2,11 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { toast } from "@/components/ui/use-toast";
 import { UploadCloud, X, Star, Plus, Trash2 } from "lucide-react";
+import { validateFiles, LIMITS } from "@/lib/validationUtils";
+import ProductLimitsInfo from "@/components/ui/ProductLimitsInfo";
+import VariantStockSummary from "./VariantStockSummary";
 // import ColorPicker from './ColorPicker';
 
 const ProductForm = ({
@@ -76,11 +80,30 @@ const ProductForm = ({
 
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
+    const currentImages = safeFormData.images || [];
+    
     if (files.length > 0) {
+      // Usar las validaciones del nuevo archivo
+      const validation = validateFiles(files, currentImages.length);
+      
+      if (!validation.isValid) {
+        toast({
+          title: "Error en la validación",
+          description: validation.error,
+          variant: "destructive"
+        });
+        return;
+      }
+      
       setFormData((prev) => ({
         ...prev,
-        images: [...(prev.images || []), ...files],
+        images: [...(prev.images || []), ...validation.validFiles],
       }));
+      
+      toast({
+        title: "Imágenes agregadas",
+        description: `Se agregaron ${validation.validFiles.length} imagen(es). Total: ${currentImages.length + validation.validFiles.length}/${LIMITS.MAX_IMAGES}`,
+      });
     }
   };
 
@@ -125,13 +148,43 @@ const ProductForm = ({
       : Object.values(newVariants[variantIndex].options || {});
     // Asegurar que exista el objeto option
     if (!newVariants[variantIndex].options[optionIndex]) {
-      newVariants[variantIndex].options[optionIndex] = { label: "", value: "" };
+      newVariants[variantIndex].options[optionIndex] = { label: "", value: "", stock: 0 };
     }
+    
+    // Actualizar el campo específico
     newVariants[variantIndex].options[optionIndex][field] = value;
+    
+    // Auto-completar valor cuando se cambia la etiqueta
+    if (field === 'label' && value) {
+      // Convertir la etiqueta a un valor más apropiado para sistemas
+      const autoValue = value.toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // Remover acentos
+        .replace(/[^a-z0-9]/g, '') // Solo letras y números
+        .trim();
+      
+      // Solo auto-completar si el valor está vacío o es igual al valor anterior
+      const currentValue = newVariants[variantIndex].options[optionIndex].value;
+      if (!currentValue || currentValue === '') {
+        newVariants[variantIndex].options[optionIndex].value = autoValue;
+      }
+    }
+    
     setFormData((prev) => ({ ...prev, variants: newVariants }));
   };
 
   const addVariant = () => {
+    const currentVariants = safeFormData.variants || [];
+    
+    if (currentVariants.length >= LIMITS.MAX_VARIANTS) {
+      toast({
+        title: "Límite de variantes excedido",
+        description: `Solo puedes crear un máximo de ${LIMITS.MAX_VARIANTS} variantes por producto.`,
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setFormData((prev) => ({
       ...prev,
       variants: [
@@ -155,8 +208,22 @@ const ProductForm = ({
   const addVariantOption = (variantIndex) => {
     const newVariants = [...(safeFormData.variants || [])];
     if (!newVariants[variantIndex]) return;
+    
+    const currentOptions = Array.isArray(newVariants[variantIndex].options) 
+      ? newVariants[variantIndex].options 
+      : Object.values(newVariants[variantIndex].options || {});
+    
+    if (currentOptions.length >= LIMITS.MAX_OPTIONS_PER_VARIANT) {
+      toast({
+        title: "Límite de opciones excedido",
+        description: `Solo puedes crear un máximo de ${LIMITS.MAX_OPTIONS_PER_VARIANT} opciones por variante.`,
+        variant: "destructive"
+      });
+      return;
+    }
+    
     const type = newVariants[variantIndex].type;
-    const newOption = { label: "", value: "", shape: "circle", size: "md" };
+    const newOption = { label: "", value: "", shape: "circle", size: "md", stock: 0 };
     if (type === "color") newOption.hex = "#000000";
     if (type === "imagen") newOption.image = "";
     // Asegurar que options sea un array
@@ -234,6 +301,11 @@ const ProductForm = ({
       exit={{ opacity: 0, height: 0 }}
       className="border-b border-gray-700 bg-gray-900/50"
     >
+      {/* Información sobre límites */}
+      <div className="p-4 border-b border-gray-700">
+        <ProductLimitsInfo />
+      </div>
+      
       <form onSubmit={handleSubmit} className="p-4 space-y-6 sm:p-6">
         <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
           <div>
@@ -364,6 +436,9 @@ const ProductForm = ({
         <div>
           <label className="block mb-1 text-sm text-gray-300 font-negro">
             Imágenes del Producto
+            <span className="ml-2 text-xs text-gray-400">
+              ({imagePreviews.length}/{LIMITS.MAX_IMAGES} imágenes)
+            </span>
           </label>
           <div className="mt-1">
             <div className="grid grid-cols-3 gap-4 mb-4 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
@@ -388,17 +463,31 @@ const ProductForm = ({
             </div>
             <label
               htmlFor="images"
-              className="flex flex-col items-center justify-center w-full px-6 pt-5 pb-6 transition-colors bg-gray-800 border-2 border-gray-600 border-dashed cursor-pointer hover:border-black hover:bg-black group"
+              className={`flex flex-col items-center justify-center w-full px-6 pt-5 pb-6 transition-colors border-2 border-dashed cursor-pointer ${
+                imagePreviews.length >= LIMITS.MAX_IMAGES 
+                  ? 'bg-gray-700 border-gray-600 cursor-not-allowed' 
+                  : 'bg-gray-800 border-gray-600 hover:border-black hover:bg-black group'
+              }`}
             >
-              <UploadCloud className="w-12 h-12 mb-2 text-black transition-colors group-hover:text-white" />
+              <UploadCloud className={`w-12 h-12 mb-2 transition-colors ${
+                imagePreviews.length >= LIMITS.MAX_IMAGES 
+                  ? 'text-gray-500' 
+                  : 'text-black group-hover:text-white'
+              }`} />
               <p className="text-sm text-gray-400">
-                <span className="text-gray-300 font-negro">
-                  Haz clic para subir
-                </span>{" "}
-                o arrastra y suelta
+                {imagePreviews.length >= LIMITS.MAX_IMAGES ? (
+                  <span className="text-gray-500">Límite máximo alcanzado ({LIMITS.MAX_IMAGES}/{LIMITS.MAX_IMAGES})</span>
+                ) : (
+                  <>
+                    <span className="text-gray-300 font-negro">
+                      Haz clic para subir
+                    </span>{" "}
+                    o arrastra y suelta
+                  </>
+                )}
               </p>
               <p className="text-xs text-gray-500">
-                PNG, JPG, GIF. Puedes seleccionar varias.
+                PNG, JPG, GIF, WEBP. Máximo 5MB por imagen.
               </p>
             </label>
             <input
@@ -406,17 +495,26 @@ const ProductForm = ({
               id="images"
               name="images"
               multiple
-              accept="image/png, image/jpeg, image/gif"
+              accept="image/png, image/jpeg, image/gif, image/webp"
               onChange={handleFileChange}
+              disabled={imagePreviews.length >= LIMITS.MAX_IMAGES}
               className="hidden"
             />
           </div>
         </div>
 
         <div className="pt-4 space-y-4 border-t border-gray-700">
-          <h3 className="text-gray-200 text-md font-negro">
-            Variantes del Producto (Color, Talle, Imagen, etc.)
-          </h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-gray-200 text-md font-negro">
+              Variantes del Producto (Color, Talle, Imagen, etc.)
+              <span className="ml-2 text-xs text-gray-400">
+                ({normalizedVariants.length}/{LIMITS.MAX_VARIANTS} variantes)
+              </span>
+            </h3>
+            <div className="text-xs text-blue-400 bg-blue-900/20 px-2 py-1 rounded">
+              💡 El campo "Valor" se completa automáticamente al escribir la "Etiqueta"
+            </div>
+          </div>
           {normalizedVariants &&
             normalizedVariants.map((variant, vIdx) => (
               <div
@@ -471,106 +569,143 @@ const ProductForm = ({
                         key={oIdx}
                         className="flex flex-wrap items-center gap-2 p-2 border border-gray-700 rounded-lg bg-gray-900/60"
                       >
-                        <input
-                          type="text"
-                          value={option.label}
-                          onChange={(e) =>
-                            handleVariantOptionChange(
-                              vIdx,
-                              oIdx,
-                              "label",
-                              e.target.value
-                            )
-                          }
-                          placeholder="Etiqueta (ej: Rojo, S, Estampado)"
-                          className="bg-[#23272f] text-white border border-gray-700 rounded-lg px-2 py-1 w-28"
-                        />
-                        <input
-                          type="text"
-                          value={option.value}
-                          onChange={(e) =>
-                            handleVariantOptionChange(
-                              vIdx,
-                              oIdx,
-                              "value",
-                              e.target.value
-                            )
-                          }
-                          placeholder="Valor (ej: rojo, s, estampado)"
-                          className="bg-[#23272f] text-white border border-gray-700 rounded-lg px-2 py-1 w-24"
-                        />
-                        {/* Si es color, mostrar color picker */}
-                        {variant.type === "color" && (
+                        <div className="flex flex-col">
+                          <label className="text-xs text-gray-400 mb-1">Etiqueta</label>
                           <input
-                            type="color"
-                            value={option.hex || "#000000"}
+                            type="text"
+                            value={option.label}
                             onChange={(e) =>
                               handleVariantOptionChange(
                                 vIdx,
                                 oIdx,
-                                "hex",
+                                "label",
                                 e.target.value
                               )
                             }
-                            className="w-8 h-8 border-none"
+                            placeholder="Ej: Rojo, Talla S, etc."
+                            className="bg-[#23272f] text-white border border-gray-700 rounded-lg px-2 py-1 w-28"
                           />
+                        </div>
+                        <div className="flex flex-col">
+                          <label className="text-xs text-gray-400 mb-1">Valor</label>
+                          <input
+                            type="text"
+                            value={option.value}
+                            onChange={(e) =>
+                              handleVariantOptionChange(
+                                vIdx,
+                                oIdx,
+                                "value",
+                                e.target.value
+                              )
+                            }
+                            placeholder="Se completa automáticamente"
+                            className="bg-[#23272f] text-white border border-gray-700 rounded-lg px-2 py-1 w-24"
+                          />
+                        </div>
+                        <div className="flex flex-col">
+                          <label className="text-xs text-gray-400 mb-1">Stock</label>
+                          <input
+                            type="number"
+                            value={option.stock || 0}
+                            onChange={(e) =>
+                              handleVariantOptionChange(
+                                vIdx,
+                                oIdx,
+                                "stock",
+                                parseInt(e.target.value) || 0
+                              )
+                            }
+                            placeholder="Stock"
+                            min="0"
+                            className="bg-[#23272f] text-white border border-gray-700 rounded-lg px-2 py-1 w-20"
+                            title={`Stock disponible para ${option.label || 'esta opción'}`}
+                          />
+                        </div>
+                        {/* Si es color, mostrar color picker */}
+                        {variant.type === "color" && (
+                          <div className="flex flex-col">
+                            <label className="text-xs text-gray-400 mb-1">Color</label>
+                            <input
+                              type="color"
+                              value={option.hex || "#000000"}
+                              onChange={(e) =>
+                                handleVariantOptionChange(
+                                  vIdx,
+                                  oIdx,
+                                  "hex",
+                                  e.target.value
+                                )
+                              }
+                              className="w-8 h-8 border-none rounded"
+                            />
+                          </div>
                         )}
                         {/* Si es imagen, input para subir imagen */}
                         {variant.type === "imagen" && (
-                          <>
-                            <input
-                              type="file"
-                              accept="image/*"
-                              onChange={(e) =>
-                                handleVariantOptionImage(
-                                  vIdx,
-                                  oIdx,
-                                  e.target.files[0]
-                                )
-                              }
-                              className="text-xs"
-                            />
-                            {option.image && (
-                              <img
-                                src={option.image}
-                                alt="preview"
-                                className="object-cover w-10 h-10 rounded"
+                          <div className="flex flex-col">
+                            <label className="text-xs text-gray-400 mb-1">Imagen</label>
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) =>
+                                  handleVariantOptionImage(
+                                    vIdx,
+                                    oIdx,
+                                    e.target.files[0]
+                                  )
+                                }
+                                className="text-xs"
                               />
-                            )}
-                          </>
+                              {option.image && (
+                                <img
+                                  src={option.image}
+                                  alt="preview"
+                                  className="object-cover w-10 h-10 rounded"
+                                />
+                              )}
+                            </div>
+                          </div>
                         )}
                         {/* Forma y tamaño */}
-                        <select
-                          value={option.shape || "circle"}
-                          onChange={(e) =>
-                            handleVariantOptionChange(
-                              vIdx,
-                              oIdx,
-                              "shape",
-                              e.target.value
-                            )
-                          }
-                          className="bg-[#23272f] text-white border border-gray-700 rounded-lg px-2 py-1"
-                        >
-                          <option value="circle">Circular</option>
-                          <option value="square">Cuadrada</option>
-                        </select>
-                        <select
-                          value={option.size || "md"}
-                          onChange={(e) =>
-                            handleVariantOptionChange(
-                              vIdx,
-                              oIdx,
-                              "size",
-                              e.target.value
-                            )
-                          }
-                          className="bg-[#23272f] text-white border border-gray-700 rounded-lg px-2 py-1"
-                        >
-                          <option value="sm">Chica</option>
-                          <option value="md">Mediana</option>
-                          <option value="lg">Grande</option>
-                        </select>
+                        <div className="flex flex-col">
+                          <label className="text-xs text-gray-400 mb-1">Forma</label>
+                          <select
+                            value={option.shape || "circle"}
+                            onChange={(e) =>
+                              handleVariantOptionChange(
+                                vIdx,
+                                oIdx,
+                                "shape",
+                                e.target.value
+                              )
+                            }
+                            className="bg-[#23272f] text-white border border-gray-700 rounded-lg px-2 py-1"
+                          >
+                            <option value="circle">Circular</option>
+                            <option value="square">Cuadrada</option>
+                          </select>
+                        </div>
+                        <div className="flex flex-col">
+                          <label className="text-xs text-gray-400 mb-1">Tamaño</label>
+                          <select
+                            value={option.size || "md"}
+                            onChange={(e) =>
+                              handleVariantOptionChange(
+                                vIdx,
+                                oIdx,
+                                "size",
+                                e.target.value
+                              )
+                            }
+                            className="bg-[#23272f] text-white border border-gray-700 rounded-lg px-2 py-1"
+                          >
+                            <option value="sm">Chica</option>
+                            <option value="md">Mediana</option>
+                            <option value="lg">Grande</option>
+                          </select>
+                        </div>
                         <Button
                           type="button"
                           variant="destructive"
@@ -584,10 +719,15 @@ const ProductForm = ({
                   <Button
                     type="button"
                     onClick={() => addVariantOption(vIdx)}
-                    className="flex items-center gap-2 px-2 py-1 mt-2 text-xs text-white transition-colors bg-black border border-gray-700 hover:bg-white hover:text-black hover:border-black"
+                    disabled={variant.options.length >= LIMITS.MAX_OPTIONS_PER_VARIANT}
+                    className={`flex items-center gap-2 px-2 py-1 mt-2 text-xs text-white transition-colors border border-gray-700 ${
+                      variant.options.length >= LIMITS.MAX_OPTIONS_PER_VARIANT
+                        ? 'bg-gray-600 cursor-not-allowed'
+                        : 'bg-black hover:bg-white hover:text-black hover:border-black'
+                    }`}
                   >
                     <Plus className="w-4 h-4 mr-1" />
-                    Añadir Opción
+                    Añadir Opción ({variant.options.length}/{LIMITS.MAX_OPTIONS_PER_VARIANT})
                   </Button>
                 </div>
               </div>
@@ -595,11 +735,24 @@ const ProductForm = ({
           <Button
             type="button"
             onClick={addVariant}
-            className="flex items-center gap-2 px-4 py-2 mt-2 text-sm text-white transition-colors bg-black border border-gray-700 hover:bg-white hover:text-black hover:border-black"
+            disabled={normalizedVariants.length >= LIMITS.MAX_VARIANTS}
+            className={`flex items-center gap-2 px-4 py-2 mt-2 text-sm text-white transition-colors border border-gray-700 ${
+              normalizedVariants.length >= LIMITS.MAX_VARIANTS 
+                ? 'bg-gray-600 cursor-not-allowed' 
+                : 'bg-black hover:bg-white hover:text-black hover:border-black'
+            }`}
           >
             <Plus className="w-4 h-4 mr-2" />
             Añadir Variante
           </Button>
+          
+          {/* Resumen de stock de variantes */}
+          {normalizedVariants.length > 0 && (
+            <VariantStockSummary 
+              variants={normalizedVariants} 
+              className="mt-4 bg-gray-800/30 border-gray-600" 
+            />
+          )}
         </div>
 
         <div className="flex items-center space-x-6">

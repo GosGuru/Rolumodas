@@ -167,3 +167,142 @@ export const updateMpMaxInstallments = async (value) => {
     return false;
   }
 };
+
+/**
+ * Obtiene la configuración de visualización de categorías
+ * @returns {Promise<Object>} - Configuración de categorías
+ */
+export const fetchCategoryDisplaySettings = async () => {
+  try {
+    const { data, error } = await supabase
+      .from("site_content")
+      .select("content_key, content_value")
+      .in("content_key", [
+        "categories_home_limit",
+        "categories_shop_limit", 
+        "categories_home_show_all",
+        "categories_shop_show_all"
+      ]);
+    
+    if (error) {
+      throw error;
+    }
+    
+    // Valores por defecto
+    const settings = {
+      homeLimit: 6,
+      shopLimit: null,
+      homeShowAll: false,
+      shopShowAll: true
+    };
+    
+    if (data && Array.isArray(data)) {
+      data.forEach(item => {
+        if (!item?.content_key || !item?.content_value) return;
+        
+        const value = item.content_value?.value;
+        if (value === undefined || value === null) return;
+        
+        switch (item.content_key) {
+          case "categories_home_limit": {
+            const num = parseInt(value, 10);
+            if (!isNaN(num) && num > 0 && num <= 20) {
+              settings.homeLimit = num;
+            }
+            break;
+          }
+          case "categories_shop_limit": {
+            if (value === "null" || value === null) {
+              settings.shopLimit = null;
+            } else {
+              const num = parseInt(value, 10);
+              if (!isNaN(num) && num > 0 && num <= 20) {
+                settings.shopLimit = num;
+              }
+            }
+            break;
+          }
+          case "categories_home_show_all":
+            settings.homeShowAll = value === "true" || value === true;
+            break;
+          case "categories_shop_show_all":
+            settings.shopShowAll = value === "true" || value === true;
+            break;
+        }
+      });
+    }
+    
+    return settings;
+  } catch (error) {
+    handleApiError(error, 'No se pudo cargar la configuración de categorías.');
+    return {
+      homeLimit: 6,
+      shopLimit: null,
+      homeShowAll: false,
+      shopShowAll: true
+    };
+  }
+};
+
+/**
+ * Actualiza la configuración de visualización de categorías
+ * @param {Object} settings - Configuración a actualizar
+ * @returns {Promise<boolean>} - true si la operación fue exitosa
+ */
+export const updateCategoryDisplaySettings = async (settings) => {
+  try {
+    if (!settings || typeof settings !== 'object') {
+      throw new Error('Configuración inválida');
+    }
+    
+    const updates = [];
+    
+    // Preparar actualizaciones con validación
+    if (typeof settings.homeLimit === 'number' && settings.homeLimit >= 1 && settings.homeLimit <= 20) {
+      updates.push({
+        content_key: "categories_home_limit",
+        content_value: { value: settings.homeLimit.toString() }
+      });
+    }
+    
+    if (settings.shopLimit === null || (typeof settings.shopLimit === 'number' && settings.shopLimit >= 1 && settings.shopLimit <= 20)) {
+      updates.push({
+        content_key: "categories_shop_limit",
+        content_value: { value: settings.shopLimit?.toString() || "null" }
+      });
+    }
+    
+    if (typeof settings.homeShowAll === 'boolean') {
+      updates.push({
+        content_key: "categories_home_show_all",
+        content_value: { value: settings.homeShowAll.toString() }
+      });
+    }
+    
+    if (typeof settings.shopShowAll === 'boolean') {
+      updates.push({
+        content_key: "categories_shop_show_all",
+        content_value: { value: settings.shopShowAll.toString() }
+      });
+    }
+    
+    if (updates.length === 0) {
+      return true; // No hay cambios que hacer
+    }
+    
+    // Ejecutar actualizaciones
+    const { error } = await supabase
+      .from("site_content")
+      .upsert(updates);
+    
+    if (error) {
+      throw error;
+    }
+    
+    toast({ title: "Éxito", description: "Configuración de categorías actualizada correctamente." });
+    return true;
+  } catch (error) {
+    handleApiError(error, 'No se pudo actualizar la configuración de categorías.');
+    return false;
+  }
+};

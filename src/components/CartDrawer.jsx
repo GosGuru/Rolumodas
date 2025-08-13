@@ -6,7 +6,7 @@ import { X, Trash2, Plus, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/contexts/CartContext';
 // import ColorDisplay from './ColorDisplay';
-import { toVariantLabel } from '@/lib/utils';
+import { getOptionText } from '@/lib/variantUtils';
 
 const CartDrawer = () => {
   const { isDrawerOpen, closeDrawer, items, removeFromCart, updateQuantity, getTotalPrice, getTotalItems } = useCart();
@@ -23,21 +23,14 @@ const CartDrawer = () => {
   const renderVariants = (selectedVariants) => {
     if (!selectedVariants || Object.keys(selectedVariants).length === 0) return null;
 
-    const getOptionLabel = (option) => {
-      if (typeof option === 'object') {
-        return option.label || option.value || option.size || '';
-      }
-      return option;
-    };
-
     return (
       <div className="flex flex-wrap gap-1 mt-1">
-    {Object.entries(selectedVariants).map(([variantName, option]) => (
+        {Object.entries(selectedVariants).map(([variantName, option]) => (
           <span
             key={variantName}
             className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-md bg-primary/10 text-primary"
           >
-      {variantName}: {toVariantLabel(option)}
+            {variantName}: {getOptionText(option)}
           </span>
         ))}
       </div>

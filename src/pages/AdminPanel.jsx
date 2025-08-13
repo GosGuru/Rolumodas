@@ -138,6 +138,20 @@ export const AdminGestionPage = () => {
     }
   };
 
+  const toggleCategoryVisibility = async (id, currentVisibility) => {
+    try {
+      const { error } = await supabase.from('categories').update({ visible: !currentVisibility }).eq('id', id);
+      if (error) {
+        toast({ title: "Error al cambiar visibilidad", description: error.message, variant: "destructive" });
+      } else {
+        toast({ title: "Éxito", description: "Visibilidad actualizada." });
+        fetchCategories();
+      }
+    } catch (err) {
+      toast({ title: "Error", description: "Problema al cambiar visibilidad.", variant: "destructive" });
+    }
+  };
+
   const handleCreateCategory = async (name, imageFile) => {
     const trimmedName = name.trim().toUpperCase();
     if (!trimmedName) {
@@ -151,9 +165,9 @@ export const AdminGestionPage = () => {
       }
       const slug = trimmedName.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
       const nextOrder = categories.length > 0 ? Math.max(...categories.map(c => c.sort_order ?? -1)) + 1 : 0;
-      let { error } = await supabase.from('categories').insert([{ name: trimmedName, slug, image: imageUrl, sort_order: nextOrder }]);
+      let { error } = await supabase.from('categories').insert([{ name: trimmedName, slug, image: imageUrl, sort_order: nextOrder, visible: true }]);
       if (error && /sort_order/i.test(error.message)) {
-        const retry = await supabase.from('categories').insert([{ name: trimmedName, slug, image: imageUrl }]);
+        const retry = await supabase.from('categories').insert([{ name: trimmedName, slug, image: imageUrl, visible: true }]);
         error = retry.error;
       }
       if (error) throw error;
@@ -234,9 +248,9 @@ export const AdminGestionPage = () => {
   }
 
   return (
-    <div className="w-full px-2 py-4 mx-auto max-w-7xl sm:px-4 sm:py-8">
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3 md:gap-8">
-        <div className="space-y-4 xl:col-span-2 md:space-y-8">
+    <div className="w-full px-4 py-4 mx-auto max-w-7xl min-h-screen">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+        <div className="space-y-6 xl:col-span-2">
           <ProductManagement
             products={products}
             categories={categories}
@@ -247,7 +261,7 @@ export const AdminGestionPage = () => {
           />
           <CategorySortableList categories={categories} onReorder={handleReorderCategories} />
         </div>
-        <div className="space-y-4 md:space-y-8">
+        <div className="space-y-6">
           <CategoryManagement
             categories={categories}
             handleCreateCategory={async (name, imageFile) => {
@@ -262,6 +276,7 @@ export const AdminGestionPage = () => {
               await handleDeleteCategory(id);
               return true;
             }}
+            toggleCategoryVisibility={toggleCategoryVisibility}
           />
           <SiteManagement />
         </div>
@@ -276,8 +291,10 @@ const AdminPanel = () => {
   return (
     <div className="relative min-h-screen bg-gradient-to-b from-gray-900 via-gray-950 to-black">
       <Sidebar />
-      <div className="pt-16 md:pl-56">
-        <Outlet />
+      <div className="md:pl-56">
+        <div className="min-h-screen">
+          <Outlet />
+        </div>
       </div>
       {isAuthenticated && user && <DashboardMobileNav />}
     </div>

@@ -1,24 +1,61 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Edit, Trash2, Eye, EyeOff } from 'lucide-react';
 import ColorDisplay from '@/components/ColorDisplay';
+import { formatVariants, calculateTotalVariantStock } from '@/lib/variantUtils';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const ProductTable = ({ products, handleEdit, handleDelete, toggleVisibility, formatPrice }) => {
+  const [productToDelete, setProductToDelete] = useState(null);
+
+  const confirmDeleteProduct = () => {
+    if (!productToDelete) return;
+    handleDelete(productToDelete.id);
+    setProductToDelete(null);
+  };
   const renderVariants = (variants) => {
     if (!variants || variants.length === 0) {
       return <span className="text-xs text-gray-500">Sin variantes</span>;
     }
 
+    const formattedVariants = formatVariants(variants);
+    const totalVariantStock = calculateTotalVariantStock(variants);
+    
+    if (formattedVariants.length === 0) {
+      return <span className="text-xs text-gray-500">Sin variantes</span>;
+    }
+
     return (
-      <div className="flex flex-wrap gap-1">
-        {variants.map((variant, index) => (
-          <span
-            key={index}
-            className="inline-flex items-center px-1.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 rounded dark:bg-blue-900/20 dark:text-blue-400"
-          >
-            {variant.name}: {Array.isArray(variant.options) ? variant.options.map(o => o.label || o).join(', ') : 'N/A'}
-          </span>
-        ))}
+      <div className="space-y-1">
+        <div className="flex flex-wrap gap-1">
+          {formattedVariants.map((variantText, index) => (
+            <span
+              key={index}
+              className="inline-flex items-center px-1.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 rounded dark:bg-blue-900/20 dark:text-blue-400"
+            >
+              {variantText}
+            </span>
+          ))}
+        </div>
+        {totalVariantStock !== null && (
+          <div className="text-xs text-gray-600 dark:text-gray-400">
+            Stock variantes: 
+            <span className={`ml-1 font-semibold ${
+              totalVariantStock > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+            }`}>
+              {totalVariantStock}
+            </span>
+          </div>
+        )}
       </div>
     );
   };
@@ -96,7 +133,7 @@ const ProductTable = ({ products, handleEdit, handleDelete, toggleVisibility, fo
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => handleDelete(product.id)}
+                onClick={() => setProductToDelete(product)}
                 className="text-red-400 hover:text-red-300 hover:bg-gray-700"
                 aria-label="Eliminar"
               >
@@ -201,7 +238,7 @@ const ProductTable = ({ products, handleEdit, handleDelete, toggleVisibility, fo
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => handleDelete(product.id)}
+                    onClick={() => setProductToDelete(product)}
                     className="text-red-400 hover:text-red-300 hover:bg-gray-700"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -212,6 +249,22 @@ const ProductTable = ({ products, handleEdit, handleDelete, toggleVisibility, fo
           </tbody>
         </table>
       </div>
+      
+      <AlertDialog open={!!productToDelete} onOpenChange={() => setProductToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás absolutamente seguro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Esto eliminará permanentemente el producto
+              "{productToDelete?.name}" y todos sus datos asociados.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setProductToDelete(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteProduct} className="bg-red-600 hover:bg-red-700">Eliminar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };
