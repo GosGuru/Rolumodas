@@ -1,7 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { ShoppingBag, BarChart2, Wrench, Eye, LogOut } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { ShoppingBag, BarChart2, Wrench, Eye } from 'lucide-react';
 
 const navItems = [
   { to: '/admin/gestion', icon: Wrench, label: 'Gestión' },
@@ -11,9 +10,8 @@ const navItems = [
 ];
 
 const DashboardMobileNav = () => {
-  const { logout } = useAuth();
   return (
-    <nav className="fixed bottom-0 left-0 z-50 w-full bg-[#0F172A] border-t border-gray-800 shadow-2xl flex justify-around items-center py-1 sm:hidden">
+    <nav className="fixed bottom-0 left-0 z-50 w-full max-w-[100vw] bg-[#0F172A] border-t border-gray-800 shadow-2xl flex justify-around items-center py-1 sm:hidden">
       {navItems.map(({ to, icon: Icon, label }) => (
         <NavLink
           key={to}
@@ -26,9 +24,6 @@ const DashboardMobileNav = () => {
           <span>{label}</span>
         </NavLink>
       ))}
-      <button onClick={async () => { await logout(); window.location.href = '/'; }} className="absolute right-4 bottom-3 bg-transparent border-none outline-none">
-        <LogOut className="w-7 h-7 text-yellow-400 hover:text-white transition-colors" />
-      </button>
     </nav>
   );
 };

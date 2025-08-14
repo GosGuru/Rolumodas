@@ -42,7 +42,7 @@ const AppLayout = ({ isSearchModalOpen, openSearchModal: _openSearchModal, close
         <meta name="description" content="Descubre las últimas tendencias en moda femenina. Ropa exclusiva, accesorios únicos y estilo incomparable en Rolu Modas." />
       </Helmet>
       
-      <HeaderWrapper />
+      <HeaderWrapper openSearchModal={_openSearchModal} />
      
       <main
         className="flex-1"

@@ -255,34 +255,41 @@ export const updateCategoryDisplaySettings = async (settings) => {
       throw new Error('Configuración inválida');
     }
     
+    // Verificar autenticación antes de intentar actualizar
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError || !session) {
+      throw new Error('Debes estar autenticado como administrador para actualizar la configuración.');
+    }
+    
     const updates = [];
     
     // Preparar actualizaciones con validación
     if (typeof settings.homeLimit === 'number' && settings.homeLimit >= 1 && settings.homeLimit <= 20) {
       updates.push({
-        content_key: "categories_home_limit",
-        content_value: { value: settings.homeLimit.toString() }
+        key: "categories_home_limit",
+        value: settings.homeLimit.toString()
       });
     }
     
     if (settings.shopLimit === null || (typeof settings.shopLimit === 'number' && settings.shopLimit >= 1 && settings.shopLimit <= 20)) {
       updates.push({
-        content_key: "categories_shop_limit",
-        content_value: { value: settings.shopLimit?.toString() || "null" }
+        key: "categories_shop_limit",
+        value: settings.shopLimit?.toString() || "null"
       });
     }
     
     if (typeof settings.homeShowAll === 'boolean') {
       updates.push({
-        content_key: "categories_home_show_all",
-        content_value: { value: settings.homeShowAll.toString() }
+        key: "categories_home_show_all",
+        value: settings.homeShowAll.toString()
       });
     }
     
     if (typeof settings.shopShowAll === 'boolean') {
       updates.push({
-        content_key: "categories_shop_show_all",
-        content_value: { value: settings.shopShowAll.toString() }
+        key: "categories_shop_show_all",
+        value: settings.shopShowAll.toString()
       });
     }
     
@@ -290,13 +297,27 @@ export const updateCategoryDisplaySettings = async (settings) => {
       return true; // No hay cambios que hacer
     }
     
-    // Ejecutar actualizaciones
-    const { error } = await supabase
-      .from("site_content")
-      .upsert(updates);
-    
-    if (error) {
-      throw error;
+    // Ejecutar actualizaciones usando solo UPDATE (evitando problemas de RLS con upsert)
+    for (const update of updates) {
+      const { data, error } = await supabase
+        .from("site_content")
+        .update({ 
+          content_value: { value: update.value }
+        })
+        .eq('content_key', update.key)
+        .select();
+      
+      if (error) {
+        if (error.code === '42501') {
+          throw new Error('No tienes permisos para actualizar esta configuración. Asegúrate de estar autenticado como administrador.');
+        }
+        throw new Error(`Error al actualizar configuración ${update.key}: ${error.message}`);
+      }
+      
+      // Verificar que se actualizó al menos un registro
+      if (!data || data.length === 0) {
+        throw new Error(`No se pudo actualizar la configuración ${update.key}. Es posible que no exista en la base de datos.`);
+      }
     }
     
     toast({ title: "Éxito", description: "Configuración de categorías actualizada correctamente." });

@@ -15,7 +15,6 @@ import MainHeader from '@/components/MainHeader';
 import DashboardMobileNav from '@/components/admin/DashboardMobileNav';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
-  calculateTotalVariantStock, 
   isVariantCombinationAvailable, 
   getVariantCombinationStock 
 } from '@/lib/variantUtils';
@@ -449,25 +448,6 @@ const ProductPage = () => {
                     selectedVariants={selectedVariants}
                   />
                 </div>
-                
-                {/* Información de stock disponible */}
-                {hasVariants && availableStock !== null && (
-                  <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border">
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      <strong>Stock disponible:</strong>
-                      <span className={`ml-2 font-semibold ${
-                        availableStock > 0 
-                          ? 'text-green-600 dark:text-green-400' 
-                          : 'text-red-600 dark:text-red-400'
-                      }`}>
-                        {availableStock > 0 
-                          ? `${availableStock} unidad${availableStock !== 1 ? 'es' : ''}`
-                          : 'Sin stock'
-                        }
-                      </span>
-                    </div>
-                  </div>
-                )}
                 
                 <div className="flex items-center space-x-2 mt-4 md:mt-6">
                   <h3 className="text-xs md:text-sm font-medium text-foreground">CANTIDAD:</h3>

@@ -9,11 +9,9 @@ import CategoryDisplaySettings from "./CategoryDisplaySettings";
 const SiteManagement = () => {
   const { 
     heroImage, 
-    mpInstallments, 
     categorySettings,
     loading, 
-    updateHeroImage, 
-    updateMpInstallments,
+    updateHeroImage,
     updateCategorySettings,
     fetchSiteContent 
   } = useSiteContent();
@@ -21,8 +19,6 @@ const SiteManagement = () => {
   const [newHeroImageFile, setNewHeroImageFile] = useState(null);
   const [preview, setPreview] = useState("");
   const [uploading, setUploading] = useState(false);
-  const [savingInstallments, setSavingInstallments] = useState(false);
-  const [localMpInstallments, setLocalMpInstallments] = useState(3);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -37,10 +33,7 @@ const SiteManagement = () => {
     }
   }, [heroImage]);
 
-  // Sincronizar installments locales con los del hook
-  useEffect(() => {
-    setLocalMpInstallments(mpInstallments);
-  }, [mpInstallments]);
+  // ...
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -59,30 +52,19 @@ const SiteManagement = () => {
       return;
     }
     setUploading(true);
-    try {
+  try {
       // Usar la función centralizada para actualizar la imagen de héroe
       await updateHeroImage(newHeroImageFile);
       setNewHeroImageFile(null);
-    } catch (error) {
+  } catch {
       // El manejo de errores ya está en la función updateHeroImage
-      console.error('Error en handleSaveHero:', error);
+  // error ya manejado en updateHeroImage
     } finally {
       setUploading(false);
     }
   };
 
-  const handleSaveInstallments = async () => {
-    setSavingInstallments(true);
-    try {
-      // Usar la función centralizada para actualizar el número máximo de cuotas
-      await updateMpInstallments(localMpInstallments);
-    } catch (error) {
-      // El manejo de errores ya está en la función updateMpInstallments
-      console.error('Error en handleSaveInstallments:', error);
-    } finally {
-      setSavingInstallments(false);
-    }
-  };
+  // ...
 
   return (
     <div className="space-y-6">
@@ -148,35 +130,7 @@ const SiteManagement = () => {
             )}
           </div>
 
-          {/* Configuración de MercadoPago */}
-          <div className="pt-6 border-t border-gray-700">
-            <h3 className="text-white font-bold mb-4">Configuración de Pagos</h3>
-            <div className="flex items-center gap-4">
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Número máximo de cuotas (MercadoPago)
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="12"
-                  value={localMpInstallments}
-                  onChange={(e) => setLocalMpInstallments(parseInt(e.target.value, 10) || 1)}
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-600 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <Button
-                onClick={handleSaveInstallments}
-                disabled={savingInstallments}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                {savingInstallments ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                ) : null}
-                {savingInstallments ? "Guardando..." : "Guardar"}
-              </Button>
-            </div>
-          </div>
+          {/* Sección de pagos eliminada según solicitud */}
         </div>
       </motion.div>
 

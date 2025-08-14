@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Tooltip from '@/components/ui/tooltip';
-import { useVariantStock } from '@/hooks/useVariantStock';
 
 const COLOR_MAP = {
   rojo: '#ff0000',
@@ -20,13 +19,6 @@ const COLOR_MAP = {
 const ProductVariants = ({ variants, onVariantChange, selectedVariants = {} }) => {
   const [localSelectedVariants, setLocalSelectedVariants] = useState(selectedVariants);
   
-  // Usar el hook de stock de variantes
-  const { 
-    isVariantCombinationAvailable, 
-    getVariantCombinationStock,
-    getAvailableOptionsForVariant 
-  } = useVariantStock(variants);
-
   // Mantener sincronizado cuando cambia desde el padre
   useEffect(() => {
     setLocalSelectedVariants(selectedVariants || {});
@@ -147,10 +139,10 @@ const ProductVariants = ({ variants, onVariantChange, selectedVariants = {} }) =
         );
         return (
           <div key={index} className="space-y-2">
-            <label className="text-sm font-medium text-muted-foreground capitalize">
+            <label className="text-sm font-medium capitalize text-muted-foreground">
               {variant.name}:
             </label>
-            <div className="flex flex-wrap gap-2 items-center">
+            <div className="flex flex-wrap items-center gap-2">
               {optionsArray.map((option, optionIndex) => {
                 const isSelected = localSelectedVariants[variant.name] === option;
                 const optionStock = parseInt(option.stock) || 0;
@@ -163,7 +155,7 @@ const ProductVariants = ({ variants, onVariantChange, selectedVariants = {} }) =
                       content={
                         <div className="text-center">
                           <div>{renderOptionValue(option)}</div>
-                          <div className="text-xs mt-1">
+                          <div className="mt-1 text-xs">
                             {isOutOfStock ? (
                               <span className="text-red-400">Sin stock</span>
                             ) : (
@@ -206,7 +198,7 @@ const ProductVariants = ({ variants, onVariantChange, selectedVariants = {} }) =
                     content={
                       <div className="text-center">
                         <div>{renderOptionValue(option)}</div>
-                        <div className="text-xs mt-1">
+                        <div className="mt-1 text-xs">
                           {isOutOfStock ? (
                             <span className="text-red-400">Sin stock</span>
                           ) : (
@@ -244,25 +236,6 @@ const ProductVariants = ({ variants, onVariantChange, selectedVariants = {} }) =
           </div>
         );
       })}
-      
-      {/* Mostrar información de stock para la selección actual */}
-      {Object.keys(localSelectedVariants).length > 0 && (
-        <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border">
-          <div className="text-sm text-gray-600 dark:text-gray-400">
-            <strong>Stock disponible:</strong>
-            <span className={`ml-2 font-semibold ${
-              getVariantCombinationStock(localSelectedVariants) > 0 
-                ? 'text-green-600 dark:text-green-400' 
-                : 'text-red-600 dark:text-red-400'
-            }`}>
-              {getVariantCombinationStock(localSelectedVariants) > 0 
-                ? `${getVariantCombinationStock(localSelectedVariants)} unidad${getVariantCombinationStock(localSelectedVariants) !== 1 ? 'es' : ''}`
-                : 'Sin stock'
-              }
-            </span>
-          </div>
-        </div>
-      )}
       
       {/* Se eliminó la sección "Selección actual" según pedido */}
     </div>
